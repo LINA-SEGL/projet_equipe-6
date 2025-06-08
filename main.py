@@ -1,4 +1,10 @@
 from Airfoil import Airfoil  # Demander à l'utilisateur d’entrer le code du profil
+from weather_api import get_delta_isa
+from Airfoil import generer_pale_vrillee
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
+API_KEY = "c6bf5947268d141c6ca08f54c7d65b63"
 nom_profil = input("Entrez le nom exact du profil NACA (ex : naca2412-il) : ")
 
 # Création du profil
@@ -13,7 +19,37 @@ profil.sauvegarder_coordonnees(f"{nom_profil}.csv")
 # Affichage graphique
 profil.tracer_conteur()
 
+profil = Airfoil.depuis_airfoiltools("naca2412-il")
+pourcentage = float(input("Pourcentage de bruit (%): "))
+profil.tracer_avec_bruit(pourcentage_bruit=pourcentage)
 
+
+
+nom_profil = input("Nom du profil (ex: naca2412-il): ")
+profil = Airfoil.depuis_airfoiltools(nom_profil)
+
+angle = float(input("Angle de rotation (°): "))
+profil.tracer_avec_rotation(angle_deg=angle)
+
+
+nom_profil = input("Entrez le nom du profil (ex: naca2412-il): ")
+profil = Airfoil.depuis_airfoiltools(nom_profil)
+
+angle_max = float(input("Angle maximal de vrillage au bord de fuite (en degrés) : "))
+profil.tracer_vrillage(angle_max_deg=angle_max)
+
+profil = Airfoil.depuis_airfoiltools("naca4412-il")
+coords = np.array(profil.coordonnees)
+
+pale = generer_pale_vrillee(coords, angle_max_deg=45, z_max=1.0)
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot(pale[:, 0], pale[:, 1], pale[:, 2])
+plt.title("Pale vrillée (rotation selon Z)")
+plt.show()
+
+###############################################################
 import asyncio
 from VolOpenSkyAsync import VolOpenSkyAsync
 from VolOpenSkyAsync import charger_compagnies_depuis_csv
@@ -36,8 +72,17 @@ async def main():
 
         print(f"{i+1}.  {v['callsign']} - {nom} ({pays})")
         print(f"   Altitude: {v['altitude_m']:.1f} m - Vitesse: {v['vitesse_mps']:.1f} m/s")
+        lat, lon = v["position"]
+        alt = v["altitude_m"]
+        delta = get_delta_isa(lat, lon, alt, API_KEY)
+
+        # Met à jour le delta ISA dans ton objet
+        v["condition_vol"].delta_isa = delta
+        # Affiche tous les paramètres aérodynamiques
         v["condition_vol"].afficher()
         print()
 
-if __name__ == "__main__":
-    asyncio.run(main())
+    print()
+
+#if __name__ == "__main__":
+    #asyncio.run(main())
