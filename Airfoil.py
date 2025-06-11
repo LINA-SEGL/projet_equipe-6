@@ -37,7 +37,7 @@ class Airfoil:
    # def afficher_resume(self):
        # print(f"Profil : {self._nom} | Nombre de points : {len(self.coordonnees)}")
 
-    # Stocker les coordonnées
+    # Stocker les coordonnées de Airfoils
     def sauvegarder_coordonnees(self, nom_fichier="coordonnees.csv"):
         with open(nom_fichier, "w") as fichier:
             fichier.write("x,y\n")
@@ -75,11 +75,17 @@ class Airfoil:
 
         Retourne : arrays x, y_supérieur, y_inférieur
         """
-        m = float(input("Indiquer la cambrure du profil (entre 0 et 1): "))
-        p = float(input("Indiquer la position de la cambrure maximale du profil (entre 0 et 1): "))
-        t = float(input("Indiquer l'épaisseur maximale du profil (entre 0 et 1): "))
-        c = float(input("Indiquer la longueur de corde du profil: "))
-        n_points = int(input("Indiquer le nombre de points souhaité pour le tracé du demi-profil: "))
+        # m = float(input("Indiquer la cambrure du profil (entre 0 et 1): "))
+        # p = float(input("Indiquer la position de la cambrure maximale du profil (entre 0 et 1): "))
+        # t = float(input("Indiquer l'épaisseur maximale du profil (entre 0 et 1): "))
+        # c = float(input("Indiquer la longueur de corde du profil: "))
+        # n_points = 18 #int(input("Indiquer le nombre de points souhaité pour le tracé du demi-profil: "))
+
+        m = 0.02
+        p = 0.2
+        t = 0.06
+        c = 12
+        n_points = 18
 
         # Discrétisation le long de x (on utilise un espacement cosinus pour affiner vers le bord d'attaque)
         beta = np.linspace(0.0, np.pi, n_points)
@@ -115,10 +121,10 @@ class Airfoil:
         x_lower = x + yt * np.sin(theta)
         y_lower = yc - yt * np.cos(theta)
 
-        self.enregistrer_profil_manuel_csv(x_upper, y_upper, x_lower, y_lower, x, m, p, t, c, self.nom)
-        self.tracer_profil_manuel(x_upper, y_upper, x_lower, y_lower)
+        # self.enregistrer_profil_manuel_csv(x_upper, y_upper, x_lower, y_lower, x, m, p, t, c, self.nom)
+        # self.tracer_profil_manuel(x_upper, y_upper, x_lower, y_lower)
 
-        return x_upper, y_upper, x_lower, y_lower, x
+        return x_upper, y_upper, x_lower, y_lower, x, c
 
     #Fonction pour tracer le profil manuel
     def tracer_profil_manuel(self, x_upper, y_upper, x_lower, y_lower):
@@ -132,14 +138,13 @@ class Airfoil:
         plt.show()
 
     #Fonction pour enregistrer les données du profil manuel dans un fichier csv
-    def enregistrer_profil_manuel_csv(self, x_up, y_up, x_low, y_low, x, m, p, t, c, nom_fichier="profil_naca.csv"):
+    def enregistrer_profil_manuel_csv(self, x_up, y_up, x_low, y_low, nom_fichier):
         """
         Enregistre les coordonnées du profil et ses propriétés dans un fichier CSV.
 
         Paramètres :
             x_up, y_up : coordonnées du bord supérieur
             x_low, y_low : coordonnées du bord inférieur
-            x : coordonnées x communes
             m, p, t, c : paramètres NACA
             nom_fichier : nom du fichier de sortie
         """
@@ -147,18 +152,43 @@ class Airfoil:
             writer = csv.writer(file)
 
             # Écriture des propriétés du profil
-            writer.writerow(["Nom:", self.nom])
-            writer.writerow(["Cambrure (m):", m])
-            writer.writerow(["Position de cambrure (p):", p])
-            writer.writerow(["Epaisseur (t):", t])
-            writer.writerow(["Longueur de corde (c):", c])
-            writer.writerow([])  # ligne vide
-            writer.writerow(["x", "y_superieur", "y_inferieur"])
+            # writer.writerow(["Nom:", self.nom])
+            # writer.writerow(["Cambrure (m):", m])
+            # writer.writerow(["Position de cambrure (p):", p])
+            # writer.writerow(["Epaisseur (t):", t])
+            # writer.writerow(["Longueur de corde (c):", c])
+            # writer.writerow([])  # ligne vide
+            writer.writerow(["x", "y_haut", "y_bas"])
 
-            for i in range(len(x)):
-                writer.writerow([x_up[i], x_low[i], y_up[i], y_low[i]])
+            for i in range(len(x_up)):
+                writer.writerow([x_up[i], y_up[i], x_low[i], y_low[i]])  # supposant que x_up = x_low
 
         print(f"Profil enregistré dans {nom_fichier}")
+
+    def enregistrer_profil_format_dat(self, x_up, y_up, x_low, y_low, c, nom_fichier):
+        """
+        Enregistre le profil au format XFOIL / AirfoilTools (.dat).
+
+        - x normalisé entre 0 et 1
+        - Ordre : extrados de 1 → 0, puis intrados de 0 → 1
+        """
+        with open(nom_fichier, mode='w') as file:
+            file.write(f"{self.nom}\n")
+
+            # Extrados : de 1 vers 0
+            for i in reversed(range(len(x_up))):
+                x = x_up[i] / c
+                y = y_up[i] / c
+                file.write(f"{x:.6f} {y:.6f}\n")
+
+            # Intrados : de 0 vers 1
+            for i in range(1, len(x_low)):
+                x = x_low[i] / c
+                y = y_low[i] / c
+                file.write(f"{x:.6f} {y:.6f}\n")
+
+        print(f"Profil enregistré au format XFOIL dans {nom_fichier}")
+
 
     """
         ---- Fin des fonctions de classe pour tracer un profil (Airfoil) manuellement ---

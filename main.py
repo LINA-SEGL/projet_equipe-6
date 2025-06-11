@@ -2,6 +2,8 @@ from Airfoil import Airfoil  # Demander à l'utilisateur d’entrer le code du p
 from weather_api import get_delta_isa
 from Airfoil import generer_pale_vrillee
 from Airfoil import *
+from aerodynamique import *
+import subprocess
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
@@ -89,5 +91,14 @@ if __name__ == "__main__":
         # Création d'un profil manuel:
         nom_profil_manuel = input("Entrez le nom de votre profil NACA: ")
         profil_manuel = Airfoil(nom_profil_manuel, [])
-        profil_2 = profil_manuel.naca4_profil()
-        profil_manuel.sauvegarder_coordonnees("NACA_manuel.csv")
+        x_up, y_up, x_low, y_low, x, c = profil_manuel.naca4_profil()
+        profil_manuel.enregistrer_profil_manuel_csv(x_up, y_up, x_low, y_low, nom_fichier=f"{nom_profil_manuel}.csv")
+        profil_manuel.enregistrer_profil_format_dat(x_up, y_up, x_low, y_low, c, nom_fichier=f"{nom_profil_manuel}.dat")
+
+    aero = Aerodynamique(nom_profil_manuel)
+    # Générer la polaire avec XFOIL
+    aero.run_xfoil(f"{nom_profil_manuel}.dat", alpha_start=-5, alpha_end=15, alpha_step=1, output_file=f"{nom_profil_manuel}.txt")
+    # Tracer
+    # aero.tracer_polaires()
+    # Sauvegarder
+    # aero.sauvegarder_csv("polaire_naca2412.csv")
