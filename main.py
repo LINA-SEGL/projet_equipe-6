@@ -55,7 +55,7 @@ from VolOpenSkyAsync import VolOpenSkyAsync
 from VolOpenSkyAsync import charger_compagnies_depuis_csv
 
 # Charger les compagnies
-compagnies = charger_compagnies_depuis_csv("data/iata_airlines.csv")
+compagnies = charger_compagnies_depuis_csv("iata_airlines.csv")
 
 async def main():
     api = VolOpenSkyAsync()
@@ -84,5 +84,5 @@ async def main():
 
     print()
 
-#if __name__ == "__main__":
-    #asyncio.run(main())
+if __name__ == "__main__":
+    asyncio.run(main())
