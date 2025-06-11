@@ -2,51 +2,45 @@ import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 from io import StringIO
-from Airfoil import Airfoil  #  importer ta classe existante
 
 class Aerodynamique:
-    def __init__(self, airfoil: Airfoil):
-        self.nom_profil = airfoil.nom  # ex: "naca2412-il"
+    def __init__(self, nom):
+        self.nom = nom  # ex: n2414-il
+        self.url_csv = f"http://airfoiltools.com/polar/csv?polar=xf-{self.nom}-50000"
+        self.donnees = None
 
+    def recuperer_donnees_csv(self):
+        response = requests.get(self.url_csv)
+        if response.status_code != 200:
+            raise Exception(f"Erreur d'accès au fichier CSV : {self.url_csv}")
 
-        @classmethod
-        def depuis_airfoiltools(cls, code_naca: str):
-            url = f"http: // airfoiltools.com / airfoil / details?airfoil ={code_naca.lower()}"
-            reponse = requests.get(url)
-            if reponse.status_code != 200:
-                raise Exception(f"Erreur lors de la récupération du profil NACA {code_naca}")
+        lignes = [l for l in response.text.splitlines() if not l.startswith("#")]
+        colonnes = ["alpha", "Cl", "Cd", "Cdp", "Cm", "Top_Xtr", "Bot_Xtr"]
+        self.donnees = pd.read_csv(StringIO("\n".join(lignes)), names=colonnes, skiprows=1)
+        print(" Données CSV récupérées.")
 
-
-
-                lignes = [l for l in response.text.splitlines() if not l.startswith("#")]
-                self.donnees = pd.read_csv(StringIO("\n".join(lignes)))
-                print(" Données récupérées.")
-
-    def sauvegarder_csv(self, nom_fichier="polaire.csv"):
+    def sauvegarder_donnees(self, nom_fichier="polar_airfoil.csv"):
         if self.donnees is not None:
-            self.donnees.to_csv(nom_fichier, index=False)
-            print(f"Fichier sauvegardé : {nom_fichier}")
+            with open(nom_fichier, "w") as fichier:
+                fichier.write(",".join(self.donnees.columns) + "\n")  # ligne d'en-tête
+                for _, ligne in self.donnees.iterrows():
+                    valeurs = ",".join([str(val) for val in ligne])
+                    fichier.write(valeurs + "\n")
+            print(f" Données sauvegardées dans {nom_fichier}")
+        else:
+            print(" Aucune donnée à sauvegarder.")
 
-    def tracer_polaires(self):
-        if self.donnees is None:
-            print("Aucune donnée chargée.")
-            return
-
-        plt.figure(figsize=(10, 6))
-        plt.plot(self.donnees["Alpha"], self.donnees["Cl"], label="Cl")
-        plt.plot(self.donnees["Alpha"], self.donnees["Cd"], label="Cd")
-        plt.plot(self.donnees["Alpha"], self.donnees["Cm"], label="Cm")
-        plt.xlabel("Angle d'attaque (°)")
-        plt.ylabel("Coefficients")
-        plt.title(f"Polaires aérodynamiques - {self.nom_profil}")
-        plt.legend()
+    def tracer_cd(self):
+        plt.plot(self.donnees["alpha"], self.donnees["Cd"], label="Cd", color="red")
+        plt.xlabel("Alpha (°)")
+        plt.ylabel("Cd")
+        plt.title(f"Cd vs Alpha – {self.nom}")
         plt.grid(True)
         plt.show()
 
+if __name__ == "__main__":
+    nom = input("Nom du profil (ex: n2414-il) : ").strip()
+    aero = Aerodynamique(nom)
 
-
-""" def recuperer_donnees(self):
-        response = requests.get(self.url_csv)
-        if response.status_code != 200:
-            print("Erreur de récupération")
-            return"""
+    aero.recuperer_donnees_csv()  #  Récupération des données
+    aero.sauvegarder_donnees("polar_" + nom + ".csv")
