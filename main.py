@@ -1,12 +1,7 @@
-from Airfoil import Airfoil  # Demander à l'utilisateur d’entrer le code du profil
-from weather_api import get_delta_isa
-from Airfoil import generer_pale_vrillee
 from Airfoil import *
 from aerodynamique import *
-import subprocess
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import numpy as np
+from ConditionVol import *
+
 
 # profil = Airfoil.depuis_airfoiltools("naca2412-il")
 # pourcentage = float(input("Pourcentage de bruit (%): "))
@@ -231,6 +226,38 @@ if __name__ == "__main__":
 
     else:
         pass
+
+
+    """
+        CHOISIR UN VOL EXISTANT:
+    """
+    obtenir_condition_vol = input("\nVoulez-vous obtenir choisir un vol existant: ").strip().lower()
+
+    if obtenir_condition_vol == "oui":
+        pass
+    elif obtenir_condition_vol == "non":
+        pass
+    else:
+        pass
+
+    """
+        CONDITION DE VOL
+    """
+
+    obtenir_conditions_vol = input("\nVoulez-vous obtenir les conditions de vol: ").strip().lower()
+
+    if obtenir_condition_vol == "oui":
+
+        altitude = int(input("\nAltitude (en mètres):"))
+        mach = float(input("Nombre de mach:"))
+        angle = int(input("Angle d'attaque (en °):"))
+
+        conditions_vol = ConditionVol(altitude, mach, angle)
+        conditions_vol.afficher()
+
+    elif obtenir_condition_vol == "non":
+        pass
+
 
     print("\n---- Fin du programme ----\n")
 
