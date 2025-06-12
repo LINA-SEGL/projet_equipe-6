@@ -2,6 +2,9 @@ import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 from io import StringIO
+from Airfoil import Airfoil  #  importer ta classe existante
+import subprocess
+import os
 
 class Aerodynamique:
     def __init__(self, nom):
@@ -166,4 +169,41 @@ if __name__ == "__main__":
     #Lina branchel
 
 
+        """ def recuperer_donnees(self):
+                response = requests.get(self.url_csv)
+                if response.status_code != 200:
+                    print("Erreur de récupération")
+                    return"""
 
+    def run_xfoil(self, dat_file, alpha_start=-5, alpha_end=15, alpha_step=1, output_file="polar_output.txt"):
+        xfoil_path = os.path.join(os.getcwd(), "xfoil.exe")
+
+        # Script pour XFOIL
+        xfoil_input = f"""
+    LOAD {dat_file}
+    PANE
+    OPER
+    VISC 1000000
+    ITER 100
+    PACC
+    {output_file}
+    
+    ASEQ {alpha_start} {alpha_end} {alpha_step}
+    PACC
+    QUIT
+    """
+
+        try:
+            result = subprocess.run(
+                [xfoil_path],
+                input=xfoil_input.encode(),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=r"C:\Users\train\Documents\Cours\ETS\MGA802\projet_sessionE2025"
+            )
+            if result.returncode != 0:
+                print("Erreur XFOIL :", result.stderr.decode())
+            else:
+                print(f"✅ Analyse XFOIL terminée. Résultats dans : {output_file}")
+        except FileNotFoundError:
+            print("XFOIL introuvable. Vérifie le chemin ou l'existence de xfoil.exe.")
