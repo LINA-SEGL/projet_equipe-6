@@ -181,11 +181,16 @@ class Aerodynamique:
             if result.returncode != 0:
                 print("Erreur XFOIL :", result.stderr.decode())
             else:
-                print(f"✅ Analyse XFOIL terminée. Résultats dans : {output_file}")
+                print(f"Analyse XFOIL terminée. Résultats dans : {output_file}")
         except FileNotFoundError:
             print("XFOIL introuvable. Vérifie le chemin ou l'existence de xfoil.exe.")
 
     def calculer_finesse(self, nom_fichier):
-        finesse = []
-        df = pd.read_csv(nom_fichier)
-        return finesse
+
+        data = self.lire_txt_et_convertir_dataframe(nom_fichier)
+
+        finesse = (data["CL"] / data["CD"]).tolist()
+
+        finesse_max = max(finesse)
+
+        return finesse, finesse_max

@@ -114,21 +114,34 @@ if __name__ == "__main__":
         profil_manuel.tracer_profil_manuel(x_up, y_up, x_low, y_low)
 
         lancement_xfoil = input("Voulez-vous calculer les performances de votre profil? (Oui / Non): ")
+
+
+
         if lancement_xfoil == "Oui":
+
             aero = Aerodynamique(nom_profil_manuel)
+
             # Générer la polaire avec XFOIL
             aero.run_xfoil(f"{nom_profil_manuel}.dat", alpha_start=-5, alpha_end=15, alpha_step=1,
                            output_file=f"{nom_profil_manuel}.txt")
             nom_fichier_manuel_txt = f"{nom_profil_manuel}.txt"
             data = aero.lire_txt_et_convertir_dataframe(nom_fichier_manuel_txt)
-            # print(data)
             aero.donnees = data
             aero.tracer_polaires_depuis_txt()
         elif lancement_xfoil == "Non":
             pass
 
+    calcul_finesse = input("Voulez-vous calculer la finesse maximale? (Oui / Non): ")
+    if calcul_finesse == "Oui":
+
+        finesse, finesse_max = aero.calculer_finesse(f"{nom_profil_manuel}.txt")
+        print(f"La finesse maximale de votre profil est : {finesse_max}")
+
+    elif calcul_finesse == "Non":
+        pass
 
     print("\n---- Fin du programme ----\n")
+
     # nom = input("Nom du profil (ex: n2414-il) : ").strip()
     # aero = Aerodynamique(nom)
     #
