@@ -34,6 +34,21 @@ import numpy as np
 # plt.title("Pale vrillée (rotation selon Z)")
 # plt.show()
 
+
+profil = Airfoil.depuis_airfoiltools("naca2412-il")
+aero = Aerodynamique(profil)
+
+# Étape 2 : Créer l’objet aérodynamique à partir du profil
+aero = Aerodynamique(profil)
+
+# Étape 3 : Récupérer les données depuis AirfoilTools
+aero.recuperer_donnees()
+
+# Étape 4 : Sauvegarder dans un fichier CSV
+aero.sauvegarder_csv("polaire_naca2412.csv")
+
+# Étape 5 : Tracer les courbes Cl, Cd, Cm
+aero.tracer_polaires()
 ###############################################################
 import asyncio
 from VolOpenSkyAsync import VolOpenSkyAsync
