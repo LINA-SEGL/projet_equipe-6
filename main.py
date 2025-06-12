@@ -110,31 +110,47 @@ if __name__ == "__main__":
         profil_manuel.enregistrer_profil_manuel_csv(x_up, y_up, x_low, y_low, nom_fichier=f"{nom_profil_manuel}.csv")
         profil_manuel.enregistrer_profil_format_dat(x_up, y_up, x_low, y_low, c, nom_fichier=f"{nom_profil_manuel}.dat")
 
-    nom = input("Nom du profil (ex: n2414-il) : ").strip()
-    aero = Aerodynamique(nom)
+        plt.figure("Contour du profil manuel")
+        profil_manuel.tracer_profil_manuel(x_up, y_up, x_low, y_low)
 
-    # Télécharger le fichier texte depuis AirfoilTools
-    nom_fichier_txt = f"polar_{nom}.txt"
-    aero.telecharger_et_sauvegarder_txt(nom_fichier_txt)
+        lancement_xfoil = input("Voulez-vous calculer les performances de votre profil? (Oui / Non): ")
+        if lancement_xfoil == "Oui":
+            aero = Aerodynamique(nom_profil_manuel)
+            # Générer la polaire avec XFOIL
+            aero.run_xfoil(f"{nom_profil_manuel}.dat", alpha_start=-5, alpha_end=15, alpha_step=1,
+                           output_file=f"{nom_profil_manuel}.txt")
+            nom_fichier_manuel_txt = f"{nom_profil_manuel}.txt"
+            data = aero.lire_txt_et_convertir_dataframe(nom_fichier_manuel_txt)
+            # print(data)
+            aero.donnees = data
+            aero.tracer_polaires_depuis_txt()
+        elif lancement_xfoil == "Non":
+            pass
 
-    # Lire le fichier texte et convertir en DataFrame
-    df = aero.lire_txt_et_convertir_dataframe(nom_fichier_txt)
 
-    # Stocker dans l’objet et tracer
-    aero.donnees = df
-    aero.tracer_polaires_depuis_txt()
-    # Lina branchel
+    print("\n---- Fin du programme ----\n")
+    # nom = input("Nom du profil (ex: n2414-il) : ").strip()
+    # aero = Aerodynamique(nom)
+    #
+    # # Télécharger le fichier texte depuis AirfoilTools
+    # nom_fichier_txt = f"polar_{nom}.txt"
+    # aero.telecharger_et_sauvegarder_txt(nom_fichier_txt)
+    #
+    # # Lire le fichier texte et convertir en DataFrame
+    # df = aero.lire_txt_et_convertir_dataframe(nom_fichier_txt)
+    #
+    # # Stocker dans l’objet et tracer
+    # aero.donnees = df
+    # aero.tracer_polaires_depuis_txt()
+    # # Lina branchel
+    #
+    # """ def recuperer_donnees(self):
+    #         response = requests.get(self.url_csv)
+    #         if response.status_code != 200:
+    #             print("Erreur de récupération")
+    #             return"""
+    #
+    # """
+    #     lancement de Xfoil pour calculer les polaires
+    # """
 
-    """ def recuperer_donnees(self):
-            response = requests.get(self.url_csv)
-            if response.status_code != 200:
-                print("Erreur de récupération")
-                return"""
-
-    """
-        lancement de Xfoil pour calculer les polaires
-    """
-
-    aero = Aerodynamique(nom_profil_manuel)
-    # Générer la polaire avec XFOIL
-    aero.run_xfoil(f"{nom_profil_manuel}.dat", alpha_start=-5, alpha_end=15, alpha_step=1, output_file=f"{nom_profil_manuel}.txt")
