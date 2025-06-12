@@ -6,7 +6,8 @@ from io import StringIO
 class Aerodynamique:
     def __init__(self, nom):
         self.nom = nom  # ex: n2414-il
-        self.url_csv = f"http://airfoiltools.com/polar/csv?polar=xf-{self.nom}-50000"
+        self.url_csv = f"http://airfoiltools.com/polar/csv?polar=xf-{self.nom}-50000.csv"
+       # xf - naca4412 - il - 50000.csv
         self.donnees = None
 
     def recuperer_donnees_csv(self):
@@ -83,7 +84,8 @@ class Aerodynamique:
             print(f" Erreur : {e}")
 
     def telecharger_et_sauvegarder_txt(self, nom_fichier="polar_airfoil.txt"):
-        url_txt = f"http://airfoiltools.com/polar/text?polar=xf-{self.nom}-50000"
+        url_txt = f"http://airfoiltools.com/polar/text?polar=xf-{self.nom}-50000.txt"
+        #xf - naca4412 - il - 50000.txt
         response = requests.get(url_txt)
 
         if response.status_code != 200:
@@ -124,7 +126,7 @@ class Aerodynamique:
             print("Aucune donnée à tracer.")
             return
 
-        fig, axes = plt.subplots(3, 1, figsize=(10, 10), sharex=True)  # 3 lignes, 1 colonne
+        fig, axes = plt.subplots(3, 1, figsize=(5, 7), sharex=True)  # 3 lignes, 1 colonne
 
         # 1. Cl
         axes[0].plot(self.donnees["alpha"], self.donnees["CL"], color="blue")
@@ -151,18 +153,15 @@ if __name__ == "__main__":
     nom = input("Nom du profil (ex: n2414-il) : ").strip()
     aero = Aerodynamique(nom)
 
-    # Partie CSV
-    aero.recuperer_donnees_csv()
-    aero.sauvegarder_donnees(f"polar_{nom}.csv")
-    nom_csv = input("Nom du fichier CSV à tracer : ").strip()
-    aero.tracer_depuis_csv(nom_csv)
-
-    # Partie TXT
+    # Télécharger le fichier texte depuis AirfoilTools
     nom_fichier_txt = f"polar_{nom}.txt"
     aero.telecharger_et_sauvegarder_txt(nom_fichier_txt)
 
+    # Lire le fichier texte et convertir en DataFrame
     df = aero.lire_txt_et_convertir_dataframe(nom_fichier_txt)
-    aero.donnees = df  # très important
+
+    # Stocker dans l’objet et tracer
+    aero.donnees = df
     aero.tracer_polaires_depuis_txt()
 
 
