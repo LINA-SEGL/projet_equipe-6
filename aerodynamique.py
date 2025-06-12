@@ -88,6 +88,7 @@ class Aerodynamique:
             print(f" Erreur : {e}")
 
     def telecharger_et_sauvegarder_txt(self, nom_fichier="polar_airfoil.txt"):
+
         url_txt = f"http://airfoiltools.com/polar/text?polar=xf-{self.nom}-50000.txt"
         #xf - naca4412 - il - 50000.txt
         response = requests.get(url_txt)
@@ -98,7 +99,7 @@ class Aerodynamique:
         with open(nom_fichier, "w", encoding="utf-8") as fichier:
             fichier.write(response.text)
 
-        print(f" Fichier texte sauvegardé sous : {nom_fichier}")
+        print(f"Performances aérodynamiques enregistrés dans le fichier: {nom_fichier}")
 
     def lire_txt_et_convertir_dataframe(self, nom_fichier_txt):
         lignes = []
@@ -152,7 +153,7 @@ class Aerodynamique:
         plt.tight_layout()
         plt.show()
 
-    def run_xfoil(self, dat_file, alpha_start=-5, alpha_end=15, alpha_step=1, output_file="polar_output.txt"):
+    def run_xfoil(self, dat_file, reynolds, mach, alpha_start=-5, alpha_end=15, alpha_step=1, output_file="polar_output.txt"):
         xfoil_path = os.path.join(os.getcwd(), "xfoil.exe")
 
         # Script pour XFOIL
@@ -160,13 +161,13 @@ class Aerodynamique:
     LOAD {dat_file}
     PANE
     OPER
-    VISC 1000000
+    VISC {reynolds}
+    MACH {mach}
     ITER 100
     PACC
     {output_file}
     
     ASEQ {alpha_start} {alpha_end} {alpha_step}
-    PACC
     QUIT
     """
 

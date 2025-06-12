@@ -45,13 +45,13 @@ class Airfoil:
                 fichier.write(f"{x},{y}\n")
 
     # Tracer le contour
-    def tracer_contour(self):
+    def tracer_contour(self, nom_profil):
         x_vals = [point[0] for point in self.coordonnees]
         y_vals = [point[1] for point in self.coordonnees]
 
         plt.figure(figsize=(8, 4))
         plt.plot(x_vals, y_vals, marker='o', linewidth=1)
-        plt.title(f"Profil aérodynamique {self.nom}")
+        plt.title(f"Profil aérodynamique {nom_profil}")
         plt.xlabel("x")
         plt.ylabel("y")
         plt.axis("equal")  # pour que l’échelle soit respectée
@@ -77,13 +77,13 @@ class Airfoil:
         """
         # m = float(input("Indiquer la cambrure du profil (entre 0 et 1): "))
         # p = float(input("Indiquer la position de la cambrure maximale du profil (entre 0 et 1): "))
-        # t = float(input("Indiquer l'épaisseur maximale du profil (entre 0 et 1): "))
+        t = float(input("Indiquer l'épaisseur maximale du profil (entre 0 et 1): "))
         # c = float(input("Indiquer la longueur de corde du profil: "))
         # n_points = 18 #int(input("Indiquer le nombre de points souhaité pour le tracé du demi-profil: "))
 
         m = 0.04
         p = 0.6
-        t = 0.08
+        # t = 0.08
         c = 1
         n_points = 18
 
@@ -160,7 +160,7 @@ class Airfoil:
             for i in range(len(x_up)):
                 writer.writerow([x_up[i], y_up[i], x_low[i], y_low[i]])  # supposant que x_up = x_low
 
-        print(f"Profil enregistré dans {nom_fichier}")
+        print(f"Les coordonnées du profil on été enregistré dans le fichier: {nom_fichier}")
 
     def enregistrer_profil_format_dat(self, x_up, y_up, x_low, y_low, c, nom_fichier):
         """
@@ -183,9 +183,6 @@ class Airfoil:
                 x = x_low[i] / c
                 y = y_low[i] / c
                 file.write(f"{x:.6f} {y:.6f}\n")
-
-        print(f"Profil enregistré au format XFOIL dans {nom_fichier}")
-
 
     """
         ---- Fin des fonctions de classe pour tracer un profil (Airfoil) manuellement ---

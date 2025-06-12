@@ -91,53 +91,145 @@ if __name__ == "__main__":
 
     print("\n---- Début du programme Airfoil ----\n")
 
-    generation = input("Voulez-vous importer ou générer un profil d'aile? ")
+    #On demande à l'utilisateur s'il veut créer ou importer un profil
+    while True:
+        generation = input("Voulez-vous importer ou générer un profil d'aile? ").strip().lower()
+        if generation in ["importer", "générer"]:
+            break  # OK : on sort de la boucle
+        else:
+            print("Réponse invalide. Veuillez taper 'importer' ou 'générer'.\n")
+
+    """
+            ---DANS LE CAS D'UNE IMPORTATION
+    """
 
     if generation == "importer":
-        nom_profil = input("Entrez le nom exact du profil NACA (ex : naca2412-il) : ")
+
+        nom_profil = input("\nEntrez le nom exact du profil NACA : (format : naca2412) : ").strip().lower()
+        nom_profil = f"{nom_profil}-il"
 
         profil = Airfoil.depuis_airfoiltools(nom_profil)
+
         # Sauvegarde des coordonnées
-        profil.sauvegarder_coordonnees(f"{nom_profil}.csv")
-        # Affichage graphique
-        profil.tracer_contour()
+        profil.sauvegarder_coordonnees(f"{nom_profil}_coord_profil.csv")
 
-    elif generation == "générer":
-        # Création d'un profil manuel:
-        nom_profil_manuel = input("Entrez le nom de votre profil NACA: ")
-        profil_manuel = Airfoil(nom_profil_manuel, [])
-        x_up, y_up, x_low, y_low, x, c = profil_manuel.naca4_profil()
-        profil_manuel.enregistrer_profil_manuel_csv(x_up, y_up, x_low, y_low, nom_fichier=f"{nom_profil_manuel}.csv")
-        profil_manuel.enregistrer_profil_format_dat(x_up, y_up, x_low, y_low, c, nom_fichier=f"{nom_profil_manuel}.dat")
+        print(f"\nLes coordonnées du profil ont été enregistrés dans le fichier: {nom_profil}_coord_profil.csv")
 
-        plt.figure("Contour du profil manuel")
-        profil_manuel.tracer_profil_manuel(x_up, y_up, x_low, y_low)
+        tracer = input("\nVoulez-vous afficher le profil? (Oui / Non): ").strip().lower()
 
-        lancement_xfoil = input("Voulez-vous calculer les performances de votre profil? (Oui / Non): ")
-
-
-
-        if lancement_xfoil == "Oui":
-
-            aero = Aerodynamique(nom_profil_manuel)
-
-            # Générer la polaire avec XFOIL
-            aero.run_xfoil(f"{nom_profil_manuel}.dat", alpha_start=-5, alpha_end=15, alpha_step=1,
-                           output_file=f"{nom_profil_manuel}.txt")
-            nom_fichier_manuel_txt = f"{nom_profil_manuel}.txt"
-            data = aero.lire_txt_et_convertir_dataframe(nom_fichier_manuel_txt)
-            aero.donnees = data
-            aero.tracer_polaires_depuis_txt()
-        elif lancement_xfoil == "Non":
+        if tracer == "oui":
+            # Affichage graphique
+            profil.tracer_contour(nom_profil)
+        elif tracer == "non":
+            pass
+        else:
             pass
 
-    calcul_finesse = input("Voulez-vous calculer la finesse maximale? (Oui / Non): ")
-    if calcul_finesse == "Oui":
+        recup_coef_aero = input("\nVoulez-vous récupérer les performances aérodynamiques de votre profil? (Oui / Non): ").strip().lower()
 
-        finesse, finesse_max = aero.calculer_finesse(f"{nom_profil_manuel}.txt")
-        print(f"La finesse maximale de votre profil est : {finesse_max}")
+        if recup_coef_aero == "oui":
 
-    elif calcul_finesse == "Non":
+            aero = Aerodynamique(nom_profil)
+
+            # Télécharger le fichier texte depuis AirfoilTools
+            nom_fichier_txt = f"polar_{nom_profil}.txt"
+            aero.telecharger_et_sauvegarder_txt(nom_fichier_txt)
+
+            # Lire le fichier texte et convertir en DataFrame
+            df = aero.lire_txt_et_convertir_dataframe(nom_fichier_txt)
+
+            # Stocker dans l’objet et tracer
+            aero.donnees = df
+            aero.tracer_polaires_depuis_txt()
+
+            perfo_pour_finesse = "importer"
+
+        elif recup_coef_aero == "non":
+            pass
+
+        else:
+            pass
+
+        """
+            ---DANS LE CAS D'UNE CRÉATION MANUELLE
+        """
+
+    elif generation == "générer":
+
+        # Création d'un profil manuel:
+        while True:
+            #demande un nom au fichier/profil
+            nom_profil_manuel = input("\nEntrez le nom de votre profil NACA: ").strip().lower()
+            #Boucle pour vérifier si le fichier existe dèjà
+            verif_fichier = f"{nom_profil_manuel}_coord_profil.csv"
+
+            if os.path.exists(verif_fichier):
+                print(f"Le fichier '{verif_fichier}' existe déjà.")
+                choix = input("\nVoulez-vous écraser le fichier ? (Oui/Non) : ").strip().lower()
+
+                if choix == "oui":
+                    print(f"Suppression du fichier '{verif_fichier}'...")
+                    os.remove(f"{verif_fichier}")
+                    break  # On sort de la boucle, on continue avec ce nom
+                elif choix == "non":
+                    print("\nVeuillez entrer un autre nom de profil.")
+            else:
+                break
+
+        profil_manuel = Airfoil(nom_profil_manuel, [])
+        x_up, y_up, x_low, y_low, x, c = profil_manuel.naca4_profil()
+
+        profil_manuel.enregistrer_profil_manuel_csv(x_up, y_up, x_low, y_low, nom_fichier=f"{nom_profil_manuel}_coord_profil.csv")
+        profil_manuel.enregistrer_profil_format_dat(x_up, y_up, x_low, y_low, c, nom_fichier=f"{nom_profil_manuel}_coord_profil.dat")
+
+        tracer = input("\nVoulez-vous afficher le profil? (Oui / Non): ").strip().lower()
+
+        if tracer == "oui":
+            profil_manuel.tracer_profil_manuel(x_up, y_up, x_low, y_low)
+
+        elif tracer == "non":
+            pass
+        else:
+            pass
+
+        lancement_xfoil = input("\nVoulez-vous calculer les performances de votre profil? (Oui / Non): ").strip().lower()
+
+        if lancement_xfoil == "oui":
+            aero = Aerodynamique(nom_profil_manuel)
+
+            mach = float(input("\nRentrez une valeur de Mach (0 à 0.7): "))
+            reynolds = int(input("\nRentrez un nombre de Reynolds: "))
+
+            # Générer la polaire avec XFOIL
+            aero.run_xfoil(f"{nom_profil_manuel}_coord_profil.dat", reynolds, mach, alpha_start=-5, alpha_end=15, alpha_step=1, output_file=f"{nom_profil_manuel}_coef_aero.txt")
+            coef_aero_generes = f"{nom_profil_manuel}_coef_aero.txt"
+            data = aero.lire_txt_et_convertir_dataframe(coef_aero_generes)
+            aero.donnees = data
+            aero.tracer_polaires_depuis_txt()
+
+            perfo_pour_finesse = "générer"
+
+        elif lancement_xfoil == "non":
+            pass
+
+        else:
+            pass
+
+    calcul_finesse = input("\nVoulez-vous calculer la finesse maximale? (Oui / Non): ").strip().lower()
+
+    if calcul_finesse == "oui":
+        if perfo_pour_finesse == "générer":
+            finesse, finesse_max = aero.calculer_finesse(f"{nom_profil_manuel}_coef_aero.txt")
+
+        elif perfo_pour_finesse == "importer":
+            finesse, finesse_max = aero.calculer_finesse(f"polar_{nom_profil}.txt")
+
+        print(f"\nLa finesse maximale de votre profil est : {finesse_max}")
+
+    elif calcul_finesse == "non":
+        pass
+
+    else:
         pass
 
     print("\n---- Fin du programme ----\n")
