@@ -1,5 +1,5 @@
 import asyncio
-from python_opensky import OpenSky, StatesResponse
+# from python_opensky import OpenSky, StatesResponse
 from ConditionVol import ConditionVol
 import pandas as pd
 
