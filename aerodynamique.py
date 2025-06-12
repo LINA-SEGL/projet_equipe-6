@@ -163,7 +163,7 @@ if __name__ == "__main__":
     # Stocker dans l’objet et tracer
     aero.donnees = df
     aero.tracer_polaires_depuis_txt()
-    #Lina branche
+    #Lina branchel
 
 
 
