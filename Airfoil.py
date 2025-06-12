@@ -7,10 +7,14 @@ import csv
 ## Class Airfoil va représenter un profil NACA avec ses cordonnées
 
 class Airfoil:
+
     def __init__(self, nom, coordonnees):
         self.nom = nom # Nom de profil
         self.coordonnees = coordonnees # une liste de tuples (x, y) représentant les points du contour de l’aile
 
+    """
+            ----  Fonctions de classe pour exporter un profil du site Airfoil Tools ----
+    """
     @classmethod
     def depuis_airfoiltools(cls, code_naca: str):
         url = f"http://airfoiltools.com/airfoil/seligdatfile?airfoil={code_naca.lower()}"
@@ -32,10 +36,6 @@ class Airfoil:
                 continue  # ignorer les lignes mal formatées
 
         return cls(nom=f"NACA{code_naca}", coordonnees=coordonnees)
-
-    # affichade d'un petit résumé nom + nmbr de points
-   # def afficher_resume(self):
-       # print(f"Profil : {self._nom} | Nombre de points : {len(self.coordonnees)}")
 
     # Stocker les coordonnées de Airfoils
     def sauvegarder_coordonnees(self, nom_fichier="coordonnees.csv"):
@@ -120,9 +120,6 @@ class Airfoil:
 
         x_lower = x + yt * np.sin(theta)
         y_lower = yc - yt * np.cos(theta)
-
-        # self.enregistrer_profil_manuel_csv(x_upper, y_upper, x_lower, y_lower, x, m, p, t, c, self.nom)
-        # self.tracer_profil_manuel(x_upper, y_upper, x_lower, y_lower)
 
         return x_upper, y_upper, x_lower, y_lower, x, c
 
