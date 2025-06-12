@@ -81,10 +81,10 @@ class Airfoil:
         # c = float(input("Indiquer la longueur de corde du profil: "))
         # n_points = 18 #int(input("Indiquer le nombre de points souhaité pour le tracé du demi-profil: "))
 
-        m = 0.02
-        p = 0.2
-        t = 0.06
-        c = 12
+        m = 0.0
+        p = 0.0
+        t = 0.122
+        c = 1
         n_points = 18
 
         # Discrétisation le long de x (on utilise un espacement cosinus pour affiner vers le bord d'attaque)

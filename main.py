@@ -98,7 +98,3 @@ if __name__ == "__main__":
     aero = Aerodynamique(nom_profil_manuel)
     # Générer la polaire avec XFOIL
     aero.run_xfoil(f"{nom_profil_manuel}.dat", alpha_start=-5, alpha_end=15, alpha_step=1, output_file=f"{nom_profil_manuel}.txt")
-    # Tracer
-    # aero.tracer_polaires()
-    # Sauvegarder
-    # aero.sauvegarder_csv("polaire_naca2412.csv")

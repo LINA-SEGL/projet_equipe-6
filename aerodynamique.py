@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from io import StringIO
 from Airfoil import Airfoil  #  importer ta classe existante
 import subprocess
-
+import os
 
 class Aerodynamique:
 
@@ -54,7 +54,7 @@ class Aerodynamique:
                     return"""
 
     def run_xfoil(self, dat_file, alpha_start=-5, alpha_end=15, alpha_step=1, output_file="polar_output.txt"):
-        xfoil_path = r"C:\Users\train\Documents\Cours\ETS\MGA802\XFOIL6.99\xfoil.exe"
+        xfoil_path = os.path.join(os.getcwd(), "xfoil.exe")
 
         # Script pour XFOIL
         xfoil_input = f"""
@@ -80,9 +80,8 @@ class Aerodynamique:
                 cwd=r"C:\Users\train\Documents\Cours\ETS\MGA802\projet_sessionE2025"
             )
             if result.returncode != 0:
-                print("❌ Erreur XFOIL :", result.stderr.decode())
+                print("Erreur XFOIL :", result.stderr.decode())
             else:
                 print(f"✅ Analyse XFOIL terminée. Résultats dans : {output_file}")
         except FileNotFoundError:
-            print("❌ XFOIL introuvable. Vérifie le chemin ou l'existence de xfoil.exe.")
-
+            print("XFOIL introuvable. Vérifie le chemin ou l'existence de xfoil.exe.")
