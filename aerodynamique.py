@@ -2,11 +2,12 @@ import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 from io import StringIO
-from Airfoil import Airfoil  #  importer ta classe existante
+from Airfoil import Airfoil
 import subprocess
 import os
 
 class Aerodynamique:
+
     def __init__(self, nom):
         self.nom = nom  # ex: n2414-il
         self.url_csv = f"http://airfoiltools.com/polar/csv?polar=xf-{self.nom}-50000.csv"
@@ -150,30 +151,6 @@ class Aerodynamique:
 
         plt.tight_layout()
         plt.show()
-
-
-if __name__ == "__main__":
-    nom = input("Nom du profil (ex: n2414-il) : ").strip()
-    aero = Aerodynamique(nom)
-
-    # Télécharger le fichier texte depuis AirfoilTools
-    nom_fichier_txt = f"polar_{nom}.txt"
-    aero.telecharger_et_sauvegarder_txt(nom_fichier_txt)
-
-    # Lire le fichier texte et convertir en DataFrame
-    df = aero.lire_txt_et_convertir_dataframe(nom_fichier_txt)
-
-    # Stocker dans l’objet et tracer
-    aero.donnees = df
-    aero.tracer_polaires_depuis_txt()
-    #Lina branchel
-
-
-        """ def recuperer_donnees(self):
-                response = requests.get(self.url_csv)
-                if response.status_code != 200:
-                    print("Erreur de récupération")
-                    return"""
 
     def run_xfoil(self, dat_file, alpha_start=-5, alpha_end=15, alpha_step=1, output_file="polar_output.txt"):
         xfoil_path = os.path.join(os.getcwd(), "xfoil.exe")

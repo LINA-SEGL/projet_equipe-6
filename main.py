@@ -37,20 +37,20 @@ import numpy as np
 # plt.show()
 
 
-profil = Airfoil.depuis_airfoiltools("naca2412-il")
-aero = Aerodynamique(profil)
+# profil = Airfoil.depuis_airfoiltools("naca2412-il")
+# aero = Aerodynamique(profil)
 
 # Étape 2 : Créer l’objet aérodynamique à partir du profil
-aero = Aerodynamique(profil)
+# aero = Aerodynamique(profil)
 
 # Étape 3 : Récupérer les données depuis AirfoilTools
-aero.recuperer_donnees()
+# aero.recuperer_donnees()
 
 # Étape 4 : Sauvegarder dans un fichier CSV
-aero.sauvegarder_csv("polaire_naca2412.csv")
+# aero.sauvegarder_csv("polaire_naca2412.csv")
 
 # Étape 5 : Tracer les courbes Cl, Cd, Cm
-aero.tracer_polaires()
+# aero.tracer_polaires()
 ###############################################################
 import asyncio
 from VolOpenSkyAsync import VolOpenSkyAsync
@@ -109,6 +109,31 @@ if __name__ == "__main__":
         x_up, y_up, x_low, y_low, x, c = profil_manuel.naca4_profil()
         profil_manuel.enregistrer_profil_manuel_csv(x_up, y_up, x_low, y_low, nom_fichier=f"{nom_profil_manuel}.csv")
         profil_manuel.enregistrer_profil_format_dat(x_up, y_up, x_low, y_low, c, nom_fichier=f"{nom_profil_manuel}.dat")
+
+    nom = input("Nom du profil (ex: n2414-il) : ").strip()
+    aero = Aerodynamique(nom)
+
+    # Télécharger le fichier texte depuis AirfoilTools
+    nom_fichier_txt = f"polar_{nom}.txt"
+    aero.telecharger_et_sauvegarder_txt(nom_fichier_txt)
+
+    # Lire le fichier texte et convertir en DataFrame
+    df = aero.lire_txt_et_convertir_dataframe(nom_fichier_txt)
+
+    # Stocker dans l’objet et tracer
+    aero.donnees = df
+    aero.tracer_polaires_depuis_txt()
+    # Lina branchel
+
+    """ def recuperer_donnees(self):
+            response = requests.get(self.url_csv)
+            if response.status_code != 200:
+                print("Erreur de récupération")
+                return"""
+
+    """
+        lancement de Xfoil pour calculer les polaires
+    """
 
     aero = Aerodynamique(nom_profil_manuel)
     # Générer la polaire avec XFOIL
