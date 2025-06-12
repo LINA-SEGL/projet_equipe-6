@@ -30,17 +30,139 @@ class Aerodynamique:
         else:
             print(" Aucune donnée à sauvegarder.")
 
-    def tracer_cd(self):
-        plt.plot(self.donnees["alpha"], self.donnees["Cd"], label="Cd", color="red")
-        plt.xlabel("Alpha (°)")
-        plt.ylabel("Cd")
-        plt.title(f"Cd vs Alpha – {self.nom}")
-        plt.grid(True)
+    def tracer_depuis_csv(self, nom_fichier):
+        try:
+            # Lire le fichier brut ligne par ligne
+            with open(nom_fichier, "r", encoding="utf-8") as f:
+                lignes = f.readlines()
+
+            # Trouver l'index de la vraie ligne d'en-tête (celle qui commence par Alpha ou alpha)
+            index_en_tete = -1
+            for i, ligne in enumerate(lignes):
+                if ligne.strip().lower().startswith("alpha"):
+                    index_en_tete = i
+                    break
+
+            if index_en_tete == -1:
+                print(" Ligne d'en-tête non trouvée.")
+                return
+
+            # Lire dans pandas à partir de la bonne ligne
+            from io import StringIO
+            contenu_utilisable = "".join(lignes[index_en_tete:])
+            df = pd.read_csv(StringIO(contenu_utilisable))
+
+            # Nettoyage si besoin
+            df.columns = [c.strip().lower() for c in df.columns]  # ex: alpha, cl, cd, cm...
+            df = df.astype(float)
+
+            # Tracer
+            fig, axs = plt.subplots(3, 1, figsize=(10, 9), sharex=True)
+
+            axs[0].plot(df["alpha"], df["cl"], label="Cl", color="blue")
+            axs[0].set_ylabel("Cl")
+            axs[0].legend()
+            axs[0].grid(True)
+
+            axs[1].plot(df["alpha"], df["cd"], label="Cd", color="red")
+            axs[1].set_ylabel("Cd")
+            axs[1].legend()
+            axs[1].grid(True)
+
+            axs[2].plot(df["alpha"], df["cm"], label="Cm", color="green")
+            axs[2].set_xlabel("Angle d'attaque α (°)")
+            axs[2].set_ylabel("Cm")
+            axs[2].legend()
+            axs[2].grid(True)
+
+            fig.suptitle(f"Polaires depuis : {nom_fichier}")
+            plt.tight_layout()
+            plt.show()
+
+        except Exception as e:
+            print(f" Erreur : {e}")
+
+    def telecharger_et_sauvegarder_txt(self, nom_fichier="polar_airfoil.txt"):
+        url_txt = f"http://airfoiltools.com/polar/text?polar=xf-{self.nom}-50000"
+        response = requests.get(url_txt)
+
+        if response.status_code != 200:
+            raise Exception(f"Erreur d'accès au fichier TXT : {url_txt}")
+
+        with open(nom_fichier, "w", encoding="utf-8") as fichier:
+            fichier.write(response.text)
+
+        print(f" Fichier texte sauvegardé sous : {nom_fichier}")
+
+    def lire_txt_et_convertir_dataframe(self, nom_fichier_txt):
+        lignes = []
+        commencer = False
+
+        with open(nom_fichier_txt, "r", encoding="utf-8") as f:
+            for ligne in f:
+                ligne = ligne.strip()
+                if not ligne:
+                    continue  # ignorer les lignes vides
+                if ligne.lower().startswith("alpha"):
+                    commencer = True
+                    lignes.append(ligne)
+                elif commencer:
+                    if all(c in "- " for c in ligne):
+                        continue  # ignorer ligne de séparation visuelle
+                    lignes.append(ligne)
+
+        # Transformation en DataFrame
+        colonnes = lignes[0].split()
+        data = [l.split() for l in lignes[1:]]
+
+        df = pd.DataFrame(data, columns=colonnes)
+        df = df.astype(float)
+        return df
+
+    def tracer_polaires_depuis_txt(self):
+        if self.donnees is None:
+            print("Aucune donnée à tracer.")
+            return
+
+        fig, axes = plt.subplots(3, 1, figsize=(10, 10), sharex=True)  # 3 lignes, 1 colonne
+
+        # 1. Cl
+        axes[0].plot(self.donnees["alpha"], self.donnees["CL"], color="blue")
+        axes[0].set_ylabel("Cl")
+        axes[0].set_title(f"Polaires du profil : {self.nom}")
+        axes[0].grid(True)
+
+        # 2. Cd
+        axes[1].plot(self.donnees["alpha"], self.donnees["CD"], color="red")
+        axes[1].set_ylabel("Cd")
+        axes[1].grid(True)
+
+        # 3. Cm
+        axes[2].plot(self.donnees["alpha"], self.donnees["CM"], color="green")
+        axes[2].set_ylabel("Cm")
+        axes[2].set_xlabel("Angle d'attaque α (°)")
+        axes[2].grid(True)
+
+        plt.tight_layout()
         plt.show()
+
 
 if __name__ == "__main__":
     nom = input("Nom du profil (ex: n2414-il) : ").strip()
     aero = Aerodynamique(nom)
 
-    aero.recuperer_donnees_csv()  #  Récupération des données
-    aero.sauvegarder_donnees("polar_" + nom + ".csv")
+    # Partie CSV
+    aero.recuperer_donnees_csv()
+    aero.sauvegarder_donnees(f"polar_{nom}.csv")
+    nom_csv = input("Nom du fichier CSV à tracer : ").strip()
+    aero.tracer_depuis_csv(nom_csv)
+
+    # Partie TXT
+    nom_fichier_txt = f"polar_{nom}.txt"
+    aero.telecharger_et_sauvegarder_txt(nom_fichier_txt)
+
+    df = aero.lire_txt_et_convertir_dataframe(nom_fichier_txt)
+    aero.donnees = df  # très important
+    aero.tracer_polaires_depuis_txt()
+
+
