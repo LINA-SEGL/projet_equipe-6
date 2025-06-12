@@ -164,24 +164,23 @@ class Airfoil:
         ---- Fin des fonctions de classe pour tracer un profil (Airfoil) manuellement ---
     """
 
-    def tracer_avec_bruit(self, pourcentage_bruit=1, mode="gaussien"):
-        from Airfoil import BruitProfil  # à enlever si BruitProfil est déjà dans le même fichier
-        amplitude = (pourcentage_bruit / 100) * 1.0  # corde = 1.0 par défaut
-        bruit = BruitProfil(amplitude=amplitude, mode=mode)
+    def tracer_avec_bruit(self, amplitude=0.01, mode="gaussien", zone=(0.0, 0.3)):
+        from math import isfinite
+        bruit = BruitProfil(amplitude=amplitude, mode=mode, zone=zone)
         coord_bruitees = bruit.appliquer(self.coordonnees)
 
-        x1, y1 = zip(*self.coordonnees)
-        x2, y2 = zip(*coord_bruitees)
+        x0, y0 = zip(*self.coordonnees)
+        x1, y1 = zip(*coord_bruitees)
 
         plt.figure(figsize=(8, 4))
-        plt.plot(x1, y1, label="Profil original", linewidth=2)
-        plt.plot(x2, y2, label=f"Bruit {pourcentage_bruit}%", linestyle="--")
-        plt.title(f"Profil {self.nom} : original vs bruité")
-        plt.xlabel("x")
-        plt.ylabel("y")
-        plt.axis("equal")
+        plt.plot(x0, y0, label="Original", linewidth=2)
+        plt.plot(x1, y1, '--', label=f"Givré ({amplitude * 100:.1f} % corde)", alpha=0.8)
+        plt.axis('equal')
         plt.grid(True)
         plt.legend()
+        plt.xlabel("x")
+        plt.ylabel("y")
+        plt.title(f"{self.nom} — givrage zone {zone}")
         plt.show()
 
     def tracer_avec_rotation(self, angle_deg=5, centre=(0, 0)):
@@ -241,19 +240,54 @@ class RotationProfil:
         return (rot + self.centre).tolist()          #  on revient au repère initial (x + x0, y + y0)
 
 
+# Classe pour appliquer du bruit (rugosité, givrage, etc.) sur une région du profil
+
+
 class BruitProfil:
-    def __init__(self, amplitude=0.001, mode="gaussien"):
-        self.amplitude = amplitude                   #  écart maximal (ou std) du bruit
-        self.mode = mode                             # uniform = bruit constant / gaussien = bruit + réaliste
+    def __init__(self, amplitude=0.01, mode="gaussien", zone=(0.0, 0.3)):
+        """
+        amplitude : déplacement max (en corde unité)
+        mode      : "gaussien" ou "uniforme"
+        zone      : (x_min, x_max) sur lequel on applique le bruit
+        """
+        self.amplitude = amplitude
+        self.mode = mode
+        self.zone = zone
 
     def appliquer(self, coordonnees):
-        coords = np.array(coordonnees)               #  liste de tuples (x, y) → matrice
-        if self.mode == "gaussien":
-            bruit = np.random.normal(0, self.amplitude, coords.shape)
-        else:
-            bruit = np.random.uniform(-self.amplitude, self.amplitude, coords.shape)
+        # conversion et extraction
+        coords = np.array(coordonnees)       # shape (N,2)
+        x_vals, y_vals = coords[:,0], coords[:,1]
 
-        return (coords + bruit).tolist()             #  ajout du bruit point par point
+        # calcul des tangentes et normales
+        dx_ds, dy_ds = np.gradient(x_vals), np.gradient(y_vals)
+        tangentes = np.vstack((dx_ds, dy_ds)).T
+        norms = np.linalg.norm(tangentes, axis=1)
+        normals = np.column_stack((-dy_ds/norms, dx_ds/norms))
+
+        # on ne bruit que là où x dans la zone ET y >= 0 (extrados)
+        masque = (
+            (x_vals >= self.zone[0])
+            & (x_vals <= self.zone[1])
+            & (y_vals >= 0)
+        )
+
+        # génération du bruit scalaire
+        if self.mode == "gaussien":
+            eta = np.random.normal(0, self.amplitude, size=len(x_vals))
+        else:
+            eta = np.random.uniform(-self.amplitude, self.amplitude, size=len(x_vals))
+
+        # on garde uniquement les eta pour lesquels masque=True
+        eta *= masque
+
+        # décalage suivant la normale
+        coords_bruitees = coords + normals * eta[:, None]
+
+        return [tuple(pt) for pt in coords_bruitees]
+
+
+           #  ajout du bruit point par point
 
 
 class RotationVrillee:
@@ -288,3 +322,6 @@ def generer_pale_vrillee(profil_2d, angle_max_deg=30, z_max=1.0, sections=50):
         for x, y in section:
             pale.append((x, y, z))
     return np.array(pale)
+
+
+
