@@ -47,3 +47,19 @@ class GestionBase:
            """
 
            df=pd.read_csv(self.chemin_fichier)
+
+           # création d'un dictionnaire pour la nouvelle ligne
+
+           nouvelle_entree = {
+               "nom_profil": nom_profil,
+               "type_profil": type_profil,
+               "date_creation": datetime.now().strftime("%d/%m/%Y %H:%M:%S"), #afin de standarisé la date stocké
+               "fichier_coord_csv": fichier_coord_csv,
+               "fichier_coord_dat": fichier_coord_dat,
+               "fichier_polaire_txt": fichier_polaire_txt,
+               "fichier_polaire_csv": fichier_polaire_csv
+           }
+
+           df= pd.concat([df, pd.DataFrame([nouvelle_entree])], ingore_index=True) #on ajoute la nouvelle entree a la base de donnée
+           df.to_csv(self.chemin_fichier, index=False)  # on retire les index automatique
+           print(f"[info] Profil '{nom_profil}' ajouté à la base de données.")
