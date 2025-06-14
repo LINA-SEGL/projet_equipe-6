@@ -88,16 +88,25 @@ class GestionBase:
 
         df = pd.read_csv(self.chemin_fichier)
 
+        # on déplace chaque fichier dans son sous-dossier
+
+        dossier_coords = "profils_manuels" if type_profil == "manuel" else "profils_importes"
+        chemin_coord_csv = self._deplacer_fichier(fichier_coord_csv, dossier_coords)
+        chemin_coord_dat = self._deplacer_fichier(fichier_coord_dat, dossier_coords)
+        chemin_polaire_txt = self._deplacer_fichier(fichier_polaire_txt, "performance_txt")
+        chemin_polaire_csv = self._deplacer_fichier(fichier_polaire_csv, "polaires_xfoil")
+
+
         # création d'un dictionnaire pour la nouvelle ligne
 
         nouvelle_entree = {
             "nom_profil": nom_profil,
             "type_profil": type_profil,
             "date_creation": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),  # afin de standarisé la date stocké
-            "fichier_coord_csv": fichier_coord_csv,
-            "fichier_coord_dat": fichier_coord_dat,
-            "fichier_polaire_txt": fichier_polaire_txt,
-            "fichier_polaire_csv": fichier_polaire_csv
+            "fichier_coord_csv": chemin_coord_csv,
+            "fichier_coord_dat": chemin_coord_dat,
+            "fichier_polaire_txt": chemin_polaire_txt,
+            "fichier_polaire_csv": chemin_polaire_csv
         }
 
         df = pd.concat([df, pd.DataFrame([nouvelle_entree])],ignore_index=True)  # on ajoute la nouvelle entree a la base de donnée
