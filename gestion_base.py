@@ -4,6 +4,7 @@ from datetime import datetime
 
 class GestionBase:
     """
+
     Classe pour gérer la base de données centrale des profils d'ailes elle crée automatiquement un dossier 'data/' et
     un fichier CSV qui contient un historique des profils enregistrés.
     """
@@ -24,7 +25,9 @@ class GestionBase:
          self._initialiser_fichier()
          self._creer_dossiers_utiles()
 
+
     def _initialiser_fichier(self):
+
         """
         Creé le dossier 'data' et le fichier 'donnees_profils.csv' s'ils n'existent pas.
         """
@@ -34,9 +37,44 @@ class GestionBase:
             df = pd.DataFrame(columns=self.colonnes)
             df.to_csv(self.chemin_fichier, index=False)
 
+    def _creer_dossiers_utiles(self):
+
+        """
+        Crée les sous-dossiers nécessaires dans 'data/' pour organiser les fichiers.
+        """
+        sous_dossiers = [
+            "profils_importes",
+            "profils_manuels",
+            "performance_txt",
+            "polaires_xfoil"
+        ]
+        for dossier in sous_dossiers:
+            os.makedirs(os.path.join(self.chemin_dossier, dossier), exist_ok=True)
+
+
+    def _deplacer_fichier(self, chemin_fichier, dossier_cible):
+
+        """
+        Déplace un fichiers vers un sous-dossier spécifique de 'data/'
+        :param chemin_fichier: chemin initial du fichier
+        :param dossier_cible: nom du sous dossier (ex: 'profils_manuels')
+        :return: chemin du fichier déplacé
+        """
+
+        if chemin_fichier and os.path.exists(self.chemin_dossier):
+            nom_fichier = os.path.basename(chemin_fichier)
+            nouveau_chemin = os.path.join(self.chemin_dossier, dossier_cible, nom_fichier)
+            os.replace(chemin_fichier, nouveau_chemin) # déplace (écrase si même nom)
+            return nouveau_chemin
+
+        return None
+
+
 
     def ajouter_profil(self, nom_profil, type_profil,
-                       fichier_coord_csv=None, fichier_coord_dat=None, fichier_polaire_txt=None, fichier_polaire_csv=None):
+                       fichier_coord_csv=None, fichier_coord_dat=None,
+                       fichier_polaire_txt=None, fichier_polaire_csv=None):
+
         """
         Ajoute un nouveau profil à la base de données avec les chemins associés aux fichiersgénérés
 
@@ -75,17 +113,3 @@ class GestionBase:
         print(df)
 
 
-    def _creer_dossiers_utiles(self):
-        """
-        Crée les sous-dossiers nécessaires dans 'data/' pour organiser les fichiers.
-        """
-        sous_dossiers = [
-            "profils_importes",
-            "profils_manuels",
-            "performance_txt",
-            "polaires_xfoil"
-
-        ]
-
-        for dossier in sous_dossiers:
-            os.makedirs(os.path.join(self.chemin_dossier, dossier), exist_ok=True)
