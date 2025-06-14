@@ -22,7 +22,7 @@ class GestionBase:
               "fichier_polaire_csv"
          ]
          self._initialiser_fichier()
-
+         self._creer_dossiers_utiles()
 
     def _initialiser_fichier(self):
         """
@@ -74,3 +74,18 @@ class GestionBase:
         df = pd.read_csv(self.chemin_fichier)
         print(df)
 
+
+    def _creer_dossiers_utiles(self):
+        """
+        Crée les sous-dossiers nécessaires dans 'data/' pour organiser les fichiers.
+        """
+        sous_dossiers = [
+            "profils_importes",
+            "profils_manuels",
+            "performance_txt",
+            "polaires_xfoil"
+
+        ]
+
+        for dossier in sous_dossiers:
+            os.makedirs(os.path.join(self.chemin_dossier, dossier), exist_ok=True)
