@@ -62,7 +62,7 @@ def afficher_details(s):
     if delta is not None:
         print(f"ΔISA ≈ {delta:.1f} K (approx.)")
     else:
-        print("ΔISA           : non calculé")
+        print("ΔISA          : non calculé")
 
 def main():
     vols = asyncio.run(fetch_vols(limit=2000))
