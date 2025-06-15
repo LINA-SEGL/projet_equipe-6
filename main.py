@@ -231,7 +231,7 @@ if __name__ == "__main__":
     """
         CHOISIR UN VOL EXISTANT:
     """
-    obtenir_condition_vol = input("\nVoulez-vous obtenir choisir un vol existant: ").strip().lower()
+    obtenir_condition_vol = input("\nVoulez-vous choisir un vol existant? (Oui / Non): ").strip().lower()
 
     if obtenir_condition_vol == "oui":
         pass
@@ -244,7 +244,7 @@ if __name__ == "__main__":
         CONDITION DE VOL
     """
 
-    obtenir_conditions_vol = input("\nVoulez-vous obtenir les conditions de vol: ").strip().lower()
+    obtenir_conditions_vol = input("\nVoulez-vous obtenir les conditions de vol? (Oui / Non): ").strip().lower()
 
     if obtenir_condition_vol == "oui":
 
