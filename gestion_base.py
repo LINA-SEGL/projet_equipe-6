@@ -122,3 +122,10 @@ class GestionBase:
         print(df)
 
 
+    def charger_base(self):
+        """
+        Charge et retourne la base de données des profils sous forme de DataFrame.
+        """
+        return pd.read_csv(sel.chemin_fichier)
+
+
