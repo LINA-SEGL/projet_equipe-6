@@ -177,7 +177,7 @@ class Aerodynamique:
                 input=xfoil_input.encode(),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                cwd=r"C:\Users\train\Documents\Cours\ETS\MGA802\projet_sessionE2025"
+                cwd = os.getcwd() # Utilise le dossier actuel automatiquement
             )
             if result.returncode != 0:
                 print("Erreur XFOIL :", result.stderr.decode())
