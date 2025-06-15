@@ -1,3 +1,4 @@
+# ce module sert à etablir une data base avec des profils déjà manipuler et de la manipuler
 import os
 import pandas as pd
 from datetime import datetime
@@ -126,6 +127,40 @@ class GestionBase:
         """
         Charge et retourne la base de données des profils sous forme de DataFrame.
         """
-        return pd.read_csv(sel.chemin_fichier)
+        return pd.read_csv(self.chemin_fichier)
 
+
+    def supprimer_profil(self, nom_profil):
+        """
+        Supprime un profil de la base de données et ses fichiers associers
+        :param nom_profil: Nom du profil à supprimer
+        """
+        df = pd.read_csv(self.chemin_fichier)
+
+        #On verifie si le profil est dans la base
+        filtre = df["nom_profil"] == nom_profil
+        if not filtre.any():
+            print(f"[alerte] Aucun profil nommé '{nom_profil}' trouvé dans la base.")
+            return False
+
+        #recuperation des fichiers à supprimer
+        fichiers_a_supprimer = df.loc[filtre,[   # pour selectionner les bonnes lignes et colonnes
+             "fichier_coord_csv",
+             "fichier_coord_dat",
+             "fichier_polaire_txt",
+             "fichier_polaire_csv"
+        ]].values.flatten() #retourne un tableau NumPy et le rend unidimensionnel
+
+        for chemin in fichiers_a_supprimer:
+            if isinstance(chemin, str) and os.path.exists(chemin):   #pour verifier que la variable chemin est bien un chemin de fichier valide
+                try:
+                    os.remove(chemin)
+                except Exception as e:
+                    print(f"[alerte] Erreur lors de la suppression du fichier '{chemin}': {e}")
+
+
+        #mise à jour de la base
+        df = df[~filtre]
+        df.to_csv(self.chemin_fichier, index=False)
+        print(f"[info] Profil '{nom_profil}' supprimé de la base et fichiers associés supprimés")
 
