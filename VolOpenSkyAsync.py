@@ -1,25 +1,30 @@
 import asyncio
 import requests
 from python_opensky import OpenSky, StatesResponse
+import os
 
-API_KEY_OPENWEATHER = "VOTRE_API_KEY"  # pour ΔISA (optionnel)
+# ⬇ Définissez votre clé ici :
+API_KEY_OPENWEATHER ="955814a8002a56c995edec56283f7caf"
 
-def calcul_delta_isa(lat: float, lon: float, alt_m: float, api_key: str) -> float:
-    """
-    Calcule ΔISA ≈ T_obs(alt) – T_ISA(alt),
-    en approximant T_obs(alt) à partir de T_surface – gradient × alt.
-    """
-    # 1. Récupère la température au sol via OpenWeatherMap
-    resp = requests.get(
-        "https://api.openweathermap.org/data/2.5/weather",
-        params={"lat": lat, "lon": lon, "appid": api_key}
-    )
-    T_sol_K = resp.json()["main"]["temp"]  # en kelvin
-    # 2. Gradient standard (6,5 K / km)
+def calcul_delta_isa(lat: float, lon: float, alt_m: float, api_key: str) -> float | None:
+    url = "https://api.openweathermap.org/data/2.5/weather"
+    params = {"lat": lat, "lon": lon, "appid": api_key}
+    resp = requests.get(url, params=params)
+
+    # Vérifier le statut HTTP
+    if resp.status_code != 200:
+        print(f"[OPENWEATHER ERROR] HTTP {resp.status_code} — {resp.text}")
+        return None
+
+    data = resp.json()
+    #  Vérifier que main.temp existe
+    if "main" not in data or "temp" not in data["main"]:
+        print(f"[OPENWEATHER ERROR] réponse inattendue : {data}")
+        return None
+
+    T_sol_K = data["main"]["temp"]
     lapse = 0.0065  # K/m
-    # 3. Température observée approximée à l'altitude
     T_obs = T_sol_K - lapse * alt_m
-    # 4. Température ISA à l'altitude : 288,15 K – lapse × alt
     T_isa = 288.15 - lapse * alt_m
     return T_obs - T_isa
 
@@ -43,10 +48,7 @@ def afficher_details(s):
     vitesse_son = (gamma * R * T_std) ** 0.5
     mach = (s.velocity or 0) / vitesse_son
     # ΔISA (optionnel)
-    try:
-        delta = calcul_delta_isa(lat, lon, alt, API_KEY_OPENWEATHER)
-    except Exception:
-        delta = None
+    delta = calcul_delta_isa(lat, lon, alt, API_KEY_OPENWEATHER)
 
     print("\n--- Détails du vol sélectionné ---")
     print(f"Callsign       : {(s.callsign or 'N/A').strip()}")
@@ -63,7 +65,7 @@ def afficher_details(s):
         print("ΔISA           : non calculé")
 
 def main():
-    vols = asyncio.run(fetch_vols(limit=100))
+    vols = asyncio.run(fetch_vols(limit=2000))
     afficher_liste(vols)
     choix = int(input("\nSélectionnez un vol (numéro) : ")) - 1
     if 0 <= choix < len(vols):
