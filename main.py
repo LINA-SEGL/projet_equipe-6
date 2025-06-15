@@ -1,6 +1,7 @@
 from Airfoil import *
 from aerodynamique import *
 from ConditionVol import *
+from VolOpenSkyAsync import *
 
 def demande_profil():
 
@@ -235,7 +236,7 @@ if __name__ == "__main__":
             # reynolds = int(input("\nRentrez un nombre de Reynolds: "))
 
             # Générer la polaire avec XFOIL
-            aero.run_xfoil(f"{nom_profil}_coord_profil.dat", reynolds, mach, alpha_start=-15, alpha_end=15,
+            aero.telecharger_et_sauvegarder_txtrun_xfoil(f"{nom_profil}_coord_profil.dat", reynolds, mach, alpha_start=-15, alpha_end=15,
                            alpha_step=1, output_file=f"{nom_profil}_coef_aero.txt")
             coef_aero_generes = f"{nom_profil}_coef_aero.txt"
             data = aero.lire_txt_et_convertir_dataframe(coef_aero_generes)
