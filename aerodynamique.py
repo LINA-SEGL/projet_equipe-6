@@ -118,14 +118,14 @@ class Aerodynamique:
         except Exception as e:
             print(f" Erreur : {e}")
 
-    def telecharger_et_sauvegarder_txt(self, nom_fichier="polar_airfoil.txt"):
+    def telecharger_et_sauvegarder_txt(self, nom_fichier="airfoil_coef_aero.txt", re = 50000):
         """
         Télécharge les performances depuis AirfoilTools (format .txt) et les enregistre.
 
         Args:
             nom_fichier (str): Nom du fichier de sortie.
         """
-        url_txt = f"http://airfoiltools.com/polar/text?polar=xf-{self.nom}-50000.txt"
+        url_txt = f"http://airfoiltools.com/polar/text?polar=xf-{self.nom}-{re}.txt"
         #xf - naca4412 - il - 50000.txt
         response = requests.get(url_txt)
 
@@ -135,7 +135,7 @@ class Aerodynamique:
         with open(nom_fichier, "w", encoding="utf-8") as fichier:
             fichier.write(response.text)
 
-        print(f"Performances aérodynamiques enregistrés dans le fichier: {nom_fichier}")
+        print(f"Performances aérodynamiques enregistrés dans le fichier: {nom_fichier}.")
 
     def lire_txt_et_convertir_dataframe(self, nom_fichier_txt):
         """
@@ -201,7 +201,7 @@ class Aerodynamique:
         plt.tight_layout()
         plt.show()
 
-    def run_xfoil(self, dat_file, reynolds, mach, alpha_start=-5, alpha_end=15, alpha_step=1, output_file="polar_output.txt"):
+    def telecharger_et_sauvegarder_txtrun_xfoil(self, dat_file, reynolds, mach, alpha_start=-5, alpha_end=15, alpha_step=1, output_file="polar_output.txt"):
         """
         Exécute XFOIL issu d'un fichier .dat et enregistre les résultats dans un fichier texte.
 
