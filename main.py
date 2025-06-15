@@ -2,7 +2,6 @@ from Airfoil import *
 from aerodynamique import *
 from ConditionVol import *
 
-
 # profil = Airfoil.depuis_airfoiltools("naca2412-il")
 # pourcentage = float(input("Pourcentage de bruit (%): "))
 # profil.tracer_avec_bruit(pourcentage_bruit=pourcentage)
@@ -79,6 +78,20 @@ from VolOpenSkyAsync import charger_compagnies_depuis_csv
 #         v["condition_vol"].afficher()
 #         print()
 
+def demande_profil():
+
+    nom_profil = input("\nEntrez le nom du profil NACA (format : naca2412) : ").strip().lower()
+    nom_profil = f"{nom_profil}-il"
+
+    #Vérifier si le profil est déjà dans la base de données!
+    #sinon:
+    profil_obj = Airfoil.depuis_airfoiltools(nom_profil)
+
+    # Sauvegarde des coordonnées
+    profil_obj.sauvegarder_coordonnees(f"{nom_profil}_coord_profil.csv")
+
+    print(f"\nLes coordonnées du profil ont été enregistrés dans le fichier: {nom_profil}_coord_profil.csv")
+    return profil_obj, nom_profil
 
 if __name__ == "__main__":
 
@@ -95,26 +108,17 @@ if __name__ == "__main__":
             print("Réponse invalide. Veuillez taper 'importer' ou 'générer'.\n")
 
     """
-            ---DANS LE CAS D'UNE IMPORTATION
+    DANS LE CAS D'UNE IMPORTATION.
     """
-
     if generation == "importer":
 
-        nom_profil = input("\nEntrez le nom exact du profil NACA : (format : naca2412) : ").strip().lower()
-        nom_profil = f"{nom_profil}-il"
-
-        profil = Airfoil.depuis_airfoiltools(nom_profil)
-
-        # Sauvegarde des coordonnées
-        profil.sauvegarder_coordonnees(f"{nom_profil}_coord_profil.csv")
-
-        print(f"\nLes coordonnées du profil ont été enregistrés dans le fichier: {nom_profil}_coord_profil.csv")
+        profil_obj_import, nom_profil = demande_profil()
 
         tracer = input("\nVoulez-vous afficher le profil? (Oui / Non): ").strip().lower()
 
         if tracer == "oui":
             # Affichage graphique
-            profil.tracer_contour(nom_profil)
+            profil_obj_import.tracer_contour(nom_profil)
         elif tracer == "non":
             pass
         else:
@@ -135,7 +139,13 @@ if __name__ == "__main__":
 
             # Stocker dans l’objet et tracer
             aero.donnees = df
-            aero.tracer_polaires_depuis_txt()
+
+            tracer_polaire = input("\nVoulez-vous afficher les courbes aérodynamiques de votre profil? (Oui / Non): ").strip().lower()
+
+            if tracer_polaire == "oui":
+                aero.tracer_polaires_depuis_txt()
+            else:
+                pass
 
             perfo_pour_finesse = "importer"
 
@@ -146,17 +156,17 @@ if __name__ == "__main__":
             pass
 
         """
-            ---DANS LE CAS D'UNE CRÉATION MANUELLE
+        DANS LE CAS D'UNE CRÉATION MANUELLE.
         """
-
     elif generation == "générer":
 
         # Création d'un profil manuel:
         while True:
             #demande un nom au fichier/profil
-            nom_profil_manuel = input("\nEntrez le nom de votre profil NACA: ").strip().lower()
-            #Boucle pour vérifier si le fichier existe dèjà
-            verif_fichier = f"{nom_profil_manuel}_coord_profil.csv"
+            nom_profil = input("\nEntrez le nom de votre profil NACA: ").strip().lower()
+            nom_profil = f"{nom_profil}-il"
+            #Boucle pour vérifier si le fichier existe déjà
+            verif_fichier = f"{nom_profil}_coord_profil.csv"
 
             if os.path.exists(verif_fichier):
                 print(f"Le fichier '{verif_fichier}' existe déjà.")
@@ -171,11 +181,11 @@ if __name__ == "__main__":
             else:
                 break
 
-        profil_manuel = Airfoil(nom_profil_manuel, [])
+        profil_manuel = Airfoil(nom_profil, [])
         x_up, y_up, x_low, y_low, x, c = profil_manuel.naca4_profil()
 
-        profil_manuel.enregistrer_profil_manuel_csv(x_up, y_up, x_low, y_low, nom_fichier=f"{nom_profil_manuel}_coord_profil.csv")
-        profil_manuel.enregistrer_profil_format_dat(x_up, y_up, x_low, y_low, c, nom_fichier=f"{nom_profil_manuel}_coord_profil.dat")
+        profil_manuel.enregistrer_profil_manuel_csv(x_up, y_up, x_low, y_low, nom_fichier=f"{nom_profil}_coord_profil.csv")
+        profil_manuel.enregistrer_profil_format_dat(x_up, y_up, x_low, y_low, c, nom_fichier=f"{nom_profil}_coord_profil.dat")
 
         tracer = input("\nVoulez-vous afficher le profil? (Oui / Non): ").strip().lower()
 
@@ -190,14 +200,14 @@ if __name__ == "__main__":
         lancement_xfoil = input("\nVoulez-vous calculer les performances de votre profil? (Oui / Non): ").strip().lower()
 
         if lancement_xfoil == "oui":
-            aero = Aerodynamique(nom_profil_manuel)
+            aero = Aerodynamique(nom_profil)
 
             mach = float(input("\nRentrez une valeur de Mach (0 à 0.7): "))
             reynolds = int(input("\nRentrez un nombre de Reynolds: "))
 
             # Générer la polaire avec XFOIL
-            aero.run_xfoil(f"{nom_profil_manuel}_coord_profil.dat", reynolds, mach, alpha_start=-5, alpha_end=15, alpha_step=1, output_file=f"{nom_profil_manuel}_coef_aero.txt")
-            coef_aero_generes = f"{nom_profil_manuel}_coef_aero.txt"
+            aero.run_xfoil(f"{nom_profil}_coord_profil.dat", reynolds, mach, alpha_start=-15, alpha_end=15, alpha_step=1, output_file=f"{nom_profil}_coef_aero.txt")
+            coef_aero_generes = f"{nom_profil}_coef_aero.txt"
             data = aero.lire_txt_et_convertir_dataframe(coef_aero_generes)
             aero.donnees = data
             aero.tracer_polaires_depuis_txt()
@@ -214,7 +224,7 @@ if __name__ == "__main__":
 
     if calcul_finesse == "oui":
         if perfo_pour_finesse == "générer":
-            finesse, finesse_max = aero.calculer_finesse(f"{nom_profil_manuel}_coef_aero.txt")
+            finesse, finesse_max = aero.calculer_finesse(f"{nom_profil}_coef_aero.txt")
 
         elif perfo_pour_finesse == "importer":
             finesse, finesse_max = aero.calculer_finesse(f"polar_{nom_profil}.txt")
@@ -227,37 +237,72 @@ if __name__ == "__main__":
     else:
         pass
 
+    obtenir_vol = input("\nVoulez-vous choisir un vol existant? (Oui / Non): ").strip().lower()
 
-    """
-        CHOISIR UN VOL EXISTANT:
-    """
-    obtenir_condition_vol = input("\nVoulez-vous choisir un vol existant? (Oui / Non): ").strip().lower()
-
-    if obtenir_condition_vol == "oui":
+    if obtenir_vol == "oui":
         pass
-    elif obtenir_condition_vol == "non":
+    elif obtenir_vol == "non":
         pass
     else:
         pass
 
-    """
-        CONDITION DE VOL
-    """
-
     obtenir_conditions_vol = input("\nVoulez-vous obtenir les conditions de vol? (Oui / Non): ").strip().lower()
 
-    if obtenir_condition_vol == "oui":
+    if obtenir_conditions_vol == "oui":
 
-        altitude = int(input("\nAltitude (en mètres):"))
+        altitude = float(input("\nAltitude (en mètres):"))
         mach = float(input("Nombre de mach:"))
-        angle = int(input("Angle d'attaque (en °):"))
+        angle = float(input("Angle d'attaque (en °):"))
 
         conditions_vol = ConditionVol(altitude, mach, angle)
         conditions_vol.afficher()
 
-    elif obtenir_condition_vol == "non":
+        """
+        Il est proposé de croiser le profil avec les conditions de vol obtenues.
+        """
+        calculer_perfo_vol = input("\nVoulez-vous obtenir les performances de votre profil selon les conditions de vol choisies? (Oui / Non): ").strip().lower()
+
+        if calculer_perfo_vol == "oui":
+            #Le programme lance XFoil avec les données du profil et les conditions atmosphériques du vol.
+            aero = Aerodynamique(nom_profil)
+
+            # mach = float(input("\nRentrez une valeur de Mach (0 à 0.7): "))
+            # reynolds = int(input("\nRentrez un nombre de Reynolds: "))
+
+            # Générer la polaire avec XFOIL
+            aero.run_xfoil(f"{nom_profil}_coord_profil.dat", reynolds, mach, alpha_start=-15, alpha_end=15,
+                           alpha_step=1, output_file=f"{nom_profil}_coef_aero.txt")
+            coef_aero_generes = f"{nom_profil}_coef_aero.txt"
+            data = aero.lire_txt_et_convertir_dataframe(coef_aero_generes)
+            aero.donnees = data
+            aero.tracer_polaires_depuis_txt()
+
+            perfo_pour_finesse = "générer"
+
+        elif calculer_perfo_vol == "non":
+            pass
+
+    elif obtenir_conditions_vol == "non":
         pass
 
+    comparaison = input("\nVoulez-vous comparer deux profils d'aile? (Oui / Non): ").strip().lower()
+
+    if comparaison == "oui":
+
+        print("\nCHOIX 1:")
+        profil_1_obj, profil_1_nom = demande_profil()
+        print("\nCHOIX 2:")
+        profil_2_obj, profil_2_nom = demande_profil()
+
+        p_1 = Airfoil.depuis_airfoiltools(profil_1_nom)
+        p_2 = Airfoil.depuis_airfoiltools(profil_2_nom)
+
+        p_1.tracer_comparaison(p_2)
+
+    elif comparaison == "non":
+        pass
+    else:
+        pass
 
     print("\n---- Fin du programme ----\n")
 

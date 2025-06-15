@@ -55,7 +55,7 @@ class Airfoil:
             except (IndexError, ValueError):
                 continue  # ignorer les lignes mal formatées
 
-        return cls(nom=f"NACA{code_naca}", coordonnees=coordonnees)
+        return cls(nom=f"{code_naca}", coordonnees=coordonnees)
 
     def sauvegarder_coordonnees(self, nom_fichier="coordonnees.csv"):
         """
@@ -207,6 +207,31 @@ class Airfoil:
                 x = x_low[i] / c
                 y = y_low[i] / c
                 file.write(f"{x:.6f} {y:.6f}\n")
+
+    def tracer_comparaison(self, profil_2):
+        """
+        Trace le contour du profil courant et d’un autre profil sur un même graphe.
+
+        Args:
+            profil_2: Autre profil à comparer avec le profil courant.
+            afficher_legend (bool): Si True, affiche la légende avec les noms des profils.
+        """
+        x1, y1 = zip(*self.coordonnees)
+        x2, y2 = zip(*profil_2.coordonnees)
+
+        nom_1 = self.nom
+        nom_2 = profil_2.nom
+
+        plt.figure(figsize=(8, 4))
+        plt.plot(x1, y1, label=self.nom, linewidth=2)
+        plt.plot(x2, y2, label=profil_2.nom, linewidth=2)
+
+        plt.title(f"Comparaison : {nom_1} vs {nom_2}")
+        plt.xlabel("Corde")
+        plt.ylabel("épaisseur")
+        plt.axis("equal")
+        plt.grid(True)
+        plt.show()
 
     def tracer_avec_bruit(self, amplitude=0.01, mode="gaussien", zone=(0.0, 0.3)):
         """
