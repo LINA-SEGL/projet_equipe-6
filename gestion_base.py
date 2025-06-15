@@ -164,3 +164,15 @@ class GestionBase:
         df.to_csv(self.chemin_fichier, index=False)
         print(f"[info] Profil '{nom_profil}' supprimé de la base et fichiers associés supprimés")
 
+
+    #rechercher si un profil existe deja
+
+    def profil_existe(self, nom_profil):
+        """
+        Vérifie si un profil existe deja dans la base de données
+        :param nom_profil: Nom du profil a rechercher
+        :return: True s'il est present falsie sinon
+        """
+
+        df = pd.read_csv(self.chemin_fichier)
+        return urn nom_profil in df ["nom_profil"].values
