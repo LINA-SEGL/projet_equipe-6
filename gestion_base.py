@@ -175,4 +175,4 @@ class GestionBase:
         """
 
         df = pd.read_csv(self.chemin_fichier)
-        return urn nom_profil in df ["nom_profil"].values
+        return nom_profil in df ["nom_profil"].values
