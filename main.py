@@ -1,7 +1,7 @@
 from Airfoil import *
 from aerodynamique import *
 from ConditionVol import *
-
+from gestion_base import *
 
 # profil = Airfoil.depuis_airfoiltools("naca2412-il")
 # pourcentage = float(input("Pourcentage de bruit (%): "))
@@ -84,6 +84,9 @@ if __name__ == "__main__":
 
     API_KEY = "c6bf5947268d141c6ca08f54c7d65b63"
 
+    #Initialisation de la basse de données des profils
+    gestion = GestionBase()
+
     print("\n---- Début du programme Airfoil ----\n")
 
     #On demande à l'utilisateur s'il veut créer ou importer un profil
@@ -103,9 +106,8 @@ if __name__ == "__main__":
         nom_profil = input("\nEntrez le nom exact du profil NACA : (format : naca2412) : ").strip().lower()
         nom_profil = f"{nom_profil}-il"
 
+        # Récupération du profil et Sauvegarde des coordonnées
         profil = Airfoil.depuis_airfoiltools(nom_profil)
-
-        # Sauvegarde des coordonnées
         profil.sauvegarder_coordonnees(f"{nom_profil}_coord_profil.csv")
 
         print(f"\nLes coordonnées du profil ont été enregistrés dans le fichier: {nom_profil}_coord_profil.csv")
@@ -144,6 +146,23 @@ if __name__ == "__main__":
 
         else:
             pass
+
+            # chemins des fichiers des fichiers crées
+            chemin_csv = f"{nom_profil}_coord_profil.csv"
+            chemin_dat = None  # pas utile dans le cas du profil importé
+            chemin_txt = f"polar_{nom_profil}.txt" if recup_coef_aero == "oui" else None
+            chemin_pol_csv = None
+
+            # on enregistre le profil dans la base et on deplace les fichiers
+            gestion.ajouter_profil(
+                nom_profil,
+                "importé",
+                chemin_csv,
+                None,
+                chemin_txt,
+                None
+
+            )
 
         """
             ---DANS LE CAS D'UNE CRÉATION MANUELLE
@@ -209,6 +228,17 @@ if __name__ == "__main__":
 
         else:
             pass
+
+        # chemins des fichiers des fichiers crées
+
+        chemin_csv = f"{nom_profil_manuel}_coord_profil.csv"
+        chemin_dat = f"{nom_profil_manuel}_coord_profil.dat"
+        chemin_txt = f"{nom_profil_manuel}_coef_aero.txt" if lancement_xfoil == "oui" else None
+        chemin_pol_csv = None
+
+        # on enregistre le profil dans la base et on deplace les fichiers
+        gestion.ajouter_profil(nom_profil_manuel, "manuel",
+                               chemin_csv, chemin_dat, chemin_txt, chemin_pol_csv)
 
     calcul_finesse = input("\nVoulez-vous calculer la finesse maximale? (Oui / Non): ").strip().lower()
 
