@@ -235,7 +235,7 @@ if __name__ == "__main__":
             # mach = float(input("\nRentrez une valeur de Mach (0 à 0.7): "))
             # reynolds = int(input("\nRentrez un nombre de Reynolds: "))
 
-            # Générer la polaire avec XFOIL
+            # Générer la polaire avec XFOIL.
             aero.telecharger_et_sauvegarder_txtrun_xfoil(f"{nom_profil}_coord_profil.dat", reynolds, mach, alpha_start=-15, alpha_end=15,
                            alpha_step=1, output_file=f"{nom_profil}_coef_aero.txt")
             coef_aero_generes = f"{nom_profil}_coef_aero.txt"
