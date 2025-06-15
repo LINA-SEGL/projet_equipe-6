@@ -7,14 +7,33 @@ import subprocess
 import os
 
 class Aerodynamique:
+    """
+    Classe pour analyser les performances aérodynamiques d’un profil via AirfoilTools ou XFOIL.
 
+    Attributes:
+       nom (str): Nom du profil (ex: 'naca2414-il').
+       url_csv (str): URL d’accès au fichier CSV des polaires.
+       donnees (pd.DataFrame): Données aérodynamiques extraites ou téléchargées.
+    """
     def __init__(self, nom):
+        """
+        Initialise une instance de la classe avec un nom de profil.
+
+        Args:
+            nom (str): Nom du profil AirfoilTools (ex: 'naca4412-il').
+        """
         self.nom = nom  # ex: n2414-il
         self.url_csv = f"http://airfoiltools.com/polar/csv?polar=xf-{self.nom}-50000.csv"
-       # xf - naca4412 - il - 50000.csv
+        # xf - naca4412 - il - 50000.csv
         self.donnees = None
 
     def recuperer_donnees_csv(self):
+        """
+        Télécharge les données polaires (CSV) depuis AirfoilTools et les stocke dans un DataFrame.
+
+        Raises:
+            Exception: Si l’URL est invalide ou inaccessible.
+        """
         response = requests.get(self.url_csv)
         if response.status_code != 200:
             raise Exception(f"Erreur d'accès au fichier CSV : {self.url_csv}")
@@ -25,6 +44,12 @@ class Aerodynamique:
         print(" Données CSV récupérées.")
 
     def sauvegarder_donnees(self, nom_fichier="polar_airfoil.csv"):
+        """
+        Sauvegarde les données polaires dans un fichier CSV.
+
+        Args:
+            nom_fichier (str): Nom du fichier de sortie.
+        """
         if self.donnees is not None:
             with open(nom_fichier, "w") as fichier:
                 fichier.write(",".join(self.donnees.columns) + "\n")  # ligne d'en-tête
@@ -36,6 +61,12 @@ class Aerodynamique:
             print(" Aucune donnée à sauvegarder.")
 
     def tracer_depuis_csv(self, nom_fichier):
+        """
+        Lit un fichier CSV brut et trace les courbes Cl, Cd et Cm en fonction de l’angle d’attaque.
+
+        Args:
+            nom_fichier (str): Nom du fichier CSV brut.
+        """
         try:
             # Lire le fichier brut ligne par ligne
             with open(nom_fichier, "r", encoding="utf-8") as f:
@@ -88,7 +119,12 @@ class Aerodynamique:
             print(f" Erreur : {e}")
 
     def telecharger_et_sauvegarder_txt(self, nom_fichier="polar_airfoil.txt"):
+        """
+        Télécharge les performances depuis AirfoilTools (format .txt) et les enregistre.
 
+        Args:
+            nom_fichier (str): Nom du fichier de sortie.
+        """
         url_txt = f"http://airfoiltools.com/polar/text?polar=xf-{self.nom}-50000.txt"
         #xf - naca4412 - il - 50000.txt
         response = requests.get(url_txt)
@@ -102,6 +138,15 @@ class Aerodynamique:
         print(f"Performances aérodynamiques enregistrés dans le fichier: {nom_fichier}")
 
     def lire_txt_et_convertir_dataframe(self, nom_fichier_txt):
+        """
+        Convertit un fichier TXT brut AirfoilTools en DataFrame.
+
+        Args:
+            nom_fichier_txt (str): Fichier .txt contenant les données.
+
+        Returns:
+            pd.DataFrame: Tableau structuré des performances.
+        """
         lignes = []
         commencer = False
 
@@ -127,6 +172,9 @@ class Aerodynamique:
         return df
 
     def tracer_polaires_depuis_txt(self):
+        """
+        Trace les courbes Cl, Cd et Cm à partir des données TXT déjà chargées.
+        """
         if self.donnees is None:
             print("Aucune donnée à tracer.")
             return
@@ -154,6 +202,18 @@ class Aerodynamique:
         plt.show()
 
     def run_xfoil(self, dat_file, reynolds, mach, alpha_start=-5, alpha_end=15, alpha_step=1, output_file="polar_output.txt"):
+        """
+        Exécute XFOIL issu d'un fichier .dat et enregistre les résultats dans un fichier texte.
+
+        Args:
+            dat_file (str): Chemin vers le fichier .dat du profil.
+            reynolds (float): Nombre de Reynolds.
+            mach (float): Nombre de Mach.
+            alpha_start (float): Angle de départ (°).
+            alpha_end (float): Angle de fin (°).
+            alpha_step (float): Incrément d’angle (°).
+            output_file (str): Fichier de sortie des résultats.
+        """
         xfoil_path = os.path.join(os.getcwd(), "xfoil.exe")
 
         # Script pour XFOIL
@@ -187,7 +247,15 @@ class Aerodynamique:
             print("XFOIL introuvable. Vérifie le chemin ou l'existence de xfoil.exe.")
 
     def calculer_finesse(self, nom_fichier):
+        """
+        Calcule la finesse aérodynamique maximale à partir d’un fichier texte.
 
+        Args:
+            nom_fichier (str): Chemin vers le fichier de résultats TXT.
+
+        Returns:
+            tuple: (liste des finesses, finesse maximale)
+        """
         data = self.lire_txt_et_convertir_dataframe(nom_fichier)
 
         finesse = (data["CL"] / data["CD"]).tolist()
