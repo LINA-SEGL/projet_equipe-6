@@ -2,10 +2,13 @@
 import requests
 import matplotlib.pyplot as plt
 import numpy as np
+import csv
+
 ## Class Airfoil va représenter un profil NACA avec ses cordonnées
+
 class Airfoil:
     def __init__(self, nom, coordonnees):
-        self.nom = nom # Nom de profile
+        self.nom = nom # Nom de profil
         self.coordonnees = coordonnees # une liste de tuples (x, y) représentant les points du contour de l’aile
 
     @classmethod
@@ -34,15 +37,15 @@ class Airfoil:
    # def afficher_resume(self):
        # print(f"Profil : {self._nom} | Nombre de points : {len(self.coordonnees)}")
 
-    #  Stocker les coordonnées
+    # Stocker les coordonnées
     def sauvegarder_coordonnees(self, nom_fichier="coordonnees.csv"):
         with open(nom_fichier, "w") as fichier:
             fichier.write("x,y\n")
             for x, y in self.coordonnees:
                 fichier.write(f"{x},{y}\n")
 
-    # Tracer le contoour
-    def tracer_conteur(self):
+    # Tracer le contour
+    def tracer_contour(self):
         x_vals = [point[0] for point in self.coordonnees]
         y_vals = [point[1] for point in self.coordonnees]
 
@@ -54,6 +57,112 @@ class Airfoil:
         plt.axis("equal")  # pour que l’échelle soit respectée
         plt.grid(True)
         plt.show()
+
+    """
+        ----  Fonctions de classe pour tracer un profil (Airfoil) manuellement ----
+    """
+
+    # Génération Manuelle d'un Profil
+    def naca4_profil(self):
+        """
+        Génère un profil NACA 4 chiffres (Formules issues de Wikipédia)
+
+        m : cambrure maximale (ex: 0.02 pour 2%)
+        p : position de cambrure maximale (ex: 0.4 pour 40%)
+        t : épaisseur maximale (ex: 0.12 pour 12%)
+        c : corde (longueur, par défaut 1.0)
+        n_points : nombre de points (demi-profil)
+
+        Retourne : arrays x, y_supérieur, y_inférieur
+        """
+        m = float(input("Indiquer la cambrure du profil (entre 0 et 1): "))
+        p = float(input("Indiquer la position de la cambrure maximale du profil (entre 0 et 1): "))
+        t = float(input("Indiquer l'épaisseur maximale du profil (entre 0 et 1): "))
+        c = float(input("Indiquer la longueur de corde du profil: "))
+        n_points = int(input("Indiquer le nombre de points souhaité pour le tracé du demi-profil: "))
+
+        # Discrétisation le long de x (on utilise un espacement cosinus pour affiner vers le bord d'attaque)
+        beta = np.linspace(0.0, np.pi, n_points)
+        x = c * (0.5 * (1 - np.cos(beta)))
+
+        # Calcul de l'épaisseur relative yt(x)
+        yt = (t / 0.2) * c * (0.2969 * np.sqrt(x / c)
+                              - 0.1260 * (x / c)
+                              - 0.3516 * (x / c) ** 2
+                              + 0.2843 * (x / c) ** 3
+                              - 0.1015 * (x / c) ** 4)
+
+        # Calcul de la cambrure yc(x) et de dyc/dx
+        yc = np.zeros_like(x)
+        dyc_dx = np.zeros_like(x)
+        coordonnees = []
+        for i in range(len(x)):
+            xi = x[i] / c
+            if xi < p:  #Coordonnées profil sans cambrure
+                yc[i] = (m / p ** 2) * (2 * p * xi - xi ** 2) * c
+                dyc_dx[i] = (2 * m / p ** 2) * (p - xi)
+            else:   #Coordonnées profil après la cambrure
+                yc[i] = (m / (1 - p) ** 2) * (1 - 2 * p + 2 * p * xi - xi ** 2) * c
+                dyc_dx[i] = (2 * m / (1 - p) ** 2) * (p - xi)
+
+        # Calcul de theta(x)
+        theta = np.arctan(dyc_dx)
+
+        # Coordonnées des surfaces supérieure et inférieure
+        x_upper = x - yt * np.sin(theta)
+        y_upper = yc + yt * np.cos(theta)
+
+        x_lower = x + yt * np.sin(theta)
+        y_lower = yc - yt * np.cos(theta)
+
+        self.enregistrer_profil_manuel_csv(x_upper, y_upper, x_lower, y_lower, x, m, p, t, c, self.nom)
+        self.tracer_profil_manuel(x_upper, y_upper, x_lower, y_lower)
+
+        return x_upper, y_upper, x_lower, y_lower, x
+
+    #Fonction pour tracer le profil manuel
+    def tracer_profil_manuel(self, x_upper, y_upper, x_lower, y_lower):
+        plt.plot(x_upper, y_upper, marker='o', linewidth=1)
+        plt.plot(x_lower, y_lower, marker='o', linewidth=1)
+        plt.title(f"Profil aérodynamique {self.nom}")
+        plt.xlabel("x")
+        plt.ylabel("y")
+        plt.axis("equal")  # pour que l’échelle soit respectée
+        plt.grid(True)
+        plt.show()
+
+    #Fonction pour enregistrer les données du profil manuel dans un fichier csv
+    def enregistrer_profil_manuel_csv(self, x_up, y_up, x_low, y_low, x, m, p, t, c, nom_fichier="profil_naca.csv"):
+        """
+        Enregistre les coordonnées du profil et ses propriétés dans un fichier CSV.
+
+        Paramètres :
+            x_up, y_up : coordonnées du bord supérieur
+            x_low, y_low : coordonnées du bord inférieur
+            x : coordonnées x communes
+            m, p, t, c : paramètres NACA
+            nom_fichier : nom du fichier de sortie
+        """
+        with open(nom_fichier, mode='w', newline='') as file:
+            writer = csv.writer(file)
+
+            # Écriture des propriétés du profil
+            writer.writerow(["Nom:", self.nom])
+            writer.writerow(["Cambrure (m):", m])
+            writer.writerow(["Position de cambrure (p):", p])
+            writer.writerow(["Epaisseur (t):", t])
+            writer.writerow(["Longueur de corde (c):", c])
+            writer.writerow([])  # ligne vide
+            writer.writerow(["x", "y_superieur", "y_inferieur"])
+
+            for i in range(len(x)):
+                writer.writerow([x_up[i], x_low[i], y_up[i], y_low[i]])
+
+        print(f"Profil enregistré dans {nom_fichier}")
+
+    """
+        ---- Fin des fonctions de classe pour tracer un profil (Airfoil) manuellement ---
+    """
 
     def tracer_avec_bruit(self, pourcentage_bruit=1, mode="gaussien"):
         from Airfoil import BruitProfil  # à enlever si BruitProfil est déjà dans le même fichier
