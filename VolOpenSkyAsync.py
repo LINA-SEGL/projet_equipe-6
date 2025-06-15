@@ -74,11 +74,3 @@ def main():
 if __name__ == "__main__":
     main()
 
-    for _, row in df.iterrows():
-        icao = str(row.get("icao_code", "")).strip().upper()
-        nom = str(row.get("name", "")).strip()
-
-        if icao and icao != "nan":
-            compagnies[icao] = (nom, "Pays inconnu")  # Le pays n'est pas dispo ici
-
-    return compagnies
