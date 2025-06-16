@@ -9,7 +9,6 @@ import requests
 
 def demande_profil():
 
-
     nom_profil = input("\nEntrez le nom du profil NACA (format : naca2412) : ").strip().lower()
     nom_profil = f"{nom_profil}-il"
 
@@ -61,7 +60,6 @@ if __name__ == "__main__":
         print(f"\nLes coordonnées du profil ont été enregistrés dans le fichier: {nom_profil}_coord_profil.csv")
 
         profil_obj_import, nom_profil = demande_profil()
-
 
         tracer = input("\nVoulez-vous afficher le profil? (Oui / Non): ").strip().lower()
 
@@ -151,12 +149,12 @@ if __name__ == "__main__":
             else:
                 break
 
-        profil_manuel = Airfoil(nom_profil_manuel, [])
+        profil_manuel = Airfoil(nom_profil, [])
         x_up, y_up, x_low, y_low, x, c = profil_manuel.naca4_profil()
 
 
-        chemin_csv = profil_manuel.enregistrer_profil_manuel_csv(x_up, y_up, x_low, y_low, nom_fichier=f"{nom_profil_manuel}_coord_profil.csv")
-        chemin_dat = profil_manuel.enregistrer_profil_format_dat(x_up, y_up, x_low, y_low, c, nom_fichier=f"{nom_profil_manuel}_coord_profil.dat")
+        chemin_csv = profil_manuel.enregistrer_profil_manuel_csv(x_up, y_up, x_low, y_low, nom_fichier=f"{nom_profil}_coord_profil.csv")
+        chemin_dat = profil_manuel.enregistrer_profil_format_dat(x_up, y_up, x_low, y_low, c, nom_fichier=f"{nom_profil}_coord_profil.dat")
 
 
         while True:
@@ -188,30 +186,24 @@ if __name__ == "__main__":
             reynolds = int(input("\nRentrez un nombre de Reynolds: "))
 
             # Générer la polaire avec XFOIL
-
-            aero.run_xfoil(f"{nom_profil_manuel}_coord_profil.dat", reynolds, mach, alpha_start=-5, alpha_end=15, alpha_step=1, output_file=f"{nom_profil_manuel}_coef_aero.txt")
-            coef_aero_generes = f"{nom_profil_manuel}_coef_aero.txt"
-            chemin_txt = os.path.join("data", coef_aero_generes)
-
-            data = aero.lire_txt_et_convertir_dataframe(coef_aero_generes)
+            output_file = os.path.join("data", f"{nom_profil}_coef_aero.txt")
+            aero.run_xfoil(f"{nom_profil}_coord_profil.dat", reynolds, mach, alpha_start=-5, alpha_end=15, alpha_step=1,
+                           output_file=output_file)
+            chemin_txt = output_file
+            data = aero.lire_txt_et_convertir_dataframe(chemin_txt)
             aero.donnees = data
             aero.tracer_polaires_depuis_txt()
 
             perfo_pour_finesse = "générer"
 
         elif lancement_xfoil == "non":
+            chemint_txt = None
             pass
-
-        else:
-            chemin_txt = None
-
-            pass
-
 
         chemin_pol_csv = None
 
         # on enregistre le profil dans la base et on deplace les fichiers
-        gestion.ajouter_profil(nom_profil_manuel, "manuel",
+        gestion.ajouter_profil(nom_profil, "manuel",
                                chemin_csv, chemin_dat, chemin_txt, chemin_pol_csv)
 
 
@@ -222,15 +214,17 @@ if __name__ == "__main__":
         else:
             print("Réponse invalide. Veuillez écrire 'Oui' ou 'Non'.")
 
-
     if calcul_finesse == "oui":
         if perfo_pour_finesse == "générer":
             finesse, finesse_max = aero.calculer_finesse(f"{nom_profil}_coef_aero.txt")
 
-        elif perfo_pour_finesse == "importer":
-            finesse, finesse_max = aero.calculer_finesse(f"{nom_profil}_coef_aero.txt")
+        #verifie que le chemin du fichier existe bien
+        if chemin_txt is None or not os.path.exists(chemin_txt):
+            print("\nAucun fichier polaire trouvé ; impossible de calculer la finesse")
 
-        print(f"\nLa finesse maximale de votre profil est : {finesse_max}")
+        else:
+            finesse, finesse_max = aero.calculer_finesse(chemin_txt)
+            print(f"\nLa finesse maximale de votre profil est : {finesse_max}")
 
     elif calcul_finesse == "non":
         pass
@@ -335,13 +329,13 @@ if __name__ == "__main__":
                     alpha_start=-15,
                     alpha_end=15,
                     alpha_step=1,
-                    output_file=f"{nom_profil}_coef_aero_{i}.txt"
+                    output_file=os.path.join("data", f"{nom_profil}_coef_aero.txt")
                 )
 
                 # lecture + tracé…
 
                 #  Lecture et tracé
-                df = aero.lire_txt_et_convertir_dataframe(f"{nom_profil}_coef_aero_{i}.txt")
+                df = aero.lire_txt_et_convertir_dataframe(chemin_txt)
                 aero.donnees = df
                 aero.tracer_polaires_depuis_txt()
 

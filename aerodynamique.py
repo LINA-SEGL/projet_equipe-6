@@ -160,7 +160,7 @@ class Aerodynamique:
         """
         lignes = []
         commencer = False
-        chemin = os.path.join(Dossier_data, nom_fichier_txt)
+        chemin = nom_fichier_txt
 
         with open(chemin, "r", encoding="utf-8") as f:
             for ligne in f:

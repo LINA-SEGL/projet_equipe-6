@@ -67,7 +67,7 @@ class Airfoil:
         chemin = os.path.join(Dossier_data, nom_fichier)
         with open(chemin, "w") as fichier:
 
-        """
+         """
         Enregistre les coordonnées du profil dans un fichier CSV.
 
         Args:
