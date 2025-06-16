@@ -84,16 +84,14 @@ if __name__ == "__main__":
 
             # Télécharger le fichier texte depuis AirfoilTools
 
-            nom_fichier_txt = f"polar_{nom_profil}.txt"
-            chemin_txt = aero.telecharger_et_sauvegarder_txt(nom_fichier_txt, reynolds)
 
-
+            chemin_txt_airfoiltools = aero.telecharger_et_sauvegarder_txt(reynolds)
 
             # Lire le fichier texte et convertir en DataFrame
-            df = aero.lire_txt_et_convertir_dataframe(nom_fichier_txt)
+            df = aero.lire_txt_et_convertir_dataframe(chemin_txt_airfoiltools)
 
             # Stocker dans l’objet et tracer
-            aero.donnees = df
+            chemin_txt = chemin_txt_airfoiltools
 
             while True:
                 tracer_polaire = input("\nVoulez-vous afficher les courbes aérodynamiques de votre profil? (Oui / Non): ").strip().lower()
@@ -284,7 +282,7 @@ if __name__ == "__main__":
                 alt_u = float(input("\nAltitude personnalisée (m) : "))
                 mach_u = float(input("Mach personnalisé : "))
                 angle_u = float(input("Angle d'attaque personnalisé (°) : "))
-                conditions_choisies.append((alt_u, mach_u, angle_u))
+                conditions_choisies.append((alt_u, mach_u, angle_u, None, None))
             except ValueError:
                 print(" Valeur incorrecte, saisie ignorée.")
 
@@ -322,7 +320,9 @@ if __name__ == "__main__":
                 print(f"Reynolds (corde=1 m) : {reynolds:.2e}")
 
                 #  lancement XFoil avec ce Reynolds
-                aero.telecharger_et_sauvegarder_txtrun_xfoil(
+                chemin_xfoil = os.path.join("data", f"{nom_profil}_coef_aero.txt")
+
+                chemin_resultat = aero.telecharger_et_sauvegarder_txtrun_xfoil(
                     f"{nom_profil}_coord_profil.dat",
                     reynolds,
                     mach,
@@ -332,12 +332,15 @@ if __name__ == "__main__":
                     output_file=os.path.join("data", f"{nom_profil}_coef_aero.txt")
                 )
 
-                # lecture + tracé…
+                if not os.path.exists(chemin_resultat):
+                    print(f"\nERREUR : Le fichier attendu n’a pas été généré : {chemin_resultat}")
+                else:
+                    #  Lecture et tracé
+                    df = aero.lire_txt_et_convertir_dataframe(chemin_xfoil)
+                    aero.donnees = df
+                    aero.tracer_polaires_depuis_txt()
 
-                #  Lecture et tracé
-                df = aero.lire_txt_et_convertir_dataframe(chemin_txt)
-                aero.donnees = df
-                aero.tracer_polaires_depuis_txt()
+
 
     while True:
         comparaison = input("\nVoulez-vous comparer deux profils d'aile? (Oui / Non): ").strip().lower()

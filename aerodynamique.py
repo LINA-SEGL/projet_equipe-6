@@ -139,6 +139,7 @@ class Aerodynamique:
         if response.status_code != 200:
             raise Exception(f"Erreur d'accès au fichier TXT : {url_txt}")
 
+        nom_fichier=f"polar_{self.nom}.txt"
         chemin = os.path.join(Dossier_data, nom_fichier)
 
         with open(chemin, "w", encoding="utf-8") as fichier:
@@ -146,6 +147,8 @@ class Aerodynamique:
 
 
         print(f"Performances aérodynamiques enregistrés dans le fichier: {chemin}")
+
+        return chemin
 
 
     def lire_txt_et_convertir_dataframe(self, nom_fichier_txt):
@@ -255,6 +258,7 @@ class Aerodynamique:
                 print("Erreur XFOIL :", result.stderr.decode())
             else:
                 print(f"Analyse XFOIL terminée. Résultats dans : {output_file}")
+                return output_file
         except FileNotFoundError:
             print("XFOIL introuvable. Vérifie le chemin ou l'existence de xfoil.exe.")
 
