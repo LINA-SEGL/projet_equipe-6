@@ -48,15 +48,16 @@ if __name__ == "__main__":
     """
     if generation == "importer":
 
+        #LE CODE CI DESSOUS EST DANS UNE FONCTION (au dessus) du main.
 
-        nom_profil = input("\nEntrez le nom exact du profil NACA : (format : naca2412) : ").strip().lower()
-        nom_profil = f"{nom_profil}-il"
-
-        # Récupération du profil et Sauvegarde des coordonnées
-        profil = Airfoil.depuis_airfoiltools(nom_profil)
-        chemin_csv = profil.sauvegarder_coordonnees() # on récupere le chemin depuis airfoil
-
-        print(f"\nLes coordonnées du profil ont été enregistrés dans le fichier: {nom_profil}_coord_profil.csv")
+        # nom_profil = input("\nEntrez le nom exact du profil NACA : (format : naca2412) : ").strip().lower()
+        # nom_profil = f"{nom_profil}-il"
+        #
+        # # Récupération du profil et Sauvegarde des coordonnées
+        # profil = Airfoil.depuis_airfoiltools(nom_profil)
+        # chemin_csv = profil.sauvegarder_coordonnees() # on récupere le chemin depuis airfoil
+        #
+        # print(f"\nLes coordonnées du profil ont été enregistrés dans le fichier: {nom_profil}_coord_profil.csv")
 
         profil_obj_import, nom_profil = demande_profil()
 
