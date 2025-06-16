@@ -1,55 +1,80 @@
+#import sys
+#print("Python exécuté :", sys.executable)
 import asyncio
-# from python_opensky import OpenSky, StatesResponse
-from ConditionVol import ConditionVol
-import pandas as pd
+import requests
+from python_opensky import OpenSky, StatesResponse
+import os
 
-class VolOpenSkyAsync:
-    def __init__(self):
-        self.api = OpenSky()
+#  Définissez votre clé ici :
+API_KEY_OPENWEATHER ="955814a8002a56c995edec56283f7caf"
 
-    async def get_vols(self, limit=5):
-        async with self.api as opensky:
-            response: StatesResponse = await opensky.get_states()
+def calcul_delta_isa(lat: float, lon: float, alt_m: float, api_key: str) -> float | None:
+    url = "https://api.openweathermap.org/data/2.5/weather"
+    params = {"lat": lat, "lon": lon, "appid": api_key}
+    resp = requests.get(url, params=params)
 
-            vols_info = []
-            for s in response.states[:limit]:
-                condition_temp = ConditionVol(s.geo_altitude or 0, mach=0, angle_deg=0)
+    # Vérifier le statut HTTP
+    if resp.status_code != 200:
+        print(f"[OPENWEATHER ERROR] HTTP {resp.status_code} — {resp.text}")
+        return None
 
-                gamma = 1.4
-                R = 287.05
-                vitesse_son = (gamma * R * condition_temp.temperature_K) ** 0.5
+    data = resp.json()
+    #  Vérifier que main.temp existe
+    if "main" not in data or "temp" not in data["main"]:
+        print(f"[OPENWEATHER ERROR] réponse inattendue : {data}")
+        return None
 
-                # Étape 2 : calcul du vrai Mach
-                mach = (s.velocity or 0) / vitesse_son
+    T_sol_K = data["main"]["temp"]
+    lapse = 0.0065  # K/m
+    T_obs = T_sol_K - lapse * alt_m
+    T_isa = 288.15 - lapse * alt_m
+    return T_obs - T_isa
 
-                # Étape 3 : créer l’objet final avec le Mach calculé
-                condition = ConditionVol(
-                    altitude_m=s.geo_altitude or 0,
-                    mach=mach,
-                    angle_deg=5,  # tu peux le rendre variable
-                    delta_isa=0  # ou tu peux estimer à partir de OpenWeather
-                )
+async def fetch_vols(limit: int = 20):
+    async with OpenSky() as api:
+        states: StatesResponse = await api.get_states()
+        return states.states[:limit]  # liste d'objets State
 
-                vols_info.append({
-                    "callsign": s.callsign.strip() if s.callsign else "N/A",
-                    "altitude_m": s.geo_altitude or 0,
-                    "vitesse_mps": s.velocity or 0,
-                    "position": (s.latitude, s.longitude),
-                    "heure": s.time_position,
-                    "condition_vol": condition
-                })
+def afficher_liste(vols):
+    for i, s in enumerate(vols, 1):
+        cs = (s.callsign or "N/A").strip()
+        pays = s.origin_country or "Inconnu"
+        print(f"{i:2d}. {cs:8s} | {pays:12s} | Alt : {s.geo_altitude or 0:7.0f} m | Vit : {s.velocity or 0:6.1f} m/s")
 
-            return vols_info
+def afficher_details(s):
+    lat, lon = s.latitude, s.longitude
+    alt = s.geo_altitude or 0
+    # Mach
+    gamma, R = 1.4, 287.05
+    T_std = 288.15 - 0.0065 * alt
+    vitesse_son = (gamma * R * T_std) ** 0.5
+    mach = (s.velocity or 0) / vitesse_son
+    # ΔISA (optionnel)
+    delta = calcul_delta_isa(lat, lon, alt, API_KEY_OPENWEATHER)
 
-def charger_compagnies_depuis_csv(fichier):
-    df = pd.read_csv(fichier, sep="^")
-    compagnies = {}
+    print("\n--- Détails du vol sélectionné ---")
+    print(f"Callsign       : {(s.callsign or 'N/A').strip()}")
+    print(f"ICAO24          : {s.icao24}")
+    print(f"Pays d’origine : {s.origin_country}")
+    print(f"Position        : lat {lat:.4f}, lon {lon:.4f}")
+    print(f"Temps position  : {s.time_position}")
+    print(f"Altitude (GPS)  : {alt:.1f} m")
+    print(f"Vitesse         : {(s.velocity or 0):.1f} m/s")
+    print(f"Mach            : {mach:.2f}")
+    if delta is not None:
+        print(f"ΔISA ≈ {delta:.1f} K (approx.)")
+    else:
+        print("ΔISA          : non calculé")
 
-    for _, row in df.iterrows():
-        icao = str(row.get("icao_code", "")).strip().upper()
-        nom = str(row.get("name", "")).strip()
+def main():
+    vols = asyncio.run(fetch_vols(limit=2000))
+    afficher_liste(vols)
+    choix = int(input("\nSélectionnez un vol (numéro) : ")) - 1
+    if 0 <= choix < len(vols):
+        afficher_details(vols[choix])
+    else:
+        print("Sélection invalide.")
 
-        if icao and icao != "nan":
-            compagnies[icao] = (nom, "Pays inconnu")  # Le pays n'est pas dispo ici
+if __name__ == "__main__":
+    main()
 
-    return compagnies
