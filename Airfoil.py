@@ -3,10 +3,9 @@ import requests
 import matplotlib.pyplot as plt
 import numpy as np
 import csv
+from gestion_base import *
 import os
 
-Dossier_data = "data/"
-os.makedirs(Dossier_data, exist_ok=True) # crée le dossier si il n'existe pas
 
 class Airfoil:
     """
@@ -61,23 +60,24 @@ class Airfoil:
 
         return cls(nom=f"{code_naca}", coordonnees=coordonnees)
 
-    def sauvegarder_coordonnees(self, nom_fichier="coordonnees.csv"):
-
-
-        chemin = os.path.join(Dossier_data, nom_fichier)
-        with open(chemin, "w") as fichier:
-
-         """
-        Enregistre les coordonnées du profil dans un fichier CSV.
-
-        Args:
-            nom_fichier (str): Nom du fichier de sortie.
+    def sauvegarder_coordonnees(self, nom_fichier=None):
         """
-        with open(nom_fichier, "w") as fichier:
-            fichier.write("x,y\n")
-            for x, y in self.coordonnees:
-                fichier.write(f"{x},{y}\n")
+        Enregistre les coordonnées du profil importé dans data/profils_importes/.
+        Args:
+            nom_fichier (str, optionnel) : nom du fichier CSV à écrire.
+        Returns:
+            str : chemin complet du fichier écrit.
+        """
+        if nom_fichier is None:
+            nom_fichier = f"{self.nom}_coord_profil.csv"
 
+        chemin = os.path.join(profils_importes, nom_fichier)
+        os.makedirs(profils_importes, exist_ok=True)
+
+        with open(chemin, "w", newline="") as f:
+            f.write("x,y\n")
+            for x, y in self.coordonnees:
+                f.write(f"{x},{y}\n")
 
         return chemin
 
@@ -173,7 +173,7 @@ class Airfoil:
         plt.grid(True)
         plt.show()
 
-    def enregistrer_profil_manuel_csv(self, x_up, y_up, x_low, y_low, nom_fichier):
+    def enregistrer_profil_manuel_csv(self, x_up, y_up, x_low, y_low, nom_fichier= None):
         """
         Enregistre le profil manuel dans un fichier CSV.
 
@@ -181,7 +181,13 @@ class Airfoil:
             x_up, y_up, x_low, y_low (array-like): Coordonnées.
             nom_fichier (str): Nom du fichier de sortie.
         """
-        with open(nom_fichier, mode='w', newline='') as file:
+        if nom_fichier is None:
+            nom_fichier = f"{self.nom}_coord_profil.csv"
+
+        chemin = os.path.join(profils_manuels, nom_fichier)
+        os.makedirs(profils_manuels, exist_ok=True)
+
+        with open(chemin, mode="w", newline="") as file:
             writer = csv.writer(file)
 
             # Écriture des propriétés du profil
@@ -196,9 +202,11 @@ class Airfoil:
             for i in range(len(x_up)):
                 writer.writerow([x_up[i], y_up[i], x_low[i], y_low[i]])  # supposant que x_up = x_low
 
-        print(f"Les coordonnées du profil on été enregistré dans le fichier: {nom_fichier}")
+        print(f"Les coordonnées du profil on été enregistré dans le fichier: {chemin}")
+        return chemin
 
-    def enregistrer_profil_format_dat(self, x_up, y_up, x_low, y_low, c, nom_fichier):
+    def enregistrer_profil_format_dat(self, x_up, y_up, x_low, y_low, c, nom_fichier= None):
+
         """
         Enregistre le profil au format .dat compatible XFOIL/AirfoilTools.
 
@@ -207,7 +215,13 @@ class Airfoil:
             c (float): Longueur de la corde.
             nom_fichier (str): Nom du fichier de sortie.
         """
-        with open(nom_fichier, mode='w') as file:
+        if nom_fichier is None:
+            nom_fichier = f"{self.nom}_coord_profil.dat"
+
+        chemin = os.path.join(profils_manuels, nom_fichier)
+        os.makedirs(profils_manuels, exist_ok=True)
+
+        with open(chemin, mode='w') as file:
             file.write(f"{self.nom}\n")
 
             # Extrados : de 1 vers 0
@@ -221,6 +235,8 @@ class Airfoil:
                 x = x_low[i] / c
                 y = y_low[i] / c
                 file.write(f"{x:.6f} {y:.6f}\n")
+
+        return chemin
 
     def tracer_comparaison(self, profil_2):
         """

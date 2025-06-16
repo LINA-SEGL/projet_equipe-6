@@ -56,7 +56,6 @@ if __name__ == "__main__":
         profil = Airfoil.depuis_airfoiltools(nom_profil)
         chemin_csv = profil.sauvegarder_coordonnees() # on récupere le chemin depuis airfoil
 
-
         print(f"\nLes coordonnées du profil ont été enregistrés dans le fichier: {nom_profil}_coord_profil.csv")
 
         profil_obj_import, nom_profil = demande_profil()
@@ -153,6 +152,15 @@ if __name__ == "__main__":
 
         chemin_csv = profil_manuel.enregistrer_profil_manuel_csv(x_up, y_up, x_low, y_low, nom_fichier=f"{nom_profil}_coord_profil.csv")
         chemin_dat = profil_manuel.enregistrer_profil_format_dat(x_up, y_up, x_low, y_low, c, nom_fichier=f"{nom_profil}_coord_profil.dat")
+
+        gestion.ajouter_profil(
+            nom_profil,
+            "manuel",
+            fichier_coord_csv=chemin_csv,
+            fichier_coord_dat=chemin_dat,
+            fichier_polaire_txt=chemin_txt,
+            fichier_polaire_csv=None
+        )
 
 
         while True:
