@@ -186,12 +186,14 @@ if __name__ == "__main__":
             else:
                 break
 
-        profil_manuel = Airfoil(nom_profil_manuel, [])
-        x_up, y_up, x_low, y_low, x, c = profil_manuel.naca4_profil()
+
+        profil_manuel = Airfoil(nom_profil, [])
+        x_up, y_up, x_low, y_low, x, c = profil.naca4_profil()
 
 
-        chemin_csv = profil_manuel.enregistrer_profil_manuel_csv(x_up, y_up, x_low, y_low, nom_fichier=f"{nom_profil_manuel}_coord_profil.csv")
-        chemin_dat = profil_manuel.enregistrer_profil_format_dat(x_up, y_up, x_low, y_low, c, nom_fichier=f"{nom_profil_manuel}_coord_profil.dat")
+
+        chemin_csv = profil_manuel.enregistrer_profil_manuel_csv(x_up, y_up, x_low, y_low, nom_fichier=f"{nom_profil}_coord_profil.csv")
+        chemin_dat = profil_manuel.enregistrer_profil_format_dat(x_up, y_up, x_low, y_low, c, nom_fichier=f"{nom_profil}_coord_profil.dat")
 
         tracer = input("\nVoulez-vous afficher le profil? (Oui / Non): ").strip().lower()
 
@@ -213,8 +215,8 @@ if __name__ == "__main__":
 
             # Générer la polaire avec XFOIL
 
-            aero.run_xfoil(f"{nom_profil_manuel}_coord_profil.dat", reynolds, mach, alpha_start=-5, alpha_end=15, alpha_step=1, output_file=f"{nom_profil_manuel}_coef_aero.txt")
-            coef_aero_generes = f"{nom_profil_manuel}_coef_aero.txt"
+            aero.run_xfoil(f"{nom_profil}_coord_profil.dat", reynolds, mach, alpha_start=-5, alpha_end=15, alpha_step=1, output_file=f"{nom_profil}_coef_aero.txt")
+            coef_aero_generes = f"{nom_profil}_coef_aero.txt"
             chemin_txt = os.path.join("data", coef_aero_generes)
             data = aero.lire_txt_et_convertir_dataframe(coef_aero_generes)
             aero.donnees = data
@@ -233,19 +235,19 @@ if __name__ == "__main__":
         chemin_pol_csv = None
 
         # on enregistre le profil dans la base et on deplace les fichiers
-        gestion.ajouter_profil(nom_profil_manuel, "manuel",
+        gestion.ajouter_profil(nom_profil, "manuel",
                                chemin_csv, chemin_dat, chemin_txt, chemin_pol_csv)
 
     calcul_finesse = input("\nVoulez-vous calculer la finesse maximale? (Oui / Non): ").strip().lower()
 
     if calcul_finesse == "oui":
-        if perfo_pour_finesse == "générer":
-            finesse, finesse_max = aero.calculer_finesse(f"{nom_profil_manuel}_coef_aero.txt")
+        #verifie que le chemin du fichier existe bien
+        if chemin_txt is None or not os.path.exists(chemin_txt):
+            print("\nAucun fichier polaire trouvé ; impossible de calculer la finesse")
 
-        elif perfo_pour_finesse == "importer":
-            finesse, finesse_max = aero.calculer_finesse(f"polar_{nom_profil}.txt")
-
-        print(f"\nLa finesse maximale de votre profil est : {finesse_max}")
+        else:
+            finesse, finesse_max = aero.calculer_finesse(chemin_txt)
+            print(f"\nLa finesse maximale de votre profil est : {finesse_max}")
 
     elif calcul_finesse == "non":
         pass
