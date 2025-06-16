@@ -190,8 +190,8 @@ if __name__ == "__main__":
         x_up, y_up, x_low, y_low, x, c = profil_manuel.naca4_profil()
 
 
-        chemin_csv = profil_manuel.enregistrer_profil_manuel_csv(x_up, y_up, x_low, y_low, nom_fichier=f"{nom_profil}_coord_profil.csv")
-        chemin_dat = profil_manuel.enregistrer_profil_format_dat(x_up, y_up, x_low, y_low, c, nom_fichier=f"{nom_profil}_coord_profil.dat")
+        chemin_csv = profil_manuel.enregistrer_profil_manuel_csv(x_up, y_up, x_low, y_low, nom_fichier=f"{nom_profil_manuel}_coord_profil.csv")
+        chemin_dat = profil_manuel.enregistrer_profil_format_dat(x_up, y_up, x_low, y_low, c, nom_fichier=f"{nom_profil_manuel}_coord_profil.dat")
 
         tracer = input("\nVoulez-vous afficher le profil? (Oui / Non): ").strip().lower()
 
@@ -213,8 +213,8 @@ if __name__ == "__main__":
 
             # Générer la polaire avec XFOIL
 
-            aero.run_xfoil(f"{nom_profil}_coord_profil.dat", reynolds, mach, alpha_start=-5, alpha_end=15, alpha_step=1, output_file=f"{nom_profil}_coef_aero.txt")
-            coef_aero_generes = f"{nom_profil}_coef_aero.txt"
+            aero.run_xfoil(f"{nom_profil_manuel}_coord_profil.dat", reynolds, mach, alpha_start=-5, alpha_end=15, alpha_step=1, output_file=f"{nom_profil_manuel}_coef_aero.txt")
+            coef_aero_generes = f"{nom_profil_manuel}_coef_aero.txt"
             chemin_txt = os.path.join("data", coef_aero_generes)
             data = aero.lire_txt_et_convertir_dataframe(coef_aero_generes)
             aero.donnees = data
