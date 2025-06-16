@@ -44,32 +44,20 @@ class ConditionVol:
         print(f"Viscosité       : {self.viscosite_kgms:.6e} kg/m·s")
 
 
-def get_temperature_openweather(lat, lon, altitude_m, api_key):
-    url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}&units=metric"
-    response = requests.get(url)
+    def calculer_reynolds(self, vitesse_m_s, corde_m, viscosite_kgms, densite_kgm3):
+        """
+        Calcule le nombre de Reynolds autour d'une aile.
 
-    if response.status_code != 200:
-        print("Erreur API OpenWeather")
-        return None
+        Le nombre de Reynolds caractérise le régime d'écoulement (laminaire/turbulent) autour du profil.
 
-    data = response.json()
-    temp_sol_C = data["main"]["temp"]
-    altitude_sol_m = data["main"].get("sea_level", 0)
+        Args:
+            vitesse_m_s (float): Vitesse de l’air en m/s.
+            corde_m (float): Longueur de la corde de l’aile (caractéristique) en mètres.
+            viscosite_kgms (float): Viscosité dynamique de l’air (kg/m·s).
+            densite_kgm3 (float): Densité de l’air (kg/m³).
 
-    temp_alt_C = temp_sol_C - 0.0065 * (altitude_m - altitude_sol_m)
-    temp_alt_K = temp_alt_C + 273.15
-
-    if altitude_m <= 11000:
-        T_ISA = 288.15 - 0.0065 * altitude_m
-    else:
-        T_ISA = 216.65
-
-    delta_isa = temp_alt_K - T_ISA
-
-    print(f"Temp réelle estimée à {altitude_m} m : {temp_alt_K:.2f} K")
-    print(f"Temp ISA à cette altitude           : {T_ISA:.2f} K")
-    print(f"  ΔISA = {delta_isa:.2f} K")
-
-    return delta_isa
-
+        Returns:
+            float: Nombre de Reynolds.
+        """
+        return (densite_kgm3 * vitesse_m_s * corde_m) / viscosite_kgms
 

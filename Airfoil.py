@@ -8,19 +8,39 @@ import os
 Dossier_data = "data/"
 os.makedirs(Dossier_data, exist_ok=True) # crée le dossier si il n'existe pas
 
-## Class Airfoil va représenter un profil NACA avec ses cordonnées
-
 class Airfoil:
+    """
+    Représente un profil aérodynamique (type NACA ou autre) à partir de ses coordonnées ou généré manuellement.
 
+    Attributes:
+        nom (str): Nom du profil.
+        coordonnees (list of tuple): Liste de couples (x, y) représentant les points du contour.
+    """
     def __init__(self, nom, coordonnees):
-        self.nom = nom # Nom de profil
-        self.coordonnees = coordonnees # une liste de tuples (x, y) représentant les points du contour de l’aile
+        """
+        Initialise un objet Airfoil avec un nom et une liste de coordonnées.
 
-    """
-            ----  Fonctions de classe pour exporter un profil du site Airfoil Tools ----
-    """
+        Args:
+            nom (str): Nom du profil (ex: 'NACA2412').
+            coordonnees (liste de tuples): Coordonnées (x, y) du contour.
+        """
+        self.nom = nom
+        self.coordonnees = coordonnees
+
     @classmethod
     def depuis_airfoiltools(cls, code_naca: str):
+        """
+        Télécharge un profil NACA depuis le site AirfoilTools.
+
+        Args:
+            code_naca (str): Code NACA (ex: '2412').
+
+        Returns:
+            Airfoil: Instance du profil téléchargé.
+
+        Raises:
+            Exception: Si la récupération échoue.
+        """
         url = f"http://airfoiltools.com/airfoil/seligdatfile?airfoil={code_naca.lower()}"
         reponse = requests.get(url)
 
@@ -39,21 +59,37 @@ class Airfoil:
             except (IndexError, ValueError):
                 continue  # ignorer les lignes mal formatées
 
-        return cls(nom=f"NACA{code_naca}", coordonnees=coordonnees)
+        return cls(nom=f"{code_naca}", coordonnees=coordonnees)
 
-    # Stocker les coordonnées de Airfoils
     def sauvegarder_coordonnees(self, nom_fichier="coordonnees.csv"):
+
 
         chemin = os.path.join(Dossier_data, nom_fichier)
         with open(chemin, "w") as fichier:
+
+         """
+        Enregistre les coordonnées du profil dans un fichier CSV.
+
+        Args:
+            nom_fichier (str): Nom du fichier de sortie.
+        """
+        with open(nom_fichier, "w") as fichier:
             fichier.write("x,y\n")
             for x, y in self.coordonnees:
                 fichier.write(f"{x},{y}\n")
 
+
         return chemin
 
     # Tracer le contour
+
     def tracer_contour(self, nom_profil):
+        """
+        Trace le contour du profil aérodynamique.
+
+        Args:
+            nom_profil (str): Titre du graphe affiché.
+        """
         x_vals = [point[0] for point in self.coordonnees]
         y_vals = [point[1] for point in self.coordonnees]
 
@@ -66,22 +102,12 @@ class Airfoil:
         plt.grid(True)
         plt.show()
 
-    """
-        ----  Fonctions de classe pour tracer un profil (Airfoil) manuellement ----
-    """
-
-    # Génération Manuelle d'un Profil
     def naca4_profil(self):
         """
-        Génère un profil NACA 4 chiffres (Formules issues de Wikipédia)
+        Génère un profil NACA 4 chiffres à partir de formules analytiques.
 
-        m : cambrure maximale (ex: 0.02 pour 2%)
-        p : position de cambrure maximale (ex: 0.4 pour 40%)
-        t : épaisseur maximale (ex: 0.12 pour 12%)
-        c : corde (longueur, par défaut 1.0)
-        n_points : nombre de points (demi-profil)
-
-        Retourne : arrays x, y_supérieur, y_inférieur
+        Returns:
+            tuple: (x_upper, y_upper, x_lower, y_lower, x, c) — coordonnées des surfaces et paramètres.
         """
         # m = float(input("Indiquer la cambrure du profil (entre 0 et 1): "))
         # p = float(input("Indiquer la position de la cambrure maximale du profil (entre 0 et 1): "))
@@ -131,8 +157,13 @@ class Airfoil:
 
         return x_upper, y_upper, x_lower, y_lower, x, c
 
-    #Fonction pour tracer le profil manuel
     def tracer_profil_manuel(self, x_upper, y_upper, x_lower, y_lower):
+        """
+       Fonction qui affiche graphiquement le profil NACA 2D généré manuellement.
+
+       Args:
+           x_upper, y_upper, x_lower, y_lower (array-like): Coordonnées des surfaces supérieure et inférieure.
+       """
         plt.plot(x_upper, y_upper, marker='o', linewidth=1)
         plt.plot(x_lower, y_lower, marker='o', linewidth=1)
         plt.title(f"Profil aérodynamique {self.nom}")
@@ -142,16 +173,13 @@ class Airfoil:
         plt.grid(True)
         plt.show()
 
-    #Fonction pour enregistrer les données du profil manuel dans un fichier csv
     def enregistrer_profil_manuel_csv(self, x_up, y_up, x_low, y_low, nom_fichier):
         """
-        Enregistre les coordonnées du profil et ses propriétés dans un fichier CSV.
+        Enregistre le profil manuel dans un fichier CSV.
 
-        Paramètres :
-            x_up, y_up : coordonnées du bord supérieur
-            x_low, y_low : coordonnées du bord inférieur
-            m, p, t, c : paramètres NACA
-            nom_fichier : nom du fichier de sortie
+        Args:
+            x_up, y_up, x_low, y_low (array-like): Coordonnées.
+            nom_fichier (str): Nom du fichier de sortie.
         """
         with open(nom_fichier, mode='w', newline='') as file:
             writer = csv.writer(file)
@@ -172,10 +200,12 @@ class Airfoil:
 
     def enregistrer_profil_format_dat(self, x_up, y_up, x_low, y_low, c, nom_fichier):
         """
-        Enregistre le profil au format XFOIL / AirfoilTools (.dat).
+        Enregistre le profil au format .dat compatible XFOIL/AirfoilTools.
 
-        - x normalisé entre 0 et 1
-        - Ordre : extrados de 1 → 0, puis intrados de 0 → 1
+        Args:
+            x_up, y_up, x_low, y_low (array-like): Coordonnées.
+            c (float): Longueur de la corde.
+            nom_fichier (str): Nom du fichier de sortie.
         """
         with open(nom_fichier, mode='w') as file:
             file.write(f"{self.nom}\n")
@@ -192,11 +222,40 @@ class Airfoil:
                 y = y_low[i] / c
                 file.write(f"{x:.6f} {y:.6f}\n")
 
-    """
-        ---- Fin des fonctions de classe pour tracer un profil (Airfoil) manuellement ---
-    """
+    def tracer_comparaison(self, profil_2):
+        """
+        Trace le contour du profil courant et d’un autre profil sur un même graphe.
+
+        Args:
+            profil_2: Autre profil à comparer avec le profil courant.
+            afficher_legend (bool): Si True, affiche la légende avec les noms des profils.
+        """
+        x1, y1 = zip(*self.coordonnees)
+        x2, y2 = zip(*profil_2.coordonnees)
+
+        nom_1 = self.nom
+        nom_2 = profil_2.nom
+
+        plt.figure(figsize=(8, 4))
+        plt.plot(x1, y1, label=self.nom, linewidth=2)
+        plt.plot(x2, y2, label=profil_2.nom, linewidth=2)
+
+        plt.title(f"Comparaison : {nom_1} vs {nom_2}")
+        plt.xlabel("Corde")
+        plt.ylabel("épaisseur")
+        plt.axis("equal")
+        plt.grid(True)
+        plt.show()
 
     def tracer_avec_bruit(self, amplitude=0.01, mode="gaussien", zone=(0.0, 0.3)):
+        """
+        Applique et affiche un bruit localisé sur l’extrados du profil.
+
+        Args:
+            amplitude (float): Amplitude maximale du bruit.
+            mode (str): Type de bruit ('gaussien' ou 'uniforme').
+            zone (tuple): Intervalle x où le bruit est appliqué.
+        """
         from math import isfinite
         bruit = BruitProfil(amplitude=amplitude, mode=mode, zone=zone)
         coord_bruitees = bruit.appliquer(self.coordonnees)
