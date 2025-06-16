@@ -3,6 +3,10 @@ import requests
 import matplotlib.pyplot as plt
 import numpy as np
 import csv
+import os
+
+Dossier_data = "data/"
+os.makedirs(Dossier_data, exist_ok=True) # crée le dossier si il n'existe pas
 
 ## Class Airfoil va représenter un profil NACA avec ses cordonnées
 
@@ -39,10 +43,14 @@ class Airfoil:
 
     # Stocker les coordonnées de Airfoils
     def sauvegarder_coordonnees(self, nom_fichier="coordonnees.csv"):
-        with open(nom_fichier, "w") as fichier:
+
+        chemin = os.path.join(Dossier_data, nom_fichier)
+        with open(chemin, "w") as fichier:
             fichier.write("x,y\n")
             for x, y in self.coordonnees:
                 fichier.write(f"{x},{y}\n")
+
+        return chemin
 
     # Tracer le contour
     def tracer_contour(self, nom_profil):
