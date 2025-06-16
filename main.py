@@ -151,7 +151,7 @@ if __name__ == "__main__":
             else:
                 break
 
-        profil_manuel = Airfoil(nom_profil, [])
+        profil_manuel = Airfoil(nom_profil_manuel, [])
         x_up, y_up, x_low, y_low, x, c = profil_manuel.naca4_profil()
 
 
