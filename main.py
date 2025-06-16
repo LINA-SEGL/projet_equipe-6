@@ -147,22 +147,16 @@ if __name__ == "__main__":
             pass
 
         else:
-            pass
-
-            # chemins des fichiers des fichiers crées
-            chemin_csv = f"{nom_profil}_coord_profil.csv"
-            chemin_dat = None  # pas utile dans le cas du profil importé
-            chemin_txt = f"polar_{nom_profil}.txt" if recup_coef_aero == "oui" else None
-            chemin_pol_csv = None
+            chemin_txt = None
 
             # on enregistre le profil dans la base et on deplace les fichiers
-            gestion.ajouter_profil(
-                nom_profil,
-                "importé",
-                chemin_csv,
-                None,
-                chemin_txt,
-                None
+        gestion.ajouter_profil(
+            nom_profil,
+            "importé",
+            chemin_csv,
+            None,  # pas de .dat
+            chemin_txt,
+            None
 
             )
 
