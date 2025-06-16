@@ -1,10 +1,14 @@
 from Airfoil import *
 from aerodynamique import *
 from ConditionVol import *
+
+from gestion_base import *
+
 from VolOpenSkyAsync import *
 import requests
 
 def demande_profil():
+
 
     nom_profil = input("\nEntrez le nom du profil NACA (format : naca2412) : ").strip().lower()
     nom_profil = f"{nom_profil}-il"
@@ -27,6 +31,9 @@ if __name__ == "__main__":
 
     API_KEY = "c6bf5947268d141c6ca08f54c7d65b63"
 
+    #Initialisation de la basse de données des profils
+    gestion = GestionBase()
+
     print("\n---- Début du programme Airfoil ----\n")
 
     #On demande à l'utilisateur s'il veut créer ou importer un profil
@@ -42,7 +49,19 @@ if __name__ == "__main__":
     """
     if generation == "importer":
 
+
+        nom_profil = input("\nEntrez le nom exact du profil NACA : (format : naca2412) : ").strip().lower()
+        nom_profil = f"{nom_profil}-il"
+
+        # Récupération du profil et Sauvegarde des coordonnées
+        profil = Airfoil.depuis_airfoiltools(nom_profil)
+        chemin_csv = profil.sauvegarder_coordonnees() # on récupere le chemin depuis airfoil
+
+
+        print(f"\nLes coordonnées du profil ont été enregistrés dans le fichier: {nom_profil}_coord_profil.csv")
+
         profil_obj_import, nom_profil = demande_profil()
+
 
         tracer = input("\nVoulez-vous afficher le profil? (Oui / Non): ").strip().lower()
 
@@ -66,8 +85,11 @@ if __name__ == "__main__":
             aero = Aerodynamique(nom_profil)
 
             # Télécharger le fichier texte depuis AirfoilTools
-            nom_fichier_txt = f"{nom_profil}_coef_aero.txt"
-            aero.telecharger_et_sauvegarder_txt(nom_fichier_txt, reynolds)
+
+            nom_fichier_txt = f"polar_{nom_profil}.txt"
+            chemin_txt = aero.telecharger_et_sauvegarder_txt(nom_fichier_txt, reynolds)
+
+
 
             # Lire le fichier texte et convertir en DataFrame
             df = aero.lire_txt_et_convertir_dataframe(nom_fichier_txt)
@@ -90,7 +112,18 @@ if __name__ == "__main__":
             perfo_pour_finesse = "importer"
 
         else:
-            pass
+            chemin_txt = None
+
+            # on enregistre le profil dans la base et on deplace les fichiers
+        gestion.ajouter_profil(
+            nom_profil,
+            "importé",
+            chemin_csv,
+            None,  # pas de .dat
+            chemin_txt,
+            None
+
+            )
 
         """
         DANS LE CAS D'UNE CRÉATION MANUELLE.
@@ -121,8 +154,10 @@ if __name__ == "__main__":
         profil_manuel = Airfoil(nom_profil, [])
         x_up, y_up, x_low, y_low, x, c = profil_manuel.naca4_profil()
 
-        profil_manuel.enregistrer_profil_manuel_csv(x_up, y_up, x_low, y_low, nom_fichier=f"{nom_profil}_coord_profil.csv")
-        profil_manuel.enregistrer_profil_format_dat(x_up, y_up, x_low, y_low, c, nom_fichier=f"{nom_profil}_coord_profil.dat")
+
+        chemin_csv = profil_manuel.enregistrer_profil_manuel_csv(x_up, y_up, x_low, y_low, nom_fichier=f"{nom_profil_manuel}_coord_profil.csv")
+        chemin_dat = profil_manuel.enregistrer_profil_format_dat(x_up, y_up, x_low, y_low, c, nom_fichier=f"{nom_profil_manuel}_coord_profil.dat")
+
 
         while True:
             tracer = input("\nVoulez-vous afficher le profil? (Oui / Non): ").strip().lower()
@@ -153,8 +188,11 @@ if __name__ == "__main__":
             reynolds = int(input("\nRentrez un nombre de Reynolds: "))
 
             # Générer la polaire avec XFOIL
-            aero.telecharger_et_sauvegarder_txtrun_xfoil(f"{nom_profil}_coord_profil.dat", reynolds, mach, alpha_start=-15, alpha_end=15, alpha_step=1, output_file=f"{nom_profil}_coef_aero.txt")
-            coef_aero_generes = f"{nom_profil}_coef_aero.txt"
+
+            aero.run_xfoil(f"{nom_profil_manuel}_coord_profil.dat", reynolds, mach, alpha_start=-5, alpha_end=15, alpha_step=1, output_file=f"{nom_profil_manuel}_coef_aero.txt")
+            coef_aero_generes = f"{nom_profil_manuel}_coef_aero.txt"
+            chemin_txt = os.path.join("data", coef_aero_generes)
+
             data = aero.lire_txt_et_convertir_dataframe(coef_aero_generes)
             aero.donnees = data
             aero.tracer_polaires_depuis_txt()
@@ -165,7 +203,17 @@ if __name__ == "__main__":
             pass
 
         else:
+            chemin_txt = None
+
             pass
+
+
+        chemin_pol_csv = None
+
+        # on enregistre le profil dans la base et on deplace les fichiers
+        gestion.ajouter_profil(nom_profil_manuel, "manuel",
+                               chemin_csv, chemin_dat, chemin_txt, chemin_pol_csv)
+
 
     while True:
         calcul_finesse = input("\nVoulez-vous calculer la finesse maximale? (Oui / Non): ").strip().lower()
@@ -173,6 +221,7 @@ if __name__ == "__main__":
             break  # sortie de la boucle si la réponse est valide
         else:
             print("Réponse invalide. Veuillez écrire 'Oui' ou 'Non'.")
+
 
     if calcul_finesse == "oui":
         if perfo_pour_finesse == "générer":

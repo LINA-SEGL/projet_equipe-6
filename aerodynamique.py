@@ -6,6 +6,9 @@ from Airfoil import Airfoil
 import subprocess
 import os
 
+Dossier_data = "data/"
+os.makedirs(Dossier_data, exist_ok=True) # crée le dossier si il n'existe pas
+
 class Aerodynamique:
     """
     Classe pour analyser les performances aérodynamiques d’un profil via AirfoilTools ou XFOIL.
@@ -51,12 +54,16 @@ class Aerodynamique:
             nom_fichier (str): Nom du fichier de sortie.
         """
         if self.donnees is not None:
-            with open(nom_fichier, "w") as fichier:
+            chemin = os.path.join(Dossier_data, nom_fichier)
+            with open(chemin, "w") as fichier:
                 fichier.write(",".join(self.donnees.columns) + "\n")  # ligne d'en-tête
                 for _, ligne in self.donnees.iterrows():
                     valeurs = ",".join([str(val) for val in ligne])
                     fichier.write(valeurs + "\n")
-            print(f" Données sauvegardées dans {nom_fichier}")
+            print(f" Données sauvegardées dans {chemin}")
+
+            return chemin
+
         else:
             print(" Aucune donnée à sauvegarder.")
 
@@ -132,10 +139,14 @@ class Aerodynamique:
         if response.status_code != 200:
             raise Exception(f"Erreur d'accès au fichier TXT : {url_txt}")
 
-        with open(nom_fichier, "w", encoding="utf-8") as fichier:
+        chemin = os.path.join(Dossier_data, nom_fichier)
+
+        with open(chemin, "w", encoding="utf-8") as fichier:
             fichier.write(response.text)
 
-        print(f"Performances aérodynamiques enregistrés dans le fichier: {nom_fichier}.")
+
+        print(f"Performances aérodynamiques enregistrés dans le fichier: {chemin}")
+
 
     def lire_txt_et_convertir_dataframe(self, nom_fichier_txt):
         """
@@ -149,8 +160,9 @@ class Aerodynamique:
         """
         lignes = []
         commencer = False
+        chemin = os.path.join(Dossier_data, nom_fichier_txt)
 
-        with open(nom_fichier_txt, "r", encoding="utf-8") as f:
+        with open(chemin, "r", encoding="utf-8") as f:
             for ligne in f:
                 ligne = ligne.strip()
                 if not ligne:
