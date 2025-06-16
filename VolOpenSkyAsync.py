@@ -1,9 +1,11 @@
+#import sys
+#print("Python exécuté :", sys.executable)
 import asyncio
 import requests
 from python_opensky import OpenSky, StatesResponse
 import os
 
-# ⬇ Définissez votre clé ici :
+#  Définissez votre clé ici :
 API_KEY_OPENWEATHER ="955814a8002a56c995edec56283f7caf"
 
 def calcul_delta_isa(lat: float, lon: float, alt_m: float, api_key: str) -> float | None:

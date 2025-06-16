@@ -2,6 +2,7 @@ from Airfoil import *
 from aerodynamique import *
 from ConditionVol import *
 from VolOpenSkyAsync import *
+import requests
 
 def demande_profil():
 
@@ -152,7 +153,7 @@ if __name__ == "__main__":
             reynolds = int(input("\nRentrez un nombre de Reynolds: "))
 
             # Générer la polaire avec XFOIL
-            aero.run_xfoil(f"{nom_profil}_coord_profil.dat", reynolds, mach, alpha_start=-15, alpha_end=15, alpha_step=1, output_file=f"{nom_profil}_coef_aero.txt")
+            aero.telecharger_et_sauvegarder_txtrun_xfoil(f"{nom_profil}_coord_profil.dat", reynolds, mach, alpha_start=-15, alpha_end=15, alpha_step=1, output_file=f"{nom_profil}_coef_aero.txt")
             coef_aero_generes = f"{nom_profil}_coef_aero.txt"
             data = aero.lire_txt_et_convertir_dataframe(coef_aero_generes)
             aero.donnees = data
@@ -188,68 +189,112 @@ if __name__ == "__main__":
     else:
         pass
 
-    while True:
-        obtenir_vol = input("\nVoulez-vous choisir un vol existant? (Oui / Non): ").strip().lower()
-        if obtenir_vol in ["oui", "non"]:
-            break  # sortie de la boucle si la réponse est valide
-        else:
-            print("Réponse invalide. Veuillez écrire 'Oui' ou 'Non'.")
+    #  MENU PRINCIPAL POUR LES CONDITIONS
+    print("\nVoulez-vous tester les performances de votre profil ?")
+    print("  0 - Non, passer cette étape")
+    print("  1 - Conditions réelles (vol existant)")
+    print("  2 - Conditions personnalisées")
+    print("  3 - Les deux")
 
-    if obtenir_vol == "oui":
-        pass
-    elif obtenir_vol == "non":
-        pass
+    while True:
+        choix_mode = input("Entrez 0, 1, 2 ou 3 : ").strip()
+        if choix_mode in ("0", "1", "2", "3"):
+            break
+        print("Réponse invalide, tapez 0, 1, 2 ou 3.")
+
+    # Si l'utilisateur choisit 0, on skippe tout
+    if choix_mode == "0":
+        print("\nTest de performance ignoré. On passe à la suite.")
     else:
-        pass
+        # Conteneur des conditions choisies
+        conditions_choisies = []
 
-    while True:
-        obtenir_conditions_vol = input("\nVoulez-vous obtenir les conditions de vol? (Oui / Non): ").strip().lower()
-        if obtenir_conditions_vol in ["oui", "non"]:
-            break  # sortie de la boucle si la réponse est valide
+        #  Conditions réelles
+        if choix_mode in ("1", "3"):
+            vols = asyncio.run(fetch_vols(limit=10))
+            afficher_liste(vols)
+            try:
+                sel = int(input("\nSélectionnez le vol (numéro) : ")) - 1
+                if 0 <= sel < len(vols):
+                    s = vols[sel]
+                    alt = s.geo_altitude or 0
+                    vit = s.velocity or 0
+                    gamma, R = 1.4, 287.05
+                    T_std = 288.15 - 0.0065 * alt
+                    mach = vit / ((gamma * R * T_std) ** 0.5)
+                    lat = s.latitude or 0.0
+                    lon = s.longitude or 0.0
+                    angle = float(input("Angle d'attaque pour ce vol (°) : "))
+                    # Récupération des coordonnées
+                    lat = s.latitude or 0.0
+                    lon = s.longitude or 0.0
+                    # On stocke désormais alt, mach, angle, lat et lon
+                    conditions_choisies.append((alt, mach, angle, lat, lon))
+                else:
+                    print(" Sélection hors plage, on continue.")
+            except ValueError:
+                print(" Entrée non valide, on continue.")
+
+        #  Conditions personnalisées
+        if choix_mode in ("2", "3"):
+            try:
+                alt_u = float(input("\nAltitude personnalisée (m) : "))
+                mach_u = float(input("Mach personnalisé : "))
+                angle_u = float(input("Angle d'attaque personnalisé (°) : "))
+                conditions_choisies.append((alt_u, mach_u, angle_u))
+            except ValueError:
+                print(" Valeur incorrecte, saisie ignorée.")
+
+        #  Lancement XFoil pour chaque condition
+        if not conditions_choisies:
+            print("\nAucune condition définie, XFoil n’est pas lancé.")
         else:
-            print("Réponse invalide. Veuillez écrire 'Oui' ou 'Non'.")
-
-    if obtenir_conditions_vol == "oui":
-
-        altitude = float(input("\nAltitude (en mètres):"))
-        mach = float(input("Nombre de mach:"))
-        angle = float(input("Angle d'attaque (en °):"))
-
-        conditions_vol = ConditionVol(altitude, mach, angle)
-        conditions_vol.afficher()
-
-        """
-        Il est proposé de croiser le profil avec les conditions de vol obtenues.
-        """
-        while True:
-            calculer_perfo_vol = input("\nVoulez-vous obtenir les performances de votre profil selon les conditions de vol choisies? (Oui / Non): ").strip().lower()
-            if calculer_perfo_vol in ["oui", "non"]:
-                break  # sortie de la boucle si la réponse est valide
-            else:
-                print("Réponse invalide. Veuillez écrire 'Oui' ou 'Non'.")
-
-        if calculer_perfo_vol == "oui":
-            #Le programme lance XFoil avec les données du profil et les conditions atmosphériques du vol.
             aero = Aerodynamique(nom_profil)
+            for i, (alt, mach, angle, lat, lon) in enumerate(conditions_choisies, start=1):
+                #  calculer ΔISA en fonction de lat/lon/alt
+                delta = calcul_delta_isa(lat, lon, alt, API_KEY) or 0.0
+                print(f"\nCondition choisie #{i} – ΔISA météo : {delta:+.1f} K")
 
-            # mach = float(input("\nRentrez une valeur de Mach (0 à 0.7): "))
-            # reynolds = int(input("\nRentrez un nombre de Reynolds: "))
+                #  créer ConditionVol en lui passant ce ΔISA
+                cond = ConditionVol(altitude_m=alt,
+                                    mach=mach,
+                                    angle_deg=angle,
+                                    delta_isa=delta)
+                cond.afficher()
 
-            # Générer la polaire avec XFOIL.
-            aero.telecharger_et_sauvegarder_txtrun_xfoil(f"{nom_profil}_coord_profil.dat", reynolds, mach, alpha_start=-15, alpha_end=15,
-                           alpha_step=1, output_file=f"{nom_profil}_coef_aero.txt")
-            coef_aero_generes = f"{nom_profil}_coef_aero.txt"
-            data = aero.lire_txt_et_convertir_dataframe(coef_aero_generes)
-            aero.donnees = data
-            aero.tracer_polaires_depuis_txt()
+                #  vitesse du son corrigée par la vraie température
+                gamma, R = 1.4, 287.05
+                vitesse_son = (gamma * R * cond.temperature_K) ** 0.5
+                vitesse = mach * vitesse_son
+                print(f"Vitesse ≈ {vitesse:.1f} m/s (mach×sons), son à {vitesse_son:.1f} m/s")
 
-            perfo_pour_finesse = "générer"
+                #  calcul du Reynolds
+                corde = 1.0
+                reynolds = cond.calculer_reynolds(
+                    vitesse_m_s=vitesse,
+                    corde_m=corde,
+                    viscosite_kgms=cond.viscosite_kgms,
+                    densite_kgm3=cond.densite_kgm3
+                )
+                print(f"Reynolds (corde=1 m) : {reynolds:.2e}")
 
-        elif calculer_perfo_vol == "non":
-            pass
+                #  lancement XFoil avec ce Reynolds
+                aero.telecharger_et_sauvegarder_txtrun_xfoil(
+                    f"{nom_profil}_coord_profil.dat",
+                    reynolds,
+                    mach,
+                    alpha_start=-15,
+                    alpha_end=15,
+                    alpha_step=1,
+                    output_file=f"{nom_profil}_coef_aero_{i}.txt"
+                )
 
-    elif obtenir_conditions_vol == "non":
-        pass
+                # lecture + tracé…
+
+                #  Lecture et tracé
+                df = aero.lire_txt_et_convertir_dataframe(f"{nom_profil}_coef_aero_{i}.txt")
+                aero.donnees = df
+                aero.tracer_polaires_depuis_txt()
 
     while True:
         comparaison = input("\nVoulez-vous comparer deux profils d'aile? (Oui / Non): ").strip().lower()
