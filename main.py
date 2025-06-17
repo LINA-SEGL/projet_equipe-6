@@ -54,6 +54,60 @@ def comparer_polaires(profiles: dict[str, pd.DataFrame]):
     # Ajuste les espacements
     plt.tight_layout()
     plt.show()
+def choisir_vols(limit: int = 100, sample_n: int = 20) -> pd.DataFrame:
+    """
+    Récupère via fetch_vols(limit), construit un DataFrame,
+    filtre selon la troposphère/stratosphère, prélève un échantillon aléatoire,
+    et répète jusqu'à ce que l'utilisateur valide la liste.
+    """
+    while True:
+        # 1) fetch et DataFrame
+        vols = asyncio.run(fetch_vols(limit=limit))
+        rows = []
+        for v in vols:
+            rows.append({
+                "icao24":          v.icao24,
+                "callsign":        (v.callsign or "").strip(),
+                "origin_country":  v.origin_country,
+                "altitude_m":      v.geo_altitude or 0.0,
+                "vitesse_m_s":     v.velocity or 0.0,
+                "latitude":        v.latitude,
+                "longitude":       v.longitude
+            })
+        df = pd.DataFrame(rows)
+
+        # 2) choix du filtre
+        print("\nFiltrer les vols par altitude :")
+        print("  1 - Troposphère (< 11 000 m)")
+        print("  2 - Stratosphère (≥ 11 000 m)")
+        print("  3 - Aucun filtre")
+        choix = input("Votre choix (1/2/3) : ").strip()
+        if choix == "1":
+            df_filt = df[df["altitude_m"] < 11000]
+        elif choix == "2":
+            df_filt = df[df["altitude_m"] >= 11000]
+        else:
+            df_filt = df
+
+        if df_filt.empty:
+            print("Aucun vol ne correspond à ce filtre, on recommence.")
+            continue
+
+        # 3) prélèvement aléatoire (vraie nouveauté à chaque appel)
+        n = min(sample_n, len(df_filt))
+        df_sample = df_filt.sample(n=n).reset_index(drop=True)
+
+        # 4) affichage
+        print(df_sample[[
+            "icao24", "callsign", "origin_country", "altitude_m", "vitesse_m_s"
+        ]].to_string(index=True))
+
+        # 5) validation ou régénération
+        rep = input("\nCette liste vous convient-elle ? (oui/non) ").strip().lower()
+        if rep == "oui":
+            return df_sample
+        # sinon on boucle et on refait un fetch + nouveau sample
+
 
 """
 BOUCLE PRINCIPALE.
@@ -340,16 +394,18 @@ if __name__ == "__main__":
     # 1) On collecte les conditions dans une liste
     conditions = []
     if choix_mode in ("1", "3"):
-        vols = asyncio.run(fetch_vols(limit=10))
-        afficher_liste(vols)
-        sel = int(input("\nSélectionnez le vol (numéro) : ")) - 1
-        s = vols[sel]
-        alt = s.geo_altitude or 0
-        vit = s.velocity or 0
+        df_vols = choisir_vols(limit=100, sample_n=20)
+        # l'index en tête de chaque ligne est déjà celui qu'on affichera
+        sel = int(input("\nSélectionnez le vol (numéro) : ").strip())
+        row = df_vols.loc[sel]
+        alt =row["altitude_m"]
+        vit =row["vitesse_m_s"]
         Tstd = 288.15 - 0.0065 * alt
         mach = vit / ((1.4 * 287.05 * Tstd) ** 0.5)
+        lat = row["latitude"]
+        lon = row["longitude"]
         angle = 2  # ou input()
-        conditions.append(("vol_reel", alt, mach, angle, s.latitude, s.longitude))
+        conditions.append(("vol_reel", alt, mach, angle, lat, lon))
 
     if choix_mode in ("2", "3"):
         alt = float(input("\nAltitude personnalisée (m) : "))
@@ -369,8 +425,8 @@ if __name__ == "__main__":
         suffix = '_vol_reel' if tag == 'vol_reel' else '_vol_perso'
         txt_out = os.path.join('data', 'profils_importes' if generation == 'importer' else 'profils_manuels',
                                f"{nom_profil}{suffix}.txt")
-        print('→ XFoil', tag, '→', txt_out)
-        aero.run_xfoil(chemin_dat, reynolds, mach, alpha_start=-5, alpha_end=12, alpha_step=1, output_file=txt_out)
+        print(' XFoil', tag, txt_out)
+        aero.run_xfoil(chemin_dat, reynolds, mach, alpha_start=-15, alpha_end=15, alpha_step=1, output_file=txt_out)
         df = aero.lire_txt_et_convertir_dataframe(txt_out)
         aero.donnees = df
         if tag == 'vol_reel':
