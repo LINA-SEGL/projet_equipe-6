@@ -151,7 +151,7 @@ class Aerodynamique:
         with open(chemin, "w", encoding="utf-8") as fichier:
             fichier.write(response.text)
 
-        print(f"Performances aérodynamiques enregistrés dans le fichier: {chemin}")
+        #print(f"Performances aérodynamiques enregistrés dans le fichier: {chemin}")
 
         return chemin
 

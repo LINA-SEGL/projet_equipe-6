@@ -1,12 +1,10 @@
-#On importe la bibliothèque requests pour faire une requête HTTP vers le site AirfoilTools
 import requests
 import matplotlib.pyplot as plt
 import numpy as np
 import csv
 from gestion_base import *
 import os
-from scipy.interpolate import make_interp_spline
-
+from interaction_graphique import *
 
 class Airfoil:
     """
@@ -110,17 +108,31 @@ class Airfoil:
         Returns:
             tuple: (x_upper, y_upper, x_lower, y_lower, x, c) — coordonnées des surfaces et paramètres.
         """
+        interface = FenetreInteraction()
+
+        params = interface.demander_parametres({
+            "m": "Cambrure du profil (entre 0 et 1)",
+            "p": "Position de la cambrure maximale (entre 0 et 1)",
+            "t": "Épaisseur maximale (entre 0 et 1)",
+            "c": "Longueur de corde du profil"
+        })
+
+        m = params["m"]
+        p = params["p"]
+        t = params["t"]
+        c = params["c"]
+
         # m = float(input("Indiquer la cambrure du profil (entre 0 et 1): "))
         # p = float(input("Indiquer la position de la cambrure maximale du profil (entre 0 et 1): "))
-        t = float(input("Indiquer l'épaisseur maximale du profil (entre 0 et 1): "))
+        # t = float(input("Indiquer l'épaisseur maximale du profil (entre 0 et 1): "))
         # c = float(input("Indiquer la longueur de corde du profil: "))
-        # n_points = 18 #int(input("Indiquer le nombre de points souhaité pour le tracé du demi-profil: "))
+        n_points = 18 #int(input("Indiquer le nombre de points souhaité pour le tracé du demi-profil: "))
 
-        m = 0.04
-        p = 0.6
+        # m = 0.04
+        # p = 0.6
         # t = 0.08
-        c = 1
-        n_points = 18
+        # c = 1
+        # n_points = 18
 
         # Discrétisation le long de x (on utilise un espacement cosinus pour affiner vers le bord d'attaque)
         beta = np.linspace(0.0, np.pi, n_points)

@@ -121,7 +121,7 @@ class GestionBase:
 
         df = pd.concat([df, pd.DataFrame([nouvelle_entree])],ignore_index=True)  # on ajoute la nouvelle entree a la base de donnée
         df.to_csv(self.chemin_fichier, index=False)  # on retire les index automatique
-        print(f"[info] Profil '{nom_profil}' ajouté à la base de données.")
+        #print(f"[info] Profil '{nom_profil}' ajouté à la base de données.")
 
 
     def afficher_base(self):

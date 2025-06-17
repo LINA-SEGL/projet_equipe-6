@@ -3,22 +3,20 @@ from aerodynamique import *
 from ConditionVol import *
 from gestion_base import *
 from VolOpenSkyAsync import *
-import tkinter as tk
-from tkinter import messagebox
-from tkinter import simpledialog
+from interaction_graphique import *
+import matplotlib.pyplot as plt
 
 def demande_profil():
 
     #nom_profil = input("\nEntrez le nom du profil NACA (format : naca2412) : ").strip().lower()
 
     # Fenêtre de saisie
-    nom_profil = simpledialog.askstring("Nom du profil", "Entrez le nom du profil NACA (format : naca2412) :")
+    nom_profil = interface.demander_texte("Entrez le nom du profil NACA (ex: naca2412)").strip().lower()
 
     if nom_profil:
         nom_profil = nom_profil.strip().lower()
-        print("Nom du profil entré :", nom_profil)
     else:
-        print("Aucune entrée.")
+        interface.msgbox("Aucun nom saisi. Veuillez réessayer.", titre="Erreur")
 
     nom_profil = f"{nom_profil}-il"
 
@@ -29,11 +27,9 @@ def demande_profil():
     # Sauvegarde des coordonnées
     profil_obj.sauvegarder_coordonnees(f"{nom_profil}_coord_profil.csv")
 
-    print(f"\nLes coordonnées du profil ont été enregistrés dans le fichier: {nom_profil}_coord_profil.csv")
+    interface.msgbox(f"\nLes coordonnées du profil ont été enregistrés dans le fichier: {nom_profil}_coord_profil.csv", titre="Erreur")
+
     return profil_obj, nom_profil
-
-
-import matplotlib.pyplot as plt
 
 def comparer_polaires(profiles: dict[str, pd.DataFrame]):
     """
@@ -66,6 +62,7 @@ def comparer_polaires(profiles: dict[str, pd.DataFrame]):
     # Ajuste les espacements
     plt.tight_layout()
     plt.show()
+
 def choisir_vols(limit: int = 100, sample_n: int = 20) -> pd.DataFrame:
     """
     Récupère via fetch_vols(limit), construit un DataFrame,
@@ -129,9 +126,8 @@ if __name__ == "__main__":
     """
     Initialisation des variables nécessaires.
     """
-    # Création de la fenêtre principale (cachée)
-    root = tk.Tk()
-    root.withdraw()  # Cache la fenêtre principale
+
+    interface = FenetreInteraction()
 
     API_KEY = "c6bf5947268d141c6ca08f54c7d65b63"
     #Initialisation de la base de données des profils
@@ -154,29 +150,27 @@ if __name__ == "__main__":
 
     print("\n---- Lancement du programme Airfoil ----\n")
 
-    #On demande à l'utilisateur s'il veut créer ou importer un profil
-    while True:
-        generation = input("Voulez-vous importer ou générer un profil d'aile? ").strip().lower()
-        if generation in ["importer", "générer"]:
-            break  # OK : on sort de la boucle
-        else:
-            print("Réponse invalide. Veuillez taper 'importer' ou 'générer'.\n")
+    generation = interface.demander_choix("Voulez-vous importer ou générer un profil ?", ["importer", "générer"])
+
+    # #On demande à l'utilisateur s'il veut créer ou importer un profil
+    # while True:
+    #     generation = input("Voulez-vous importer ou générer un profil d'aile? ").strip().lower()
+    #     if generation in ["importer", "générer"]:
+    #         break  # OK : on sort de la boucle
+    #     else:
+    #         print("Réponse invalide. Veuillez taper 'importer' ou 'générer'.\n")
 
     """
     DANS LE CAS D'UNE IMPORTATION.
     """
     if generation == "importer":
 
-        #profil_obj contient les propriétés du profil en tant qu'objet de la classe Airfoil.
-        #nom_profil est le nom du profil sous forme d'une chaine de caractères.
         profil_obj_import, nom_profil = demande_profil()
-        # ─── Convertir le CSV importé EN DAT pour XFoil ───
-        # profil_obj_import.sauvegarder_coordonnees() vous a donné un CSV :
+
         chemin_csv = profil_obj_import.sauvegarder_coordonnees(f"{nom_profil}_coord_profil.csv")
 
         # Construire le chemin .dat à partir du même nom
         chemin_dat = chemin_csv.replace("_coord_profil.csv", "_coord_profil.dat")
-        #print('DAT généré :', chemin_dat)
 
         # Ouvrir le CSV, lire x,y puis écrire le .dat
         with open(chemin_csv, "r") as f_csv, open(chemin_dat, "w") as f_dat:
@@ -187,27 +181,27 @@ if __name__ == "__main__":
                 x_str, y_str = ligne.strip().split(",")
                 f_dat.write(f"{float(x_str):.6f} {float(y_str):.6f}\n")
 
-        #print("Fichier .dat pour XFoil créé :", chemin_dat)
-        # ────────────────────────────────────────────────────────
+        tracer = interface.demander_choix("Voulez-vous afficher le profil ?", ["Oui", "Non"])
 
-        tracer = input("\nVoulez-vous afficher le profil? (Oui / Non): ").strip().lower()
-
-        if tracer == "oui":
-            # Affichage graphique
+        if tracer.lower() == "oui":
             profil_obj_import.tracer_contour(nom_profil)
         else:
             pass
 
-        while True:
-            recup_coef_aero = input("\nVoulez-vous récupérer les performances aérodynamiques de votre profil? (Oui / Non): ").strip().lower()
-            if recup_coef_aero in ["oui", "non"]:
-                break  # sortie de la boucle si la réponse est valide
-            else:
-                print("Réponse invalide. Veuillez écrire 'Oui' ou 'Non'.")
+        recup_coef_aero = interface.demander_choix("Voulez-vous récupérer les performances aérodynamiques de votre profil?", ["Oui", "Non"])
 
-        if recup_coef_aero == "oui":
+        # while True:
+        #     recup_coef_aero = input("\nVoulez-vous récupérer les performances aérodynamiques de votre profil? (Oui / Non): ").strip().lower()
+        #     if recup_coef_aero in ["oui", "non"]:
+        #         break  # sortie de la boucle si la réponse est valide
+        #     else:
+        #         print("Réponse invalide. Veuillez écrire 'Oui' ou 'Non'.")
 
-            reynolds = int(input("\nPour quel nombre de Reynolds? (50000/100000/1000000): "))
+        if recup_coef_aero.lower() == "oui":
+
+            reynolds = int(interface.demander_choix("Pour quel nombre de Reynolds? (50000/100000/1000000)?", ["50000", "100000", "1000000"]))
+
+            #reynolds = int(input("\nPour quel nombre de Reynolds? (50000/100000/1000000): "))
 
             ##aero = Aerodynamique(nom_profil)
             aero_import = Aerodynamique(nom_profil)
@@ -223,14 +217,16 @@ if __name__ == "__main__":
             # Stocker dans l’objet et tracer
             chemin_txt = chemin_txt_airfoiltools
 
-            while True:
-                tracer_polaire = input("\nVoulez-vous afficher les courbes aérodynamiques de votre profil? (Oui / Non): ").strip().lower()
-                if tracer_polaire in ["oui", "non"]:
-                    break  # sortie de la boucle si la réponse est valide
-                else:
-                    print("Réponse invalide. Veuillez écrire 'Oui' ou 'Non'.")
+            tracer_polaire = interface.demander_choix("Voulez-vous afficher les courbes aérodynamiques de votre profil?", ["Oui", "Non"])
 
-            if tracer_polaire == "oui":
+            # while True:
+            #     tracer_polaire = input("\nVoulez-vous afficher les courbes aérodynamiques de votre profil? (Oui / Non): ").strip().lower()
+            #     if tracer_polaire in ["oui", "non"]:
+            #         break  # sortie de la boucle si la réponse est valide
+            #     else:
+            #         print("Réponse invalide. Veuillez écrire 'Oui' ou 'Non'.")
+
+            if tracer_polaire.lower() == "oui":
                 aero_import.tracer_polaires_depuis_txt()
             else:
                 pass
@@ -255,28 +251,31 @@ if __name__ == "__main__":
         """
 
     elif generation == "générer":
+
         profil_manuel, nom_profil = None, None
 
-        # Création d'un profil manuel:
         while True:
-            #demande un nom au fichier/profil
-            nom_profil = input("\nEntrez le nom de votre profil NACA: ").strip().lower()
-            nom_profil = f"{nom_profil}-il"
-            #Boucle pour vérifier si le fichier existe déjà
+            # Demande un nom au fichier/profil
+            nom_profil = interface.demander_texte("Entrez le nom de votre profil NACA :")
+            if not nom_profil:
+                interface.msgbox("Aucun nom saisi. Veuillez réessayer.", titre="Erreur")
+                continue
+
+            nom_profil = f"{nom_profil.strip().lower()}-il"
             verif_fichier = f"{nom_profil}_coord_profil.csv"
 
+            # Vérifie si le fichier existe déjà
             if os.path.exists(verif_fichier):
-                print(f"Le fichier '{verif_fichier}' existe déjà.")
-                choix = input("\nVoulez-vous écraser le fichier ? (Oui/Non) : ").strip().lower()
-
-                if choix == "oui":
-                    print(f"Suppression du fichier '{verif_fichier}'...")
-                    os.remove(f"{verif_fichier}")
-                    break  # On sort de la boucle, on continue avec ce nom
-                elif choix == "non":
-                    print("\nVeuillez entrer un autre nom de profil.")
+                interface.msgbox(f"Le fichier '{verif_fichier}' existe déjà.", titre="Fichier existant")
+                choix = interface.demander_choix("Voulez-vous écraser le fichier existant ?", ["Oui", "Non"])
+                if choix.lower() == "oui":
+                    os.remove(verif_fichier)
+                    interface.msgbox(f"Le fichier '{verif_fichier}' a été supprimé.", titre="Information")
+                    break  # nom accepté
+                else:
+                    interface.msgbox("Veuillez entrer un autre nom de profil.")
             else:
-                break
+                break  # nom accepté
 
         profil_manuel = Airfoil(nom_profil, [])
         #générer un profil Naca à 4 chiffres.
@@ -285,7 +284,6 @@ if __name__ == "__main__":
         #enregistrer les coordonnées du profil en .csv et .dat
         chemin_csv = profil_manuel.enregistrer_profil_manuel_csv(x_up, y_up, x_low, y_low, nom_fichier=f"{nom_profil}_coord_profil.csv")
         chemin_dat = profil_manuel.enregistrer_profil_format_dat(x_up, y_up, x_low, y_low, c, nom_fichier=f"{nom_profil}_coord_profil.dat")
-        print(' DAT manuel :', chemin_dat)
 
         gestion.ajouter_profil(
             nom_profil,
@@ -296,15 +294,10 @@ if __name__ == "__main__":
             fichier_polaire_csv=None
         )
 
-        while True:
-            tracer = input("\nVoulez-vous afficher le profil? (Oui / Non): ").strip().lower()
-            if tracer in ["oui", "non"]:
-                break  # sortie de la boucle si la réponse est valide
-            else:
-                print("Réponse invalide. Veuillez écrire 'Oui' ou 'Non'.")
+        # Demander à l'utilisateur s'il veut afficher le profil
+        tracer = interface.demander_choix("Voulez-vous afficher le profil ?", ["Oui", "Non"]).strip().lower()
 
         if tracer == "oui":
-            #appel de la fonction de classe qui trace le profil avec les coordonnées en entrée.
             profil_manuel.tracer_profil_manuel(x_up, y_up, x_low, y_low)
 
         elif tracer == "non":
@@ -313,17 +306,25 @@ if __name__ == "__main__":
             pass
 
         while True:
-            lancement_xfoil = input("\nVoulez-vous calculer les performances de votre profil? (Oui / Non): ").strip().lower()
-            if lancement_xfoil in ["oui", "non"]:
+            lancement_xfoil = interface.demander_choix("Voulez-vous calculer les performances de votre profil?", ["Oui", "Non"])
+            #lancement_xfoil = input("\nVoulez-vous calculer les performances de votre profil? (Oui / Non): ").strip().lower()
+            if lancement_xfoil.lower() in ["oui", "non"]:
                 break  # sortie de la boucle si la réponse est valide
             else:
-                print("Réponse invalide. Veuillez écrire 'Oui' ou 'Non'.")
+                pass
 
-        if lancement_xfoil == "oui":
+        if lancement_xfoil.lower() == "oui":
             aero_manuel = Aerodynamique(nom_profil)
 
-            mach = float(input("\nRentrez une valeur de Mach (0 à 0.7): "))
-            reynolds = int(input("\nRentrez un nombre de Reynolds: "))
+            params = interface.demander_parametres({
+                "mach": "Rentrez une valeur de Mach (0 à 0.7)",
+                "reynolds": "Rentrez un nombre de Reynolds"
+            })
+            mach = params["mach"]
+            reynolds = params["reynolds"]
+
+            # mach = float(input("\nRentrez une valeur de Mach (0 à 0.7): "))
+            # reynolds = int(input("\nRentrez un nombre de Reynolds: "))
 
             # Générer la polaire avec XFOIL
             output_file = os.path.join("data", "polaires_xfoil", f"{nom_profil}_coef_aero.txt")
@@ -341,7 +342,7 @@ if __name__ == "__main__":
             #Variable qui enregistre l'existance de courbes aéro nécessaires pour connaitre la finesse.
             perfo_pour_finesse = "générer"
 
-        elif lancement_xfoil == "non":
+        elif lancement_xfoil.lower() == "non":
             chemint_txt = None
             pass
 
@@ -352,14 +353,17 @@ if __name__ == "__main__":
         #                        chemin_csv, chemin_dat, chemin_txt, chemin_pol_csv)
 
 
-    while True:
-        calcul_finesse = input("\nVoulez-vous calculer la finesse maximale? (Oui / Non): ").strip().lower()
-        if calcul_finesse in ["oui", "non"]:
-            break  # sortie de la boucle si la réponse est valide
-        else:
-            print("Réponse invalide. Veuillez écrire 'Oui' ou 'Non'.")
 
-    if calcul_finesse == "oui":
+    # while True:
+    #     calcul_finesse = input("\nVoulez-vous calculer la finesse maximale? (Oui / Non): ").strip().lower()
+    #     if calcul_finesse in ["oui", "non"]:
+    #         break  # sortie de la boucle si la réponse est valide
+    #     else:
+    #         print("Réponse invalide. Veuillez écrire 'Oui' ou 'Non'.")
+
+    calcul_finesse = interface.demander_choix("Voulez-vous calculer la finesse maximale?",["Oui", "Non"])
+
+    if calcul_finesse.lower() == "oui":
         if perfo_pour_finesse == "générer":
             aero = aero_manuel
 
@@ -367,12 +371,14 @@ if __name__ == "__main__":
             aero = aero_import
 
         if chemin_txt is None or not os.path.exists(chemin_txt):
-            print(f"\nAucun fichier polaire importé trouvé : {chemin_txt}")
+            interface.msgbox(f"\nAucun fichier polaire importé trouvé : {chemin_txt}", titre="Erreur")
+            #print(f"\nAucun fichier polaire importé trouvé : {chemin_txt}")
         else:
             finesse, finesse_max = aero.calculer_finesse(chemin_txt)
-            print(f"\nLa finesse maximale de votre profil est : {finesse_max}")
+            interface.msgbox(f"\nLa finesse maximale de votre profil est : {finesse_max}", titre="Finesse maximale")
+            #print(f"\nLa finesse maximale de votre profil est : {finesse_max}")
 
-    elif calcul_finesse == "non":
+    elif calcul_finesse.lower() == "non":
         pass
 
     else:
