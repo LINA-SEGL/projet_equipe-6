@@ -4,12 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="3ddf66ec-8b16-4c62-b4a0-7be6a3879e26" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/aerodynamique.py" beforeDir="false" afterPath="$PROJECT_DIR$/aerodynamique.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-    </list>
+    <list default="true" id="3ddf66ec-8b16-4c62-b4a0-7be6a3879e26" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -25,7 +20,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="noe" />
+        <entry key="$PROJECT_DIR$" value="Cyril" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -69,7 +64,7 @@
     "Python.test.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "Cyril",
+    "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "last_opened_file_path": "C:/Users/Noé/PycharmProjects/projet_sessionE2025",
     "node.js.detected.package.eslint": "true",
@@ -169,7 +164,15 @@
       <option name="project" value="LOCAL" />
       <updated>1750043713449</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Changements sur les chemins d'accès à la base de données, modification nom de la fonction xfoil, ajout d'une variable pour sous dossier, test sur la partie génération OK">
+      <option name="closed" value="true" />
+      <created>1750119684839</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1750119684839</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -194,7 +197,8 @@
     <MESSAGE value="integration de GestionBase dans main" />
     <MESSAGE value="maj les fichiers voont bien dans &quot;data/&quot;" />
     <MESSAGE value="ajustement" />
-    <option name="LAST_COMMIT_MESSAGE" value="ajustement" />
+    <MESSAGE value="Changements sur les chemins d'accès à la base de données, modification nom de la fonction xfoil, ajout d'une variable pour sous dossier, test sur la partie génération OK" />
+    <option name="LAST_COMMIT_MESSAGE" value="Changements sur les chemins d'accès à la base de données, modification nom de la fonction xfoil, ajout d'une variable pour sous dossier, test sur la partie génération OK" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/projet_sessionE2025$main.coverage" NAME="main Coverage Results" MODIFIED="1750100980117" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />

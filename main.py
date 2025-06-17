@@ -148,7 +148,7 @@ if __name__ == "__main__":
             "manuel",
             fichier_coord_csv=chemin_csv,
             fichier_coord_dat=chemin_dat,
-            fichier_polaire_txt=chemin_txt,
+            #fichier_polaire_txt=chemin_txt,
             fichier_polaire_csv=None
         )
 
