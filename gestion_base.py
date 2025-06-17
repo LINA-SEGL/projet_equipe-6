@@ -3,6 +3,14 @@ import os
 import pandas as pd
 from datetime import datetime
 
+# chemins globaux pour l'organisation des fichiers
+Dossier_data = "data/"
+profils_importes = os.path.join(Dossier_data, "profils_importes")
+profils_manuels = os.path.join(Dossier_data, "profils_manuels")
+polaires_xfoil = os.path.join(Dossier_data, "polaires_xfoil")
+performance_txt = os.path.join(Dossier_data, "performance_txt")
+
+
 class GestionBase:
     """
 
@@ -46,8 +54,9 @@ class GestionBase:
         sous_dossiers = [
             "profils_importes",
             "profils_manuels",
-            "performance_txt",
-            "polaires_xfoil"
+            "polaires_xfoil",
+            "performance_txt"
+
         ]
         for dossier in sous_dossiers:
             os.makedirs(os.path.join(self.chemin_dossier, dossier), exist_ok=True)
