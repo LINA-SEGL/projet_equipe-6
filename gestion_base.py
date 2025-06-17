@@ -8,7 +8,7 @@ Dossier_data = "data/"
 profils_importes = os.path.join(Dossier_data, "profils_importes")
 profils_manuels = os.path.join(Dossier_data, "profils_manuels")
 polaires_xfoil = os.path.join(Dossier_data, "polaires_xfoil")
-performance_txt = os.path.join(Dossier_data, "performance_txt")
+polaires_importees = os.path.join(Dossier_data, "polaires_importees")
 
 
 class GestionBase:
@@ -55,7 +55,7 @@ class GestionBase:
             "profils_importes",
             "profils_manuels",
             "polaires_xfoil",
-            "performance_txt"
+            "polaires_importees"
 
         ]
         for dossier in sous_dossiers:
@@ -103,7 +103,7 @@ class GestionBase:
         dossier_coords = "profils_manuels" if type_profil == "manuel" else "profils_importes"
         chemin_coord_csv = self._deplacer_fichier(fichier_coord_csv, dossier_coords)
         chemin_coord_dat = self._deplacer_fichier(fichier_coord_dat, dossier_coords)
-        chemin_polaire_txt = self._deplacer_fichier(fichier_polaire_txt, "performance_txt")
+        chemin_polaire_txt = self._deplacer_fichier(fichier_polaire_txt, "polaires_importees")
         chemin_polaire_csv = self._deplacer_fichier(fichier_polaire_csv, "polaires_xfoil")
 
 
