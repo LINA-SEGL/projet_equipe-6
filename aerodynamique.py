@@ -268,6 +268,8 @@ class Aerodynamique:
         Returns:
             tuple: (liste des finesses, finesse maximale)
         """
+
+
         data = self.lire_txt_et_convertir_dataframe(nom_fichier)
 
         finesse = (data["CL"] / data["CD"]).tolist()

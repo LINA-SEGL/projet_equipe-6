@@ -186,8 +186,8 @@ if __name__ == "__main__":
             reynolds = int(input("\nRentrez un nombre de Reynolds: "))
 
             # Générer la polaire avec XFOIL
-            output_file = os.path.join("data", f"{nom_profil}_coef_aero.txt")
-            aero.run_xfoil(f"{nom_profil}_coord_profil.dat", reynolds, mach, alpha_start=-5, alpha_end=15, alpha_step=1,
+            output_file = os.path.join("data", "performance_txt", f"{nom_profil}_coef_aero.txt")
+            aero.telecharger_et_sauvegarder_txtrun_xfoil(f"{nom_profil}_coord_profil.dat", reynolds, mach, alpha_start=-5, alpha_end=15, alpha_step=1,
                            output_file=output_file)
             chemin_txt = output_file
             data = aero.lire_txt_et_convertir_dataframe(chemin_txt)
@@ -216,7 +216,10 @@ if __name__ == "__main__":
 
     if calcul_finesse == "oui":
         if perfo_pour_finesse == "générer":
-            finesse, finesse_max = aero.calculer_finesse(f"{nom_profil}_coef_aero.txt")
+           # finesse, finesse_max = aero.calculer_finesse(f"{nom_profil}_coef_aero.txt")
+           finesse, finesse_max = aero.calculer_finesse(os.path.join("data", "performance_txt", f"{nom_profil}_coef_aero.txt"))
+
+
 
         #verifie que le chemin du fichier existe bien
         if chemin_txt is None or not os.path.exists(chemin_txt):
