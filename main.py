@@ -156,7 +156,7 @@ if __name__ == "__main__":
 
         # Construire le chemin .dat à partir du même nom
         chemin_dat = chemin_csv.replace("_coord_profil.csv", "_coord_profil.dat")
-        print('DAT généré :', chemin_dat)
+        #print('DAT généré :', chemin_dat)
 
         # Ouvrir le CSV, lire x,y puis écrire le .dat
         with open(chemin_csv, "r") as f_csv, open(chemin_dat, "w") as f_dat:
@@ -167,7 +167,7 @@ if __name__ == "__main__":
                 x_str, y_str = ligne.strip().split(",")
                 f_dat.write(f"{float(x_str):.6f} {float(y_str):.6f}\n")
 
-        print("Fichier .dat pour XFoil créé :", chemin_dat)
+        #print("Fichier .dat pour XFoil créé :", chemin_dat)
         # ────────────────────────────────────────────────────────
 
         tracer = input("\nVoulez-vous afficher le profil? (Oui / Non): ").strip().lower()
@@ -194,9 +194,6 @@ if __name__ == "__main__":
 
             # Télécharger le fichier texte depuis AirfoilTools
             chemin_txt_airfoiltools = aero_import.telecharger_et_sauvegarder_txt(reynolds)
-
-            print("chemin import finesse", chemin_txt_airfoiltools)
-
 
             # Lire le fichier texte et convertir en DataFrame
             df_import = aero_import.lire_txt_et_convertir_dataframe(chemin_txt_airfoiltools)
@@ -231,7 +228,6 @@ if __name__ == "__main__":
             None,  # pas de .dat
             chemin_txt,
             None
-
             )
 
         """
@@ -345,33 +341,15 @@ if __name__ == "__main__":
 
     if calcul_finesse == "oui":
         if perfo_pour_finesse == "générer":
-            finesse, finesse_max = aero_manuel.calculer_finesse(chemin_txt)
-
+            aero = aero_manuel
 
         elif perfo_pour_finesse == "importer":
+            aero = aero_import
 
-            # pour un profil importé on se sert de l'objet aero_import
-
-            # chemin_txt a déjà été défini lors de aero_import.telecharger_et_sauvegarder_txt(...)
-
-            chemin_import = chemin_txt
-
-            if chemin_import is None or not os.path.exists(chemin_import):
-
-                print(f"\nAucun fichier polaire importé trouvé : {chemin_import}")
-
-            else:
-
-                # on calcule la finesse avec aero_import, pas aero_manuel
-
-                finesse, finesse_max = aero_import.calculer_finesse(chemin_import)
-
-        #verifie que le chemin du fichier existe bien
         if chemin_txt is None or not os.path.exists(chemin_txt):
-            print("\nAucun fichier polaire trouvé ; impossible de calculer la finesse")
-
+            print(f"\nAucun fichier polaire importé trouvé : {chemin_txt}")
         else:
-            finesse, finesse_max = aero_manuel.calculer_finesse(chemin_txt)
+            finesse, finesse_max = aero.calculer_finesse(chemin_txt)
             print(f"\nLa finesse maximale de votre profil est : {finesse_max}")
 
     elif calcul_finesse == "non":

@@ -146,7 +146,7 @@ class Aerodynamique:
             raise Exception(f"Erreur d'accès au fichier TXT : {url_txt}")
 
         nom_fichier=f"{self.nom}_coef_aero.txt"
-        chemin = os.path.join("data", "profils_importes", nom_fichier)
+        chemin = os.path.join("data", "performance_txt", nom_fichier)
 
         with open(chemin, "w", encoding="utf-8") as fichier:
             fichier.write(response.text)
