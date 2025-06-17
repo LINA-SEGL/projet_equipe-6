@@ -4,7 +4,7 @@ from ConditionVol import *
 from gestion_base import *
 from VolOpenSkyAsync import *
 import requests
-git push origin main
+import shutil
 def demande_profil():
 
     nom_profil = input("\nEntrez le nom du profil NACA (format : naca2412) : ").strip().lower()
@@ -49,6 +49,24 @@ if __name__ == "__main__":
         #profil_obj contient les propriétés du profil en tant qu'objet de la classe Airfoil.
         #nom_profil est le nom du profil sous forme d'une chaine de caractères.
         profil_obj_import, nom_profil = demande_profil()
+        # ─── Convertir le CSV importé EN DAT pour XFoil ───
+        # profil_obj_import.sauvegarder_coordonnees() vous a donné un CSV :
+        chemin_csv = profil_obj_import.sauvegarder_coordonnees(f"{nom_profil}_coord_profil.csv")
+
+        # Construire le chemin .dat à partir du même nom
+        chemin_dat = chemin_csv.replace("_coord_profil.csv", "_coord_profil.dat")
+
+        # Ouvrir le CSV, lire x,y puis écrire le .dat
+        with open(chemin_csv, "r") as f_csv, open(chemin_dat, "w") as f_dat:
+            lignes = f_csv.readlines()
+            # la première ligne est l'en-tête "x,y", on l'ignore :
+            f_dat.write(f"{nom_profil}\n")
+            for ligne in lignes[1:]:
+                x_str, y_str = ligne.strip().split(",")
+                f_dat.write(f"{float(x_str):.6f} {float(y_str):.6f}\n")
+
+        print("Fichier .dat pour XFoil créé :", chemin_dat)
+        # ────────────────────────────────────────────────────────
 
         tracer = input("\nVoulez-vous afficher le profil? (Oui / Non): ").strip().lower()
 
@@ -74,8 +92,12 @@ if __name__ == "__main__":
             # Télécharger le fichier texte depuis AirfoilTools
             chemin_txt_airfoiltools = aero.telecharger_et_sauvegarder_txt(reynolds)
 
+
             # Lire le fichier texte et convertir en DataFrame
             df = aero.lire_txt_et_convertir_dataframe(chemin_txt_airfoiltools)
+            # **Nouvelle ligne :** on stocke le DataFrame pour le tracer
+            aero.donnees = df
+
 
             # Stocker dans l’objet et tracer
             chemin_txt = chemin_txt_airfoiltools
@@ -330,31 +352,59 @@ if __name__ == "__main__":
                 print(f"Reynolds (corde=1 m) : {reynolds:.2e}")
 
                 #  lancement XFoil avec ce Reynolds
-                chemin_xfoil = os.path.join("data", "performance_txt", f"{nom_profil}_coef_aero_vol_reel.txt")
+                if generation== "générer":
+                    chemin_xfoil = os.path.join("data", "performance_txt", f"{nom_profil}_coef_aero_vol_reel.txt")
+                    fichier_dat = os.path.join("data", f"{sous_dossier}", f"{nom_profil}_coord_profil.dat")
 
-                fichier_dat = os.path.join("data", f"{sous_dossier}", f"{nom_profil}_coord_profil.dat")
+                    aero.run_xfoil(
+                        fichier_dat,
+                        reynolds,
+                        mach,
+                        alpha_start=-5,
+                        alpha_end=12,
+                        alpha_step=1,
+                        output_file = os.path.join("data", "performance_txt", f"{nom_profil}_coef_aero_vol_reel.txt")
+                    )
 
-                aero.run_xfoil(
-                    fichier_dat,
-                    reynolds,
-                    mach,
-                    alpha_start=-5,
-                    alpha_end=12,
-                    alpha_step=1,
-                    output_file = os.path.join("data", "performance_txt", f"{nom_profil}_coef_aero_vol_reel.txt")
-                )
+                    chemin_resultat = os.path.join("data", "performance_txt", f"{nom_profil}_coef_aero_vol_reel.txt")
 
-                chemin_resultat = os.path.join("data", "performance_txt", f"{nom_profil}_coef_aero_vol_reel.txt")
+                    print("Chemin résultat", chemin_resultat)
 
-                print("Chemin résultat", chemin_resultat)
+                    if not os.path.exists(chemin_resultat):
+                        print(f"\nERREUR : Le fichier attendu n’a pas été généré : {chemin_resultat}")
+                    else:
+                         #  Lecture et tracé
+                        df = aero.lire_txt_et_convertir_dataframe(chemin_xfoil)
+                        aero.donnees = df
+                        aero.tracer_polaires_depuis_txt()
 
-                if not os.path.exists(chemin_resultat):
-                    print(f"\nERREUR : Le fichier attendu n’a pas été généré : {chemin_resultat}")
-                else:
-                    #  Lecture et tracé
-                    df = aero.lire_txt_et_convertir_dataframe(chemin_xfoil)
-                    aero.donnees = df
-                    aero.tracer_polaires_depuis_txt()
+                elif generation== "importer":
+                    chemin_xfoil = os.path.join("data", "profils_importes", f"{nom_profil}_coef_aero_vol_reel.txt")
+                    fichier_dat = os.path.join("data", f"{sous_dossier}", f"{nom_profil}_coord_profil.dat")
+
+                    aero.run_xfoil(
+                        fichier_dat,
+                        reynolds,
+                        mach,
+                        alpha_start=-5,
+                        alpha_end=12,
+                        alpha_step=1,
+                        output_file=os.path.join("data", "profils_importes", f"{nom_profil}_coef_aero_vol_reel.txt")
+                    )
+
+                    chemin_resultat = os.path.join("data", "profils_importest", f"{nom_profil}_coef_aero_vol_reel.txt")
+
+                    print("Chemin résultat", chemin_resultat)
+
+                    if not os.path.exists(chemin_resultat):
+                        print(f"\nERREUR : Le fichier attendu n’a pas été généré : {chemin_resultat}")
+                    else:
+                        #  Lecture et tracé
+                        df = aero.lire_txt_et_convertir_dataframe(chemin_xfoil)
+                        aero.donnees = df
+                        aero.tracer_polaires_depuis_txt()
+
+
 
 
 
