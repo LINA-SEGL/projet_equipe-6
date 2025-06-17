@@ -1,0 +1,29 @@
+# Fichiers spécifiques à PyCharm
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Fichiers de cache et temporaires
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# Environnements virtuels
+venv/
+env/
+.venv/
+
+# Fichiers de données/binaires (ajustez selon vos besoins)
+data/
+*.exe
+*.zip
+*.dat
+*.log
+
+# Autres fichiers système
+.DS_Store
+Thumbs.db
