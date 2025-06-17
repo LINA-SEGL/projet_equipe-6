@@ -61,6 +61,11 @@ cd projet_sessionE2025
 pip install -e
 ```
 
+Installez également:
+
+```
+pip install python-opensky
+```
 
 ## Dépendances:
 
