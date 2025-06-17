@@ -8,9 +8,11 @@ import os
 
 # ─────────── dossier pour les imports AirfoilTools ───────────
 # (tous les .txt générés par telecharger_et_sauvegarder_txt iront ici)
-Dossier_data = "data/"
-Dossier_data = os.path.join("data", "profils_importes")
-os.makedirs(Dossier_data, exist_ok=True)
+dossier_data = "data/"
+sous_dossier_data_import = os.path.join("data", "profils_importes")
+sous_dossier_data_genere = os.path.join("data", "profils_manuels")
+
+os.makedirs(sous_dossier_data_import, exist_ok=True)
 # ─────────────────────────────────────────────────────────────
 
 class Aerodynamique:
@@ -58,7 +60,7 @@ class Aerodynamique:
             nom_fichier (str): Nom du fichier de sortie.
         """
         if self.donnees is not None:
-            chemin = os.path.join(Dossier_data, nom_fichier)
+            chemin = os.path.join(dossier_data, "profils_importes", nom_fichier)
             with open(chemin, "w") as fichier:
                 fichier.write(",".join(self.donnees.columns) + "\n")  # ligne d'en-tête
                 for _, ligne in self.donnees.iterrows():
@@ -129,7 +131,7 @@ class Aerodynamique:
         except Exception as e:
             print(f" Erreur : {e}")
 
-    def telecharger_et_sauvegarder_txt(self, nom_fichier="airfoil_coef_aero.txt", re = 50000):
+    def telecharger_et_sauvegarder_txt(self, re = 50000):
         """
         Télécharge les performances depuis AirfoilTools (format .txt) et les enregistre.
 
@@ -143,12 +145,11 @@ class Aerodynamique:
         if response.status_code != 200:
             raise Exception(f"Erreur d'accès au fichier TXT : {url_txt}")
 
-        nom_fichier=f"polar_{self.nom}.txt"
-        chemin = os.path.join(Dossier_data, nom_fichier)
+        nom_fichier=f"{self.nom}_coef_aero.txt"
+        chemin = os.path.join("data", "profils_importes", nom_fichier)
 
         with open(chemin, "w", encoding="utf-8") as fichier:
             fichier.write(response.text)
-
 
         print(f"Performances aérodynamiques enregistrés dans le fichier: {chemin}")
 

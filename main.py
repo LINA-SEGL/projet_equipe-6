@@ -92,12 +92,13 @@ if __name__ == "__main__":
             # Télécharger le fichier texte depuis AirfoilTools
             chemin_txt_airfoiltools = aero.telecharger_et_sauvegarder_txt(reynolds)
 
+            print("chemin import finesse", chemin_txt_airfoiltools)
+
 
             # Lire le fichier texte et convertir en DataFrame
             df = aero.lire_txt_et_convertir_dataframe(chemin_txt_airfoiltools)
             # **Nouvelle ligne :** on stocke le DataFrame pour le tracer
             aero.donnees = df
-
 
             # Stocker dans l’objet et tracer
             chemin_txt = chemin_txt_airfoiltools
@@ -241,6 +242,11 @@ if __name__ == "__main__":
         if perfo_pour_finesse == "générer":
             finesse, finesse_max = aero.calculer_finesse(chemin_txt)
 
+        elif perfo_pour_finesse == "importer":
+            #Chemin du fichier pour le calcul de la finesse avec les profils importés
+            chemin_txt = os.path.join("data", "performance_txt", f"{nom_profil}_coef_aero.txt")
+            finesse, finesse_max = aero.calculer_finesse(chemin_txt)
+
         #verifie que le chemin du fichier existe bien
         if chemin_txt is None or not os.path.exists(chemin_txt):
             print("\nAucun fichier polaire trouvé ; impossible de calculer la finesse")
@@ -342,14 +348,14 @@ if __name__ == "__main__":
                 print(f"Vitesse ≈ {vitesse:.1f} m/s (mach×sons), son à {vitesse_son:.1f} m/s")
 
                 #  calcul du Reynolds
-                corde = 1.0
+                corde = float(input("\nRentrez la longueur de corde de votre aile (en m): "))
                 reynolds = cond.calculer_reynolds(
                     vitesse_m_s=vitesse,
                     corde_m=corde,
                     viscosite_kgms=cond.viscosite_kgms,
                     densite_kgm3=cond.densite_kgm3
                 )
-                print(f"Reynolds (corde=1 m) : {reynolds:.2e}")
+                print(f"Reynolds (corde= {corde}m) : {reynolds:.2e}")
 
                 #  lancement XFoil avec ce Reynolds
                 if generation== "générer":
@@ -392,7 +398,7 @@ if __name__ == "__main__":
                         output_file=os.path.join("data", "profils_importes", f"{nom_profil}_coef_aero_vol_reel.txt")
                     )
 
-                    chemin_resultat = os.path.join("data", "profils_importest", f"{nom_profil}_coef_aero_vol_reel.txt")
+                    chemin_resultat = os.path.join("data", "profils_importes", f"{nom_profil}_coef_aero_vol_reel.txt")
 
                     print("Chemin résultat", chemin_resultat)
 
