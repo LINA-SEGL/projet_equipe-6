@@ -5,6 +5,7 @@ import numpy as np
 import csv
 from gestion_base import *
 import os
+from scipy.interpolate import make_interp_spline
 
 
 class Airfoil:
@@ -328,6 +329,123 @@ class Airfoil:
         plt.legend()
         plt.show()
 
+    def tracer_givrage(self, epaisseur=0.02, zone=(0.3, 0.45)):
+        """
+        Trace le profil original et une couche de givrage ajoutée sur l'extrados,
+        enregistre les coordonnées givrées en CSV et en DAT (XFoil).
+
+        epaisseur : épaisseur uniforme du givrage (en fraction de corde)
+        zone      : intervalle x_min, x_max où le givrage est appliqué
+        """
+        import os, csv
+
+        # ─── dossiers et chemins ───────────────────────────────────────────────────────
+        dossier = os.path.join("data", "profils_givre")
+        os.makedirs(dossier, exist_ok=True)
+        fichier_csv = os.path.join(dossier, f"{self.nom}_coord_givre.csv")
+        fichier_dat = os.path.join(dossier, f"{self.nom}_coord_givre.dat")
+
+        # ───  extraction coords ──────────────────────────────────────────────────────
+        coords = np.array(self.coordonnees)  # shape (N,2)
+        x_vals, y_vals = coords[:, 0], coords[:, 1]
+
+        # ───  normales ────────────────────────────────────────────────────────────────
+        dx_ds, dy_ds = np.gradient(x_vals), np.gradient(y_vals)
+        tangentes = np.vstack((dx_ds, dy_ds)).T
+        longueurs = np.linalg.norm(tangentes, axis=1)
+        normals = np.column_stack((-dy_ds / longueurs, dx_ds / longueurs))
+
+        # ───  masque extrados + zone ─────────────────────────────────────────────────
+        masque = (
+                (x_vals >= zone[0]) &
+                (x_vals <= zone[1]) &
+                (y_vals >= 0)
+        )
+
+        # ───  calcul des points givrés ───────────────────────────────────────────────
+        coords_givre = coords.copy()
+        coords_givre[masque] -= normals[masque] * epaisseur
+
+        # ───  écriture du CSV ─────────────────────────────────────────────────────────
+        with open(fichier_csv, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["x", "y"])
+            for x, y in coords_givre:
+                writer.writerow([f"{x:.6f}", f"{y:.6f}"])
+        print(f" CSV givré : {fichier_csv}")
+
+        # ───  écriture du DAT pour XFoil ──────────────────────────────────────────────
+        with open(fichier_dat, "w", encoding="utf-8") as f:
+            # entête XFoil
+            f.write(f"{self.nom}-givre\n")
+            for x, y in coords_givre:
+                f.write(f"{x:.6f} {y:.6f}\n")
+        print(f" DAT givré  : {fichier_dat}")
+
+        # ───  tracé ───────────────────────────────────────────────────────────────────
+        plt.figure(figsize=(8, 4))
+        plt.plot(x_vals, y_vals, label="Original", linewidth=2)
+        plt.plot(coords_givre[:, 0],
+                 coords_givre[:, 1],
+                 color="crimson",
+                 linewidth=2,
+                 label=f"Givré {epaisseur:.3f} zone {zone}")
+        plt.title(f"Profil givré {self.nom}")
+        plt.xlabel("x")
+        plt.ylabel("y")
+        plt.axis("equal")
+        plt.grid(True)
+        plt.legend()
+        plt.show()
+
+
+class GivreProfil:
+    """
+    Applique une couche de givrage uniformément sur l'extrados,
+    de x0 à x1, avec une épaisseur max ep_max.
+    """
+    def __init__(self, ep_max=0.02, zone=(0.2, 0.6), forme="gaussienne"):
+        self.ep_max = ep_max
+        self.x0, self.x1 = zone
+        self.forme = forme
+
+    def _epaisseur(self, x):
+        """Retourne l'épaisseur de givrage en x."""
+        # normalise x dans [0,1] sur la zone
+        xi = (x - self.x0) / (self.x1 - self.x0)
+        xi = np.clip(xi, 0, 1)
+        if self.forme == "gaussienne":
+            # pic en milieu de zone
+            return self.ep_max * np.exp(-((xi - 0.5)**2)/(2*0.15**2))
+        elif self.forme == "triangle":
+            return self.ep_max * np.minimum(xi, 1 - xi) * 2
+        else:  # uniforme
+            return self.ep_max * np.ones_like(xi)
+
+    def appliquer(self, coordonnees):
+        coords = np.array(coordonnees)    # shape (N,2)
+        x, y = coords[:,0], coords[:,1]
+
+        # calcul des normales du profil
+        dx_ds, dy_ds = np.gradient(x), np.gradient(y)
+        tang = np.vstack((dx_ds, dy_ds)).T
+        norms = np.linalg.norm(tang, axis=1, keepdims=True)
+        normals = np.hstack((-dy_ds.reshape(-1,1), dx_ds.reshape(-1,1))) / norms
+
+        # on ne givre que l'extrados (y>=0)
+        masque = y >= 0
+
+        # calcul de l'épaisseur en chaque point
+        eps = self._epaisseur(x)
+
+        # on applique uniquement sur la zone d'extrados
+        decal = normals * (eps * masque)[:,None]
+
+        # retourne les nouvelles coordonnées
+        coords_givre = coords + decal
+        return [tuple(pt) for pt in coords_givre]
+
+
 
 class RotationProfil:
     def __init__(self, angle_deg=0, centre=(0, 0)):
@@ -430,5 +548,23 @@ def generer_pale_vrillee(profil_2d, angle_max_deg=30, z_max=1.0, sections=50):
             pale.append((x, y, z))
     return np.array(pale)
 
+if __name__ == "__main__":
+    from main import demande_profil
+
+    # 1) on importe le profil via ta fonction existante
+    profil_obj, nom_profil = demande_profil()
+
+    # 2) on affiche le profil brut
+    profil_obj.tracer_contour(nom_profil)
+
+    # 3) on récupère les paramètres de givrage
+    ep = float(input("Épaisseur du givrage [0.02] : ") or 0.02)
+    z0, z1 = map(
+        float,
+        (input("Zone givrage x0,x1 [0.3,0.45] : ") or "0.3,0.45").split(",")
+    )
+
+    # 4) on trace la couche de givrage **en plus** du profil
+    profil_obj.tracer_givrage(epaisseur=ep, zone=(z0, z1))
 
 
