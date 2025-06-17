@@ -27,3 +27,7 @@ data/
 # Autres fichiers système
 .DS_Store
 Thumbs.db
+
+!pplot.exe
+!pxplot.exe
+!xfoil.exe
