@@ -6,8 +6,12 @@ from Airfoil import Airfoil
 import subprocess
 import os
 
+# ─────────── dossier pour les imports AirfoilTools ───────────
+# (tous les .txt générés par telecharger_et_sauvegarder_txt iront ici)
 Dossier_data = "data/"
-os.makedirs(Dossier_data, exist_ok=True) # crée le dossier si il n'existe pas
+Dossier_data = os.path.join("data", "profils_importes")
+os.makedirs(Dossier_data, exist_ok=True)
+# ─────────────────────────────────────────────────────────────
 
 class Aerodynamique:
     """
