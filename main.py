@@ -20,6 +20,41 @@ def demande_profil():
     print(f"\nLes coordonnées du profil ont été enregistrés dans le fichier: {nom_profil}_coord_profil.csv")
     return profil_obj, nom_profil
 
+
+import matplotlib.pyplot as plt
+
+def comparer_polaires(profiles: dict[str, pd.DataFrame]):
+    """
+    Compare plusieurs polaires en un seul graphique 2×2 :
+      - CL(α)
+      - CD(α)
+      - CM(α)
+      - CL(CD) (polar lift/drag)
+    profiles : dictionnaire {label → DataFrame}, chaque DataFrame doit avoir les colonnes
+               'alpha', 'CL', 'CD' et 'CM'.
+    """
+    # Prépare un 2×2
+    fig, axs = plt.subplots(2, 2, figsize=(12, 10))
+    ax_cl,   ax_cd   = axs[0]
+    ax_cm,   ax_lvsd = axs[1]
+
+    # Pour chaque profil, trace trois courbes
+    for label, df in profiles.items():
+        ax_cl.plot(   df["alpha"], df["CL"],   label=label)
+        ax_cd.plot(   df["alpha"], df["CD"],   label=label)
+        ax_cm.plot(   df["alpha"], df["CM"],   label=label)
+        ax_lvsd.plot(df["CD"],    df["CL"],   label=label)
+
+    # Titres, axes, légendes, grilles
+    ax_cl  .set_title("CL vs α");   ax_cl  .set_ylabel("CL");    ax_cl  .legend(); ax_cl  .grid(True)
+    ax_cd  .set_title("CD vs α");   ax_cd  .set_ylabel("CD");    ax_cd  .legend(); ax_cd  .grid(True)
+    ax_cm  .set_title("CM vs α");   ax_cm  .set_ylabel("CM");    ax_cm  .legend(); ax_cm  .grid(True)
+    ax_lvsd.set_title("CL vs CD");  ax_lvsd.set_xlabel("CD"); ax_lvsd.set_ylabel("CL"); ax_lvsd.legend(); ax_lvsd.grid(True)
+
+    # Ajuste les espacements
+    plt.tight_layout()
+    plt.show()
+
 """
 BOUCLE PRINCIPALE.
 """
@@ -30,6 +65,18 @@ if __name__ == "__main__":
 
     #Initialisation de la base de données des profils
     gestion = GestionBase()
+    # on réserve les variables pour stocker chacun des trois objets Aerodynamique
+    aero_import = None
+    aero_manuel = None
+    aero_volreel = None
+    aero_volperso = None
+
+    df_import = None
+    df_manuel = None
+    df_volreel = None
+    df_volperso = None
+    # Initialisation des chemins et objets
+    chemin_dat = None  # localisation du .dat
 
     print("\n---- Lancement du programme Airfoil ----\n")
 
@@ -55,6 +102,7 @@ if __name__ == "__main__":
 
         # Construire le chemin .dat à partir du même nom
         chemin_dat = chemin_csv.replace("_coord_profil.csv", "_coord_profil.dat")
+        print('DAT généré :', chemin_dat)
 
         # Ouvrir le CSV, lire x,y puis écrire le .dat
         with open(chemin_csv, "r") as f_csv, open(chemin_dat, "w") as f_dat:
@@ -87,18 +135,19 @@ if __name__ == "__main__":
 
             reynolds = int(input("\nPour quel nombre de Reynolds? (50000/100000/1000000): "))
 
-            aero = Aerodynamique(nom_profil)
+            ##aero = Aerodynamique(nom_profil)
+            aero_import = Aerodynamique(nom_profil)
 
             # Télécharger le fichier texte depuis AirfoilTools
-            chemin_txt_airfoiltools = aero.telecharger_et_sauvegarder_txt(reynolds)
+            chemin_txt_airfoiltools = aero_import.telecharger_et_sauvegarder_txt(reynolds)
 
             print("chemin import finesse", chemin_txt_airfoiltools)
 
 
             # Lire le fichier texte et convertir en DataFrame
-            df = aero.lire_txt_et_convertir_dataframe(chemin_txt_airfoiltools)
+            df_import = aero_import.lire_txt_et_convertir_dataframe(chemin_txt_airfoiltools)
             # **Nouvelle ligne :** on stocke le DataFrame pour le tracer
-            aero.donnees = df
+            aero_import.donnees = df_import
 
             # Stocker dans l’objet et tracer
             chemin_txt = chemin_txt_airfoiltools
@@ -111,7 +160,7 @@ if __name__ == "__main__":
                     print("Réponse invalide. Veuillez écrire 'Oui' ou 'Non'.")
 
             if tracer_polaire == "oui":
-                aero.tracer_polaires_depuis_txt()
+                aero_import.tracer_polaires_depuis_txt()
             else:
                 pass
 
@@ -136,6 +185,7 @@ if __name__ == "__main__":
         """
 
     elif generation == "générer":
+        profil_manuel, nom_profil = None, None
 
         # Création d'un profil manuel:
         while True:
@@ -165,6 +215,7 @@ if __name__ == "__main__":
         #enregistrer les coordonnées du profil en .csv et .dat
         chemin_csv = profil_manuel.enregistrer_profil_manuel_csv(x_up, y_up, x_low, y_low, nom_fichier=f"{nom_profil}_coord_profil.csv")
         chemin_dat = profil_manuel.enregistrer_profil_format_dat(x_up, y_up, x_low, y_low, c, nom_fichier=f"{nom_profil}_coord_profil.dat")
+        print(' DAT manuel :', chemin_dat)
 
         gestion.ajouter_profil(
             nom_profil,
@@ -199,7 +250,7 @@ if __name__ == "__main__":
                 print("Réponse invalide. Veuillez écrire 'Oui' ou 'Non'.")
 
         if lancement_xfoil == "oui":
-            aero = Aerodynamique(nom_profil)
+            aero_manuel = Aerodynamique(nom_profil)
 
             mach = float(input("\nRentrez une valeur de Mach (0 à 0.7): "))
             reynolds = int(input("\nRentrez un nombre de Reynolds: "))
@@ -210,12 +261,12 @@ if __name__ == "__main__":
             acces_fichier_dat = os.path.join("data", "profils_manuels", f"{nom_profil}_coord_profil.dat")
 
             #aero.telecharger_et_sauvegarder_txtrun_xfoil(f"{nom_profil}_coord_profil.dat", reynolds, mach, alpha_start=-15, alpha_end=15, alpha_step=1, output_file=output_file)
-            aero.run_xfoil(acces_fichier_dat, reynolds, mach, alpha_start=-5, alpha_end=12, alpha_step=1,output_file=output_file)
+            aero_manuel.run_xfoil(acces_fichier_dat, reynolds, mach, alpha_start=-5, alpha_end=12, alpha_step=1,output_file=output_file)
 
             chemin_txt = output_file
-            data = aero.lire_txt_et_convertir_dataframe(output_file)
-            aero.donnees = data
-            aero.tracer_polaires_depuis_txt()
+            df_manuel = aero_manuel.lire_txt_et_convertir_dataframe(output_file)
+            aero_manuel.donnees =  df_manuel
+            aero_manuel.tracer_polaires_depuis_txt()
 
             #Variable qui enregistre l'existance de courbes aéro nécessaires pour connaitre la finesse.
             perfo_pour_finesse = "générer"
@@ -240,19 +291,33 @@ if __name__ == "__main__":
 
     if calcul_finesse == "oui":
         if perfo_pour_finesse == "générer":
-            finesse, finesse_max = aero.calculer_finesse(chemin_txt)
+            finesse, finesse_max = aero_manuel.calculer_finesse(chemin_txt)
+
 
         elif perfo_pour_finesse == "importer":
-            #Chemin du fichier pour le calcul de la finesse avec les profils importés
-            chemin_txt = os.path.join("data", "performance_txt", f"{nom_profil}_coef_aero.txt")
-            finesse, finesse_max = aero.calculer_finesse(chemin_txt)
+
+            # pour un profil importé on se sert de l'objet aero_import
+
+            # chemin_txt a déjà été défini lors de aero_import.telecharger_et_sauvegarder_txt(...)
+
+            chemin_import = chemin_txt
+
+            if chemin_import is None or not os.path.exists(chemin_import):
+
+                print(f"\nAucun fichier polaire importé trouvé : {chemin_import}")
+
+            else:
+
+                # on calcule la finesse avec aero_import, pas aero_manuel
+
+                finesse, finesse_max = aero_import.calculer_finesse(chemin_import)
 
         #verifie que le chemin du fichier existe bien
         if chemin_txt is None or not os.path.exists(chemin_txt):
             print("\nAucun fichier polaire trouvé ; impossible de calculer la finesse")
 
         else:
-            finesse, finesse_max = aero.calculer_finesse(chemin_txt)
+            finesse, finesse_max = aero_manuel.calculer_finesse(chemin_txt)
             print(f"\nLa finesse maximale de votre profil est : {finesse_max}")
 
     elif calcul_finesse == "non":
@@ -268,151 +333,62 @@ if __name__ == "__main__":
     print("  2 - Conditions personnalisées")
     print("  3 - Les deux")
 
-    while True:
+    choix_mode = ""
+    while choix_mode not in ("0", "1", "2", "3"):
         choix_mode = input("Entrez 0, 1, 2 ou 3 : ").strip()
-        if choix_mode in ("0", "1", "2", "3"):
-            break
-        print("Réponse invalide, tapez 0, 1, 2 ou 3.")
 
-    # Si l'utilisateur choisit 0, on passe la fonction
-    if choix_mode == "0":
-        print("\nTest de performance ignoré.")
-    else:
-        # Conteneur des conditions choisies
-        conditions_choisies = []
+    # 1) On collecte les conditions dans une liste
+    conditions = []
+    if choix_mode in ("1", "3"):
+        vols = asyncio.run(fetch_vols(limit=10))
+        afficher_liste(vols)
+        sel = int(input("\nSélectionnez le vol (numéro) : ")) - 1
+        s = vols[sel]
+        alt = s.geo_altitude or 0
+        vit = s.velocity or 0
+        Tstd = 288.15 - 0.0065 * alt
+        mach = vit / ((1.4 * 287.05 * Tstd) ** 0.5)
+        angle = 2  # ou input()
+        conditions.append(("vol_reel", alt, mach, angle, s.latitude, s.longitude))
 
-        #Condition pour le chemin d'accès au fichier de coordonnées
-        if generation == "importer":
-            sous_dossier = "profils_importes"
-        elif generation == "générer":
-            sous_dossier = "profils_manuels"
+    if choix_mode in ("2", "3"):
+        alt = float(input("\nAltitude personnalisée (m) : "))
+        mach = float(input("Mach personnalisé : "))
+        angle = float(input("Angle d’attaque perso (°) : "))
+        conditions.append(("vol_perso", alt, mach, angle, None, None))
 
-        #  Conditions réelles
-        if choix_mode in ("1", "3"):
-            vols = asyncio.run(fetch_vols(limit=10))
-            afficher_liste(vols)
-            try:
-                sel = int(input("\nSélectionnez le vol (numéro) : ")) - 1
-                if 0 <= sel < len(vols):
-                    s = vols[sel]
-                    alt = s.geo_altitude or 0
-                    vit = s.velocity or 0
-                    gamma, R = 1.4, 287.05
-                    T_std = 288.15 - 0.0065 * alt
-                    mach = vit / ((gamma * R * T_std) ** 0.5)
-                    lat = s.latitude or 0.0
-                    lon = s.longitude or 0.0
-                    #Choix angle d'attaque retiré
-                    angle = 2 #float(input("Angle d'attaque pour ce vol (°) : "))
-                    # Récupération des coordonnées
-                    lat = s.latitude or 0.0
-                    lon = s.longitude or 0.0
-                    # On stocke désormais alt, mach, angle, lat et lon
-                    conditions_choisies.append((alt, mach, angle, lat, lon))
-                else:
-                    print(" Sélection hors de la plage de vols.")
-            except ValueError:
-                print(" Entrée non valide, sélectionnez un numéro de vol.")
-
-        #  Conditions personnalisées
-        if choix_mode in ("2", "3"):
-            try:
-                alt_u = float(input("\nAltitude personnalisée (m) : "))
-                mach_u = float(input("Mach personnalisé : "))
-                angle_u = float(input("Angle d'attaque personnalisé (°) : "))
-                conditions_choisies.append((alt_u, mach_u, angle_u, None, None))
-            except ValueError:
-                print(" Valeur incorrecte, saisie ignorée.")
-
-        #  Lancement XFoil pour chaque condition
-        if not conditions_choisies:
-            print("\nAucune condition définie, XFoil n’est pas lancé.")
+        # Exécution XFoil pour chaque condition
+    for tag, alt, mach, angle, lat, lon in conditions:
+        cond = ConditionVol(altitude_m=alt, mach=mach, angle_deg=angle,
+                            delta_isa=calcul_delta_isa(lat or 0, lon or 0, alt, API_KEY) or 0)
+        cond.afficher()
+        corde = float(input('Corde (m): '))
+        reynolds = cond.calculer_reynolds(vitesse_m_s=mach * (1.4 * 287.05 * cond.temperature_K) ** 0.5, corde_m=corde,
+                                          viscosite_kgms=cond.viscosite_kgms, densite_kgm3=cond.densite_kgm3)
+        aero = Aerodynamique(nom_profil)
+        suffix = '_vol_reel' if tag == 'vol_reel' else '_vol_perso'
+        txt_out = os.path.join('data', 'profils_importes' if generation == 'importer' else 'profils_manuels',
+                               f"{nom_profil}{suffix}.txt")
+        print('→ XFoil', tag, '→', txt_out)
+        aero.run_xfoil(chemin_dat, reynolds, mach, alpha_start=-5, alpha_end=12, alpha_step=1, output_file=txt_out)
+        df = aero.lire_txt_et_convertir_dataframe(txt_out)
+        aero.donnees = df
+        if tag == 'vol_reel':
+            aero_volreel, df_volreel = aero, df
         else:
-            aero = Aerodynamique(nom_profil)
-            for i, (alt, mach, angle, lat, lon) in enumerate(conditions_choisies, start=1):
-                #  calculer ΔISA en fonction de lat/lon/alt
-                delta = calcul_delta_isa(lat, lon, alt, API_KEY) or 0.0
-                print(f"\nCondition choisie #{i} – ΔISA météo : {delta:+.1f} K")
+            aero_volperso, df_volperso = aero, df
+        if input('Afficher polaire X ? (Oui/Non) ').strip().lower() == 'oui':
+            aero.tracer_polaires_depuis_txt()
 
-                #  créer ConditionVol en lui passant ce ΔISA
-                cond = ConditionVol(altitude_m=alt,
-                                    mach=mach,
-                                    angle_deg=angle,
-                                    delta_isa=delta)
-                cond.afficher()
+        # Collecte des polaires pour comparaison
+    polaires = {}
+    if aero_import:   polaires['Importé'] = aero_import.donnees
+    if aero_manuel:   polaires['Manuel'] = aero_manuel.donnees
+    if aero_volreel:  polaires['Vol réel'] = aero_volreel.donnees
+    if aero_volperso: polaires['Vol perso'] = aero_volperso.donnees
 
-                #  vitesse du son corrigée par la vraie température
-                gamma, R = 1.4, 287.05
-                vitesse_son = (gamma * R * cond.temperature_K) ** 0.5
-                vitesse = mach * vitesse_son
-                print(f"Vitesse ≈ {vitesse:.1f} m/s (mach×sons), son à {vitesse_son:.1f} m/s")
-
-                #  calcul du Reynolds
-                corde = float(input("\nRentrez la longueur de corde de votre aile (en m): "))
-                reynolds = cond.calculer_reynolds(
-                    vitesse_m_s=vitesse,
-                    corde_m=corde,
-                    viscosite_kgms=cond.viscosite_kgms,
-                    densite_kgm3=cond.densite_kgm3
-                )
-                print(f"Reynolds (corde= {corde}m) : {reynolds:.2e}")
-
-                #  lancement XFoil avec ce Reynolds
-                if generation== "générer":
-                    chemin_xfoil = os.path.join("data", "performance_txt", f"{nom_profil}_coef_aero_vol_reel.txt")
-                    fichier_dat = os.path.join("data", f"{sous_dossier}", f"{nom_profil}_coord_profil.dat")
-
-                    aero.run_xfoil(
-                        fichier_dat,
-                        reynolds,
-                        mach,
-                        alpha_start=-5,
-                        alpha_end=12,
-                        alpha_step=1,
-                        output_file = os.path.join("data", "performance_txt", f"{nom_profil}_coef_aero_vol_reel.txt")
-                    )
-
-                    chemin_resultat = os.path.join("data", "performance_txt", f"{nom_profil}_coef_aero_vol_reel.txt")
-
-                    print("Chemin résultat", chemin_resultat)
-
-                    if not os.path.exists(chemin_resultat):
-                        print(f"\nERREUR : Le fichier attendu n’a pas été généré : {chemin_resultat}")
-                    else:
-                         #  Lecture et tracé
-                        df = aero.lire_txt_et_convertir_dataframe(chemin_xfoil)
-                        aero.donnees = df
-                        aero.tracer_polaires_depuis_txt()
-
-                elif generation== "importer":
-                    chemin_xfoil = os.path.join("data", "profils_importes", f"{nom_profil}_coef_aero_vol_reel.txt")
-                    fichier_dat = os.path.join("data", f"{sous_dossier}", f"{nom_profil}_coord_profil.dat")
-
-                    aero.run_xfoil(
-                        fichier_dat,
-                        reynolds,
-                        mach,
-                        alpha_start=-5,
-                        alpha_end=12,
-                        alpha_step=1,
-                        output_file=os.path.join("data", "profils_importes", f"{nom_profil}_coef_aero_vol_reel.txt")
-                    )
-
-                    chemin_resultat = os.path.join("data", "profils_importes", f"{nom_profil}_coef_aero_vol_reel.txt")
-
-                    print("Chemin résultat", chemin_resultat)
-
-                    if not os.path.exists(chemin_resultat):
-                        print(f"\nERREUR : Le fichier attendu n’a pas été généré : {chemin_resultat}")
-                    else:
-                        #  Lecture et tracé
-                        df = aero.lire_txt_et_convertir_dataframe(chemin_xfoil)
-                        aero.donnees = df
-                        aero.tracer_polaires_depuis_txt()
-
-
-
-
+    if len(polaires) >= 2 and input('Superposer polaires ? (Oui/Non) ').strip().lower() == 'oui':
+        comparer_polaires(polaires)
 
     while True:
         comparaison = input("\nVoulez-vous comparer deux profils d'aile? (Oui / Non): ").strip().lower()
