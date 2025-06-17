@@ -5,10 +5,21 @@ from gestion_base import *
 from VolOpenSkyAsync import *
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import simpledialog
 
 def demande_profil():
 
-    nom_profil = input("\nEntrez le nom du profil NACA (format : naca2412) : ").strip().lower()
+    #nom_profil = input("\nEntrez le nom du profil NACA (format : naca2412) : ").strip().lower()
+
+    # Fenêtre de saisie
+    nom_profil = simpledialog.askstring("Nom du profil", "Entrez le nom du profil NACA (format : naca2412) :")
+
+    if nom_profil:
+        nom_profil = nom_profil.strip().lower()
+        print("Nom du profil entré :", nom_profil)
+    else:
+        print("Aucune entrée.")
+
     nom_profil = f"{nom_profil}-il"
 
     #Vérifier si le profil est déjà dans la base de données!
@@ -115,9 +126,14 @@ BOUCLE PRINCIPALE.
 """
 
 if __name__ == "__main__":
+    """
+    Initialisation des variables nécessaires.
+    """
+    # Création de la fenêtre principale (cachée)
+    root = tk.Tk()
+    root.withdraw()  # Cache la fenêtre principale
 
     API_KEY = "c6bf5947268d141c6ca08f54c7d65b63"
-
     #Initialisation de la base de données des profils
     gestion = GestionBase()
     # on réserve les variables pour stocker chacun des trois objets Aerodynamique
@@ -132,6 +148,9 @@ if __name__ == "__main__":
     df_volperso = None
     # Initialisation des chemins et objets
     chemin_dat = None  # localisation du .dat
+    """
+    Fin de l'initialisation des variables nécessaires.
+    """
 
     print("\n---- Lancement du programme Airfoil ----\n")
 
