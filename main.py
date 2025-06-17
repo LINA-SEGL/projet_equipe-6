@@ -1,9 +1,7 @@
 from Airfoil import *
 from aerodynamique import *
 from ConditionVol import *
-
 from gestion_base import *
-
 from VolOpenSkyAsync import *
 import requests
 
@@ -30,10 +28,10 @@ if __name__ == "__main__":
 
     API_KEY = "c6bf5947268d141c6ca08f54c7d65b63"
 
-    #Initialisation de la basse de données des profils
+    #Initialisation de la base de données des profils
     gestion = GestionBase()
 
-    print("\n---- Début du programme Airfoil ----\n")
+    print("\n---- Lancement du programme Airfoil ----\n")
 
     #On demande à l'utilisateur s'il veut créer ou importer un profil
     while True:
@@ -48,17 +46,8 @@ if __name__ == "__main__":
     """
     if generation == "importer":
 
-        #LE CODE CI DESSOUS EST DANS UNE FONCTION (au dessus) du main.
-
-        # nom_profil = input("\nEntrez le nom exact du profil NACA : (format : naca2412) : ").strip().lower()
-        # nom_profil = f"{nom_profil}-il"
-        #
-        # # Récupération du profil et Sauvegarde des coordonnées
-        # profil = Airfoil.depuis_airfoiltools(nom_profil)
-        # chemin_csv = profil.sauvegarder_coordonnees() # on récupere le chemin depuis airfoil
-        #
-        # print(f"\nLes coordonnées du profil ont été enregistrés dans le fichier: {nom_profil}_coord_profil.csv")
-
+        #profil_obj contient les propriétés du profil en tant qu'objet de la classe Airfoil.
+        #nom_profil est le nom du profil sous forme d'une chaine de caractères.
         profil_obj_import, nom_profil = demande_profil()
 
         tracer = input("\nVoulez-vous afficher le profil? (Oui / Non): ").strip().lower()
@@ -83,8 +72,6 @@ if __name__ == "__main__":
             aero = Aerodynamique(nom_profil)
 
             # Télécharger le fichier texte depuis AirfoilTools
-
-
             chemin_txt_airfoiltools = aero.telecharger_et_sauvegarder_txt(reynolds)
 
             # Lire le fichier texte et convertir en DataFrame
@@ -124,6 +111,7 @@ if __name__ == "__main__":
         """
         DANS LE CAS D'UNE CRÉATION MANUELLE.
         """
+
     elif generation == "générer":
 
         # Création d'un profil manuel:
@@ -148,9 +136,10 @@ if __name__ == "__main__":
                 break
 
         profil_manuel = Airfoil(nom_profil, [])
+        #générer un profil Naca à 4 chiffres.
         x_up, y_up, x_low, y_low, x, c = profil_manuel.naca4_profil()
 
-
+        #enregistrer les coordonnées du profil en .csv et .dat
         chemin_csv = profil_manuel.enregistrer_profil_manuel_csv(x_up, y_up, x_low, y_low, nom_fichier=f"{nom_profil}_coord_profil.csv")
         chemin_dat = profil_manuel.enregistrer_profil_format_dat(x_up, y_up, x_low, y_low, c, nom_fichier=f"{nom_profil}_coord_profil.dat")
 
@@ -159,10 +148,10 @@ if __name__ == "__main__":
             "manuel",
             fichier_coord_csv=chemin_csv,
             fichier_coord_dat=chemin_dat,
-            fichier_polaire_txt=chemin_txt,
-            fichier_polaire_csv=None
+            #fichier_polaire_txt=chemin_txt,
+            fichier_polaire_txt = None,
+            fichier_polaire_csv = None
         )
-
 
         while True:
             tracer = input("\nVoulez-vous afficher le profil? (Oui / Non): ").strip().lower()
@@ -172,6 +161,7 @@ if __name__ == "__main__":
                 print("Réponse invalide. Veuillez écrire 'Oui' ou 'Non'.")
 
         if tracer == "oui":
+            #appel de la fonction de classe qui trace le profil avec les coordonnées en entrée.
             profil_manuel.tracer_profil_manuel(x_up, y_up, x_low, y_low)
 
         elif tracer == "non":
@@ -193,14 +183,19 @@ if __name__ == "__main__":
             reynolds = int(input("\nRentrez un nombre de Reynolds: "))
 
             # Générer la polaire avec XFOIL
-            output_file = os.path.join("data", f"{nom_profil}_coef_aero.txt")
-            aero.run_xfoil(f"{nom_profil}_coord_profil.dat", reynolds, mach, alpha_start=-5, alpha_end=15, alpha_step=1,
-                           output_file=output_file)
+            output_file = os.path.join("data", "polaires_xfoil", f"{nom_profil}_coef_aero.txt")
+
+            acces_fichier_dat = os.path.join("data", "profils_manuels", f"{nom_profil}_coord_profil.dat")
+
+            #aero.telecharger_et_sauvegarder_txtrun_xfoil(f"{nom_profil}_coord_profil.dat", reynolds, mach, alpha_start=-15, alpha_end=15, alpha_step=1, output_file=output_file)
+            aero.run_xfoil(acces_fichier_dat, reynolds, mach, alpha_start=-5, alpha_end=12, alpha_step=1,output_file=output_file)
+
             chemin_txt = output_file
-            data = aero.lire_txt_et_convertir_dataframe(chemin_txt)
+            data = aero.lire_txt_et_convertir_dataframe(output_file)
             aero.donnees = data
             aero.tracer_polaires_depuis_txt()
 
+            #Variable qui enregistre l'existance de courbes aéro nécessaires pour connaitre la finesse.
             perfo_pour_finesse = "générer"
 
         elif lancement_xfoil == "non":
@@ -210,8 +205,8 @@ if __name__ == "__main__":
         chemin_pol_csv = None
 
         # on enregistre le profil dans la base et on deplace les fichiers
-        gestion.ajouter_profil(nom_profil, "manuel",
-                               chemin_csv, chemin_dat, chemin_txt, chemin_pol_csv)
+        # gestion.ajouter_profil(nom_profil, "manuel",
+        #                        chemin_csv, chemin_dat, chemin_txt, chemin_pol_csv)
 
 
     while True:
@@ -223,7 +218,7 @@ if __name__ == "__main__":
 
     if calcul_finesse == "oui":
         if perfo_pour_finesse == "générer":
-            finesse, finesse_max = aero.calculer_finesse(f"{nom_profil}_coef_aero.txt")
+            finesse, finesse_max = aero.calculer_finesse(chemin_txt)
 
         #verifie que le chemin du fichier existe bien
         if chemin_txt is None or not os.path.exists(chemin_txt):
@@ -252,12 +247,18 @@ if __name__ == "__main__":
             break
         print("Réponse invalide, tapez 0, 1, 2 ou 3.")
 
-    # Si l'utilisateur choisit 0, on skippe tout
+    # Si l'utilisateur choisit 0, on passe la fonction
     if choix_mode == "0":
-        print("\nTest de performance ignoré. On passe à la suite.")
+        print("\nTest de performance ignoré.")
     else:
         # Conteneur des conditions choisies
         conditions_choisies = []
+
+        #Condition pour le chemin d'accès au fichier de coordonnées
+        if generation == "importer":
+            sous_dossier = "profils_importes"
+        elif generation == "générer":
+            sous_dossier = "profils_manuels"
 
         #  Conditions réelles
         if choix_mode in ("1", "3"):
@@ -274,16 +275,17 @@ if __name__ == "__main__":
                     mach = vit / ((gamma * R * T_std) ** 0.5)
                     lat = s.latitude or 0.0
                     lon = s.longitude or 0.0
-                    angle = float(input("Angle d'attaque pour ce vol (°) : "))
+                    #Choix angle d'attaque retiré
+                    angle = 2 #float(input("Angle d'attaque pour ce vol (°) : "))
                     # Récupération des coordonnées
                     lat = s.latitude or 0.0
                     lon = s.longitude or 0.0
                     # On stocke désormais alt, mach, angle, lat et lon
                     conditions_choisies.append((alt, mach, angle, lat, lon))
                 else:
-                    print(" Sélection hors plage, on continue.")
+                    print(" Sélection hors de la plage de vols.")
             except ValueError:
-                print(" Entrée non valide, on continue.")
+                print(" Entrée non valide, sélectionnez un numéro de vol.")
 
         #  Conditions personnalisées
         if choix_mode in ("2", "3"):
@@ -329,17 +331,23 @@ if __name__ == "__main__":
                 print(f"Reynolds (corde=1 m) : {reynolds:.2e}")
 
                 #  lancement XFoil avec ce Reynolds
-                chemin_xfoil = os.path.join("data", f"{nom_profil}_coef_aero.txt")
+                chemin_xfoil = os.path.join("data", "performance_txt", f"{nom_profil}_coef_aero_vol_reel.txt")
 
-                chemin_resultat = aero.telecharger_et_sauvegarder_txtrun_xfoil(
-                    f"{nom_profil}_coord_profil.dat",
+                fichier_dat = os.path.join("data", f"{sous_dossier}", f"{nom_profil}_coord_profil.dat")
+
+                aero.run_xfoil(
+                    fichier_dat,
                     reynolds,
                     mach,
-                    alpha_start=-15,
-                    alpha_end=15,
+                    alpha_start=-5,
+                    alpha_end=12,
                     alpha_step=1,
-                    output_file=os.path.join("data", f"{nom_profil}_coef_aero.txt")
+                    output_file = os.path.join("data", "performance_txt", f"{nom_profil}_coef_aero_vol_reel.txt")
                 )
+
+                chemin_resultat = os.path.join("data", "performance_txt", f"{nom_profil}_coef_aero_vol_reel.txt")
+
+                print("Chemin résultat", chemin_resultat)
 
                 if not os.path.exists(chemin_resultat):
                     print(f"\nERREUR : Le fichier attendu n’a pas été généré : {chemin_resultat}")
