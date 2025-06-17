@@ -1,4 +1,9 @@
-# projet_sessionE2025
+# Projet de session Eté 2025
+## MGA802 - Sujet spéciaux en aéronautique
+
+Le projet suivant à été développé dans le cadre du cours de MGA802 - Sujet spéciaux en aéronautique, axé sur la programmation Python.
+C'est un projet réalisé en équipe, lors de ce cours intensif sur une période de 1 semaine.
+
 
 A remplir:
 
@@ -9,3 +14,121 @@ Introduction au code (contexte, utilité, pertinence, cadre d’utilisation)
 • Utilisation d’un exemple fourni avec le code
 • Autres informations pertinentes sur le code
 • Adressés aux utilisateurs et développeurs
+
+## A propos, Utilité et cadre d'utilisation
+
+Ce programme s'adresse aux personnes en lien avec l'aéronautique, et notamment dans le design conceptuel d'aéronefs, étape primaire nécessaire au dimensionnement "théorique" des aéronefs qui se base principalement sur les ailes.
+
+Ce programme est utile à toute personne qui souhaite évaluer rapidement et simplement les performances d'un profil d'aile dans des conditions réelles.
+
+Ce programme s’adresse ainsi à:
+
+- Des étudiant·e·s ou ingénieur·e·s en aéronautique
+- Toute personne souhaitant évaluer simplement un profil NACA dans un contexte réel
+- Des concepteurs cherchant une base pour une étude de design préliminaire
+
+# Programme Python: Générateur et calculateur de performance de profils d'ailes d'aéronefs.
+
+Le programme permet de tracer des profils d'ailes de type NACA. Ils peuvent être soient importés du site [AirfoilTools](http://airfoiltools.com/airfoil/naca4digit) ou alors généré selon les paramètres rentrés par l'utilisateur.
+Il est ensuite possible dans un cas ou dans l'autre de calculer les performances aérodynamiques du profil (coefficient de traînée $C_D$, de portance $C_L$ et de moment $C_M$ en fonction de l'angle d'attaque. 
+Un sous-programme appelé : [XFoil](https://web.mit.edu/drela/Public/web/xfoil/) est exécuté dans le cas ou les courbes n'existent pas dans la base de données de [AirfoilTools](http://airfoiltools.com/airfoil/naca4digit).
+
+Les coordonnées du profil et les données de performances aérodynamiques sont enregistrées dans une database créée localement qui est peuplée à chaque nouvelle création/importation de profils NACA.
+Ce projet utilise les données procurées par le programme [OpenSky](https://github.com/joostlek/python-opensky), dont il faut télécharger les packages pour l'utilisation complète.
+
+Il est possible de sélectionner un vol issu de OpenSky, et grâce aux paramètres atmosphériques de ce vol, de calculer les performances du profil étudié dans des conditions réelles, afin d'avoir une estimation (les performances d'un profil 2D ne sont pas les mêmes quand 3D). Il est envisageable d'améliorer ce programme avec une fonctionnalité permettant de passer d'un profil 2D à un profil 3D, connaissant les équations.
+
+## Requis
+
+Le projet de ce cours à été mis en oeuvre selon certains requis:
+- Utiliser et manipuler des bases de données avec des bibliothèques scientifiques de Python.
+- Réaliser une série de tâches sur ces données en les traitant avec le maximum de moyens permis par Python (écriture de fichier, filtrage, fonctions mathématiques...)
+- Structuré dans une programmation orientée objet, mis sous la forme d'un module installable, documenté et fourni avec un exemple.
+
+## Installation
+
+Installez le module avec :
+
+```
+pip install git+https://github.com/LINA-SEGL/projet_sessionE2025.git
+```
+
+Vous pouvez également le cloner en faisant:
+
+```
+git clone https://github.com/LINA-SEGL/projet_sessionE2025.git
+cd projet_sessionE2025
+pip install -e
+```
+
+
+## Dépendances:
+
+- Python ≥ 3.9
+- numpy
+- matplotlib
+- requests
+- pandas
+- sqlite3
+- XFoil (doit être installé et accessible dans le PATH)
+- OpenSky Python SDK : python-opensky
+
+```
+python
+import airfoil_calculateur
+
+from 
+
+
+def main() -> None:
+
+
+if __name__ == "__main__":
+    .run(main())
+```
+
+## Contribution
+
+Ce projet est open-source. Il est ouvert à qui veut bien y contribuer.
+
+Merci de votre implication! :heart_eyes:
+
+## Paramétrer l'environnement
+
+Vous aurez besoin de:
+- XFoil
+- Numpy
+- Pandas
+
+## Architecture
+
+L'architecture du projet est le suivant:
+
+```
+projet_sessionE2025/
+├── airfoil_calculateur/
+│   ├── __init__.py
+│   ├── condition_vol.py
+│   ├── airfoil.py
+│   ├── xfoil_interface.py
+│   └── ...
+├── data/
+│   └── base_de_donnees.db
+├── tests/
+│   └── test_airfoil.py
+├── main.py
+└── README.md
+```
+
+## Auteurs du projet
+Le projet à été développé par 3 membres:
+- Lina Seghilani
+- Noé Morance
+- Cyril Traineau
+
+## License
+
+## Remerciements
+- Prof. [Marlène Sanjosé]
+- Prof. [Ilyass Tabiai]
+- LINA-SEGL
