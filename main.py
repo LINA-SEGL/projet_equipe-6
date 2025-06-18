@@ -321,7 +321,7 @@ if __name__ == "__main__":
             acces_fichier_dat = os.path.join("data", "profils_manuels", f"{nom_profil}_coord_profil.dat")
 
             #aero.telecharger_et_sauvegarder_txtrun_xfoil(f"{nom_profil}_coord_profil.dat", reynolds, mach, alpha_start=-15, alpha_end=15, alpha_step=1, output_file=output_file)
-            output_file = aero_manuel.run_xfoil(acces_fichier_dat, reynolds, mach, alpha_start=-5, alpha_end=12, alpha_step=1,output_file=output_file)
+            output_file = aero_manuel.run_xfoil(acces_fichier_dat, reynolds, mach, alpha_start=-10, alpha_end=10, alpha_step=0.25,output_file=output_file)
 
             chemin_txt = output_file
             print("chemin_txt", chemin_txt)

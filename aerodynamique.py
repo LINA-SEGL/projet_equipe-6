@@ -245,7 +245,7 @@ class Aerodynamique:
         plt.tight_layout()
         plt.show()
 
-    def run_xfoil(self, dat_file, reynolds, mach, alpha_start=-5, alpha_end=15, alpha_step=1, output_file="polar_output.txt"):
+    def run_xfoil(self, dat_file, reynolds, mach, alpha_start=-6, alpha_end=15, alpha_step=0.5, output_file="polar_output.txt"):
         """
         Exécute XFOIL issu d'un fichier .dat et enregistre les résultats dans un fichier texte.
 
@@ -263,11 +263,16 @@ class Aerodynamique:
         # Script pour XFOIL
         xfoil_input = f"""
         LOAD {dat_file}
+        MDES
+        FILT
+        EXEC
+        
         PANE
         OPER
+        ITER 70
+        RE {reynolds}
         VISC {reynolds}
         MACH {mach}
-        ITER 200
         PACCMore actions
         {output_file}
         
