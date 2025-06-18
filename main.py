@@ -554,3 +554,122 @@ if __name__ == "__main__":
         pass
     else:
         pass
+
+    # ===================================
+    #         SIMULATION GIVRAGE
+    # ===================================
+
+    while True:
+        faire_givrage = interface.demander_choix(
+            "Voulez-vous simuler un givrage sur un profil ?", ["Oui", "Non"]
+        ).strip().lower()
+        if faire_givrage in ("oui", "non"):
+            break
+
+    if faire_givrage == "oui":
+        # 1. Sélection du profil à givrer
+        profil_givre_label = interface.demander_choix(
+            "Sur quel type de profil veux-tu simuler le givrage ?",
+            ["Profil importé actuel", "Profil depuis la base"]
+        ).strip().lower()
+
+        # --- Profil importé ---
+        if profil_givre_label == "profil importé actuel" and aero_import is not None:
+            profil_a_givrer = profil_obj_import
+            nom_profil_givre = nom_profil
+            aero_normale = aero_import
+            chemin_dat_givre = chemin_dat
+
+        # --- Profil depuis la base ---
+        elif profil_givre_label == "profil depuis la base":
+            nom_profil_base = interface.demander_texte(
+                "Rentrez le nom du profil de la base à givrer (ex : naca2412)").strip().lower()
+            nom_profil_givre = f"{nom_profil_base}-il"
+            coord_profil_base = f"{nom_profil_givre}_coord_profil.dat"
+            chemin_dat_givre = None
+            for dossier in ["data/profils_importes", "data/profils_manuels"]:
+                chemin_test = os.path.join(dossier, coord_profil_base)
+                if os.path.exists(chemin_test):
+                    chemin_dat_givre = chemin_test
+                    break
+            if chemin_dat_givre is None:
+                interface.msgbox(f"Profil {nom_profil_givre} introuvable dans la base !", titre="Erreur")
+                raise SystemExit
+
+            profil_a_givrer = Airfoil.depuis_airfoiltools(
+                nom_profil_givre)  # ou tu fais ta propre lecture depuis le .dat/CSV
+            # Charger la polaire normale si besoin
+            polaire_txt = f"{nom_profil_givre}_coef_aero.txt"
+            chemin_polaire_base = None
+            for dossier in ["data/polaires_importees", "data/polaires_xfoil"]:
+                test = os.path.join(dossier, polaire_txt)
+                if os.path.exists(test):
+                    chemin_polaire_base = test
+                    break
+            if chemin_polaire_base:
+                aero_normale = Aerodynamique(nom_profil_givre)
+                aero_normale.donnees = aero_normale.lire_txt_et_convertir_dataframe(chemin_polaire_base)
+            else:
+                aero_normale = None
+
+        else:
+            interface.msgbox("Aucun profil à givrer sélectionné !", titre="Erreur")
+            raise SystemExit
+
+        # 2. Demande des paramètres de givrage
+        ep = float(interface.demander_texte("Épaisseur du givrage (ex : 0.02)").replace(",", ".") or 0.02)
+        zone_txt = interface.demander_texte("Zone de givrage x0,x1 (ex : 0.3,0.45)")
+        if zone_txt:
+            z0, z1 = map(float, zone_txt.replace(" ", "").split(","))
+        else:
+            z0, z1 = 0.3, 0.45
+
+        # 3. Générer et sauvegarder le profil givré (CSV + DAT)
+        profil_a_givrer.tracer_givrage(epaisseur=ep, zone=(z0, z1))
+
+        # 4. Préparer le chemin pour le givré
+        dir_givre = os.path.join("data", "profils_givre")
+        dat_givre = os.path.join(dir_givre, f"{nom_profil_givre}_coord_givre.dat")
+        txt_givre = os.path.join(dir_givre, f"{nom_profil_givre}_givree.txt")
+
+        # 5. Simulation XFoil sur profil givré
+        aero_givre = Aerodynamique(nom_profil_givre + "-givre")
+        # Pour Reynolds et Mach : demande si non dispo, sinon réutilise ceux du calcul normal
+        try:
+            reynolds_givre = reynolds
+            mach_givre = mach
+        except:
+            # Si pas défini dans le main, demande ici
+            reynolds_givre = float(interface.demander_texte("Reynolds pour givrage ? (ex : 50000)") or 50000)
+            mach_givre = float(interface.demander_texte("Mach pour givrage ? (ex : 0.1)") or 0.1)
+
+        aero_givre.run_xfoil(
+            dat_file=dat_givre,
+            reynolds=reynolds_givre,
+            mach=mach_givre,
+            alpha_start=-5, alpha_end=12, alpha_step=1,
+            output_file=txt_givre
+        )
+
+        # 6. Charger la polaire givrée
+        if os.path.exists(txt_givre):
+            df_givre = aero_givre.lire_txt_et_convertir_dataframe(txt_givre)
+            if not df_givre.empty:
+                aero_givre.donnees = df_givre
+                # 7. Comparer les deux polaires sur le même graphe
+                polaires = {}
+                if aero_normale and getattr(aero_normale, "donnees", None) is not None:
+                    polaires["Normal"] = aero_normale.donnees
+                polaires["Givré"] = aero_givre.donnees
+                if len(polaires) >= 2:
+                    comparer_polaires(polaires)
+                else:
+                    aero_givre.tracer_polaires_depuis_txt()
+            else:
+                print("Données givrées vides ou invalides !")
+        else:
+            print("Fichier givré non trouvé ou erreur.")
+
+    else:
+        print("Fin du programme, sans simulation de givrage.")
+
