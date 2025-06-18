@@ -252,7 +252,7 @@ class Aerodynamique:
         PACC
         QUIT
         """
-
+        #test
         try:
             result = subprocess.run(
                 [xfoil_path],
