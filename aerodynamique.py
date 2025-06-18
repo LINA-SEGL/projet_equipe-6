@@ -155,7 +155,6 @@ class Aerodynamique:
 
         return chemin
 
-
     def lire_txt_et_convertir_dataframe(self, nom_fichier_txt):
         """
         Convertit un fichier TXT brut AirfoilTools en DataFrame.
@@ -166,9 +165,17 @@ class Aerodynamique:
         Returns:
             pd.DataFrame: Tableau structuré des performances.
         """
+        import os
         lignes = []
         commencer = False
         chemin = nom_fichier_txt
+
+        # 1. Vérifie que le fichier existe AVANT d'ouvrir
+        if not os.path.exists(chemin):
+            print(f"[ERREUR] Fichier non trouvé : {chemin}")
+            # Affiche le contenu du dossier parent pour debug
+            print("Fichiers disponibles :", os.listdir(os.path.dirname(chemin)))
+            return None
 
         with open(chemin, "r", encoding="utf-8") as f:
             for ligne in f:
@@ -183,13 +190,30 @@ class Aerodynamique:
                         continue  # ignorer ligne de séparation visuelle
                     lignes.append(ligne)
 
-        # Transformation en DataFrame
-        colonnes = lignes[0].split()
-        data = [l.split() for l in lignes[1:]]
+        # 2. Vérifie qu'il y a des données à parser
+        if not lignes:
+            print(f"[ERREUR] Aucun bloc de données détecté dans : {chemin}")
+            return None
 
-        df = pd.DataFrame(data, columns=colonnes)
-        df = df.astype(float)
-        return df
+        try:
+            colonnes = lignes[0].split()
+            data = [l.split() for l in lignes[1:]]
+
+            # 3. Check cohérence colonnes/données
+            if not data or len(data[0]) != len(colonnes):
+                print(f"[ERREUR] Données mal formatées dans : {chemin}")
+                print("En-tête :", colonnes)
+                print("Première ligne de data :", data[0] if data else "Aucune donnée")
+                return None
+
+            df = pd.DataFrame(data, columns=colonnes)
+            df = df.astype(float)
+            print(f"[OK] Données extraites : {len(df)} lignes, colonnes : {df.columns.tolist()}")
+            return df
+
+        except Exception as e:
+            print(f"[ERREUR] Exception lors du parsing du fichier {chemin} : {e}")
+            return None
 
     def tracer_polaires_depuis_txt(self):
         """
@@ -225,7 +249,7 @@ class Aerodynamique:
         """
         Exécute XFOIL issu d'un fichier .dat et enregistre les résultats dans un fichier texte.
 
-        Args:
+           Args:More actions
             dat_file (str): Chemin vers le fichier .dat du profil.
             reynolds (float): Nombre de Reynolds.
             mach (float): Nombre de Mach.
@@ -238,18 +262,18 @@ class Aerodynamique:
 
         # Script pour XFOIL
         xfoil_input = f"""
-        LOAD "{dat_file}"
+        LOAD {dat_file}
         PANE
         OPER
         VISC {reynolds}
         MACH {mach}
         ITER 200
-        PACC
+        PACCMore actions
         {output_file}
         
         ASEQ {alpha_start} {alpha_end} {alpha_step}
-        
-        PACC
+
+
         QUIT
         """
         #test

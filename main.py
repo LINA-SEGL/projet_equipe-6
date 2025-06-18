@@ -431,6 +431,7 @@ if __name__ == "__main__":
                                           viscosite_kgms=cond.viscosite_kgms, densite_kgm3=cond.densite_kgm3)
         aero = Aerodynamique(nom_profil)
         suffix = '_vol_reel' if tag == 'vol_reel' else '_vol_perso'
+
         txt_out = os.path.join('data', 'profils_importes' if generation == 'importer' else 'profils_manuels',
                                f"{nom_profil}{suffix}.txt")
         print(' XFoil', tag, txt_out)
@@ -471,11 +472,10 @@ if __name__ == "__main__":
         p_1 = Airfoil.depuis_airfoiltools(profil_1_nom)
         p_2 = Airfoil.depuis_airfoiltools(profil_2_nom)
 
+
         p_1.tracer_comparaison(p_2)
 
     elif comparaison == "non":
         pass
     else:
         pass
-
-    print("\n---- Fin du programme ----\n")
