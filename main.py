@@ -342,6 +342,17 @@ if __name__ == "__main__":
         #                        chemin_csv, chemin_dat, chemin_txt, chemin_pol_csv)
 
     elif generation == "base":
+        #Lecture des dossiers de la base
+        dossier_database = "data"  # Remplacez par le chemin du dossier
+        try:
+            contenu = os.listdir(dossier_database)
+            for element in contenu:
+                print(element)
+        except FileNotFoundError:
+            print(f"Erreur : Le dossier '{dossier_database}' n'existe pas.")
+        except PermissionError:
+            print(f"Erreur : Accès refusé au dossier '{dossier_database}'.")
+
         perfo_pour_finesse = "base"
 
     # while True:
