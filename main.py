@@ -311,7 +311,7 @@ if __name__ == "__main__":
             })
             mach = params["mach"]
             reynolds = params["reynolds"]
-
+            print(mach, reynolds)
             # mach = float(input("\nRentrez une valeur de Mach (0 à 0.7): "))
             # reynolds = int(input("\nRentrez un nombre de Reynolds: "))
 
@@ -321,11 +321,14 @@ if __name__ == "__main__":
             acces_fichier_dat = os.path.join("data", "profils_manuels", f"{nom_profil}_coord_profil.dat")
 
             #aero.telecharger_et_sauvegarder_txtrun_xfoil(f"{nom_profil}_coord_profil.dat", reynolds, mach, alpha_start=-15, alpha_end=15, alpha_step=1, output_file=output_file)
-            aero_manuel.run_xfoil(acces_fichier_dat, reynolds, mach, alpha_start=-5, alpha_end=12, alpha_step=1,output_file=output_file)
+            output_file = aero_manuel.run_xfoil(acces_fichier_dat, reynolds, mach, alpha_start=-5, alpha_end=12, alpha_step=1,output_file=output_file)
 
             chemin_txt = output_file
+            print("chemin_txt", chemin_txt)
+            print("output_file", output_file)
+
             df_manuel = aero_manuel.lire_txt_et_convertir_dataframe(output_file)
-            aero_manuel.donnees =  df_manuel
+            aero_manuel.donnees = df_manuel
             aero_manuel.tracer_polaires_depuis_txt()
 
             #Variable qui enregistre l'existance de courbes aéro nécessaires pour connaitre la finesse.
@@ -343,15 +346,73 @@ if __name__ == "__main__":
 
     elif generation == "base":
         #Lecture des dossiers de la base
-        dossier_database = "data"  # Remplacez par le chemin du dossier
+        dossier_database_import = "data/profils_importes"  #
+        dossier_database_genere = "data/profils_manuels"   #
+
         try:
-            contenu = os.listdir(dossier_database)
-            for element in contenu:
-                print(element)
+            contenu_import = os.listdir(dossier_database_import)
+            contenu_genere = os.listdir(dossier_database_genere)
+
+            # Vérifier si les deux dossiers sont vides
+            if not contenu_import and not contenu_genere:
+                interface.msgbox("Aucun profil NACA trouvé dans la base de données.", titre="Base vide")
+                base_vide = True
+
+            else:
+                base_vide = False
+
         except FileNotFoundError:
             print(f"Erreur : Le dossier '{dossier_database}' n'existe pas.")
         except PermissionError:
             print(f"Erreur : Accès refusé au dossier '{dossier_database}'.")
+
+        if base_vide == True:
+            pass
+        elif base_vide == False:
+            print("Les fichiers de profils NACA existants dans la base sont listés ci-dessous:\n")
+            for element in contenu_import:
+                fichier_import = element.split("-il_coord")[0]
+                print(fichier_import)
+            for element in contenu_genere:
+                fichier_genere = element.split("-il_coord")[0]
+                print(fichier_genere)
+
+            coord_profil_base = interface.demander_texte(
+                "Rentrez le nom du profil NACA que vous souhaitez utiliser").strip().lower()
+
+            polaire_profil_base = f"{coord_profil_base}-il_coef_aero.txt"
+            coord_profil_base = f"{coord_profil_base}-il_coord_profil.dat"
+
+            dossiers_possibles = [
+                "data/profils_importes",
+                "data/profils_manuels"
+            ]
+            # On va cherche le chemin qui mène au fichier : coord_profil_base
+            chemin_dat = None
+            for dossier in dossiers_possibles:
+                chemin_possible = os.path.join(dossier, coord_profil_base)
+                print(chemin_possible)
+                if os.path.exists(chemin_possible):
+                    chemin_dat = chemin_possible
+                    break
+
+            # On refait la même chose pour avoir les fichiers de performances aero
+            dossiers_possibles = [
+                "data/polaires_importees",
+                "data/polaires_xfoil",
+            ]
+            # On va cherche le chemin qui mène au fichier : polaire_profil_base
+            chemin_txt = None
+            for dossier in dossiers_possibles:
+                chemin_possible = os.path.join(dossier, polaire_profil_base)
+                if os.path.exists(chemin_possible):
+                    chemin_txt = chemin_possible
+                    break
+
+            if chemin_txt is None:
+                interface.msgbox(f"Le fichier '{polaire_profil_base}' n'a pas été trouvé dans la base de données, les performances n'ont peut être pas été générées.")
+
+            aero_base = Aerodynamique(polaire_profil_base)
 
         perfo_pour_finesse = "base"
 
@@ -365,12 +426,11 @@ if __name__ == "__main__":
     calcul_finesse = interface.demander_choix("Voulez-vous calculer la finesse maximale?",["Oui", "Non"])
 
     if calcul_finesse.lower() == "oui":
+
         if perfo_pour_finesse == "générer":
             aero = aero_manuel
-
         elif perfo_pour_finesse == "importer":
             aero = aero_import
-
         elif perfo_pour_finesse == "base":
             aero = aero_base
 
@@ -378,6 +438,7 @@ if __name__ == "__main__":
             interface.msgbox(f"\nAucun fichier polaire importé trouvé : {chemin_txt}", titre="Erreur")
             #print(f"\nAucun fichier polaire importé trouvé : {chemin_txt}")
         else:
+            print("chemin pour finesse", chemin_txt)
             finesse, finesse_max = aero.calculer_finesse(chemin_txt)
             interface.msgbox(f"\nLa finesse maximale de votre profil est : {finesse_max}", titre="Finesse maximale")
             #print(f"\nLa finesse maximale de votre profil est : {finesse_max}")

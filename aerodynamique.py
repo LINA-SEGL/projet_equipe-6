@@ -253,6 +253,10 @@ class Aerodynamique:
         QUIT
         """
         #test
+        print("=== SCRIPT XFOIL ===")
+        print(xfoil_input)
+        print("====================")
+
         try:
             result = subprocess.run(
                 [xfoil_path],
