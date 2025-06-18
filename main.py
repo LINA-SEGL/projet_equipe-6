@@ -130,6 +130,7 @@ if __name__ == "__main__":
     # on réserve les variables pour stocker chacun des trois objets Aerodynamique
     aero_import = None
     aero_manuel = None
+    aero_base = None
     aero_volreel = None
     aero_volperso = None
 
@@ -142,10 +143,9 @@ if __name__ == "__main__":
     """
     Fin de l'initialisation des variables nécessaires.
     """
-
     print("\n---- Lancement du programme Airfoil ----\n")
 
-    generation = interface.demander_choix("Voulez-vous importer ou générer un profil ?", ["importer", "générer"])
+    generation = interface.demander_choix("Voulez-vous importer de AirfoilTools, de votre base ou générer un profil ?", ["importer", "générer", "base"])
 
     # #On demande à l'utilisateur s'il veut créer ou importer un profil
     # while True:
@@ -300,13 +300,7 @@ if __name__ == "__main__":
         else:
             pass
 
-        while True:
-            lancement_xfoil = interface.demander_choix("Voulez-vous calculer les performances de votre profil?", ["Oui", "Non"])
-            #lancement_xfoil = input("\nVoulez-vous calculer les performances de votre profil? (Oui / Non): ").strip().lower()
-            if lancement_xfoil.lower() in ["oui", "non"]:
-                break  # sortie de la boucle si la réponse est valide
-            else:
-                pass
+        lancement_xfoil = interface.demander_choix("Voulez-vous calculer les performances de votre profil?", ["Oui", "Non"])
 
         if lancement_xfoil.lower() == "oui":
             aero_manuel = Aerodynamique(nom_profil)
@@ -347,7 +341,8 @@ if __name__ == "__main__":
         # gestion.ajouter_profil(nom_profil, "manuel",
         #                        chemin_csv, chemin_dat, chemin_txt, chemin_pol_csv)
 
-
+    elif generation == "base":
+        perfo_pour_finesse = "base"
 
     # while True:
     #     calcul_finesse = input("\nVoulez-vous calculer la finesse maximale? (Oui / Non): ").strip().lower()
@@ -364,6 +359,9 @@ if __name__ == "__main__":
 
         elif perfo_pour_finesse == "importer":
             aero = aero_import
+
+        elif perfo_pour_finesse == "base":
+            aero = aero_base
 
         if chemin_txt is None or not os.path.exists(chemin_txt):
             interface.msgbox(f"\nAucun fichier polaire importé trouvé : {chemin_txt}", titre="Erreur")
