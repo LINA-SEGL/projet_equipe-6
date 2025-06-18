@@ -80,12 +80,17 @@ def choisir_vols(limit: int = 100, sample_n: int = 20) -> pd.DataFrame:
             })
         df = pd.DataFrame(rows)
 
-        # 2) choix du filtre
-        print("\nFiltrer les vols par altitude :")
-        print("  1 - Troposphère (< 11 000 m)")
-        print("  2 - Stratosphère (≥ 11 000 m)")
-        print("  3 - Aucun filtre")
-        choix = input("Votre choix (1/2/3) : ").strip()
+        # 2) choix du filtre — entrée robuste
+        while True:
+            print("\nFiltrer les vols par altitude :")
+            print("  1 - Troposphère (< 11 000 m)")
+            print("  2 - Stratosphère (≥ 11 000 m)")
+            print("  3 - Aucun filtre")
+            choix = input("Votre choix (1/2/3) : ").strip()
+            if choix in ("1", "2", "3"):
+                break
+            print(" Entrée invalide. Veuillez entrer 1, 2 ou 3.")
+
         if choix == "1":
             df_filt = df[df["altitude_m"] < 11000]
         elif choix == "2":
@@ -97,7 +102,7 @@ def choisir_vols(limit: int = 100, sample_n: int = 20) -> pd.DataFrame:
             print("Aucun vol ne correspond à ce filtre, on recommence.")
             continue
 
-        # 3) prélèvement aléatoire (vraie nouveauté à chaque appel)
+        # 3) prélèvement aléatoire
         n = min(sample_n, len(df_filt))
         df_sample = df_filt.sample(n=n).reset_index(drop=True)
 
@@ -106,11 +111,17 @@ def choisir_vols(limit: int = 100, sample_n: int = 20) -> pd.DataFrame:
             "icao24", "callsign", "origin_country", "altitude_m", "vitesse_m_s"
         ]].to_string(index=True))
 
-        # 5) validation ou régénération
-        rep = input("\nCette liste vous convient-elle ? (oui/non) ").strip().lower()
+        # 5) validation — entrée robuste
+        while True:
+            rep = input("\nCette liste vous convient-elle ? (oui/non) ").strip().lower()
+            if rep in ("oui", "non"):
+                break
+            print(" Veuillez répondre uniquement par 'oui' ou 'non'.")
+
         if rep == "oui":
             return df_sample
-        # sinon on boucle et on refait un fetch + nouveau sample
+        # sinon on boucle
+
 
 
 """
