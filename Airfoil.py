@@ -561,22 +561,79 @@ def generer_pale_vrillee(profil_2d, angle_max_deg=30, z_max=1.0, sections=50):
     return np.array(pale)
 
 if __name__ == "__main__":
-    from main import demande_profil
+    from main import demande_profil, comparer_polaires
+    from aerodynamique import Aerodynamique
+    import os
 
-    # 1) on importe le profil via ta fonction existante
-    profil_obj, nom_profil = demande_profil()
+    from interaction_graphique import *
 
-    # 2) on affiche le profil brut
-    profil_obj.tracer_contour(nom_profil)
+    # 1) importer et afficher le profil brut
+    interface = FenetreInteraction()
+    profil_obj, nom = demande_profil(interface)  # correction ici
+    profil_obj.tracer_contour(nom)
 
-    # 3) on récupère les paramètres de givrage
+    # 2) paramètres de givrage
     ep = float(input("Épaisseur du givrage [0.02] : ") or 0.02)
     z0, z1 = map(
         float,
         (input("Zone givrage x0,x1 [0.3,0.45] : ") or "0.3,0.45").split(",")
     )
 
-    # 4) on trace la couche de givrage **en plus** du profil
+    # 3) tracer + sauvegarder le profil givré (CSV + DAT)
     profil_obj.tracer_givrage(epaisseur=ep, zone=(z0, z1))
 
+    # 4) préparer Mach/Reynolds
+    reynolds = float(input("Reynolds (ex: 50000) : ") or 50000)
+    mach = float(input("Mach     (ex: 0.1)    : ") or 0.1)
 
+    # 5) créer les dossiers
+    dir_import = os.path.join("data", "profils_importes")
+    dir_givre = os.path.join("data", "profils_givre")
+    os.makedirs(dir_import, exist_ok=True)
+    os.makedirs(dir_givre, exist_ok=True)
+
+    # 6) lancer XFoil sur le profil normal
+    aero_norm = Aerodynamique(nom)
+    dat_norm = os.path.join(dir_import, f"{nom}_coord_profil.dat")
+    txt_norm = os.path.join(dir_import, f"{nom}_normale.txt")
+    txt_norm = aero_norm.run_xfoil(
+        dat_file=dat_norm, reynolds=reynolds, mach=mach,
+        alpha_start=-5, alpha_end=12, alpha_step=1,
+        output_file=txt_norm
+    )
+    if txt_norm and os.path.exists(txt_norm):
+        aero_norm.donnees = aero_norm.lire_txt_et_convertir_dataframe(txt_norm)
+    else:
+        aero_norm.donnees = None
+
+    # 7) lancer XFoil sur le profil givré
+    aero_givre = Aerodynamique(nom + "-givre")
+    dat_givre = os.path.join(dir_givre, f"{nom}_coord_givre.dat")
+    txt_givre = os.path.join(dir_givre, f"{nom}_givree.txt")
+    txt_givre = aero_givre.run_xfoil(
+        dat_file=dat_givre, reynolds=reynolds, mach=mach,
+        alpha_start=-5, alpha_end=12, alpha_step=1,
+        output_file=txt_givre
+    )
+    if txt_givre and os.path.exists(txt_givre):
+        aero_givre.donnees = aero_givre.lire_txt_et_convertir_dataframe(txt_givre)
+    else:
+        aero_givre.donnees = None
+
+    # 8) tracer chaque polaire séparément
+    if aero_norm.donnees is not None:
+        aero_norm.tracer_polaires_depuis_txt()
+    if aero_givre.donnees is not None:
+        aero_givre.tracer_polaires_depuis_txt()
+
+    # 9) superposer les deux dans la même figure
+    polaires = {}
+    if aero_norm.donnees is not None:
+        polaires["Normal"] = aero_norm.donnees
+    if aero_givre.donnees is not None:
+        polaires["Givré"] = aero_givre.donnees
+
+    if len(polaires) >= 2:
+        comparer_polaires(polaires)
+    else:
+        print("Pas assez de données pour superposer les polaires.")

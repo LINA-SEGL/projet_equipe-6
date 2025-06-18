@@ -6,30 +6,25 @@ from VolOpenSkyAsync import *
 from interaction_graphique import *
 import matplotlib.pyplot as plt
 
-def demande_profil():
-
-    #nom_profil = input("\nEntrez le nom du profil NACA (format : naca2412) : ").strip().lower()
-
-    # Fenêtre de saisie
+def demande_profil(interface):
     nom_profil = interface.demander_texte("Entrez le nom du profil NACA (ex: naca2412)").strip().lower()
 
     if nom_profil:
         nom_profil = nom_profil.strip().lower()
     else:
         interface.msgbox("Aucun nom saisi. Veuillez réessayer.", titre="Erreur")
+        return None, None  # Ajouter cette ligne pour gérer explicitement le cas vide
 
     nom_profil = f"{nom_profil}-il"
 
-    #Vérifier si le profil est déjà dans la base de données!
-    #sinon:
     profil_obj = Airfoil.depuis_airfoiltools(nom_profil)
 
-    # Sauvegarde des coordonnées
     profil_obj.sauvegarder_coordonnees(f"{nom_profil}_coord_profil.csv")
 
-    interface.msgbox(f"\nLes coordonnées du profil ont été enregistrés dans le fichier: {nom_profil}_coord_profil.csv", titre="Erreur")
+    interface.msgbox(f"\nLes coordonnées du profil ont été enregistrées dans le fichier : {nom_profil}_coord_profil.csv", titre="Information")
 
     return profil_obj, nom_profil
+
 
 def comparer_polaires(profiles: dict[str, pd.DataFrame]):
     """
@@ -165,7 +160,7 @@ if __name__ == "__main__":
     """
     if generation == "importer":
 
-        profil_obj_import, nom_profil = demande_profil()
+        profil_obj_import, nom_profil = demande_profil(interface)
 
         chemin_csv = profil_obj_import.sauvegarder_coordonnees(f"{nom_profil}_coord_profil.csv")
 
