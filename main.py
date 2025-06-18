@@ -377,8 +377,7 @@ if __name__ == "__main__":
                 fichier_genere = element.split("-il_coord")[0]
                 print(fichier_genere)
 
-            coord_profil_base = interface.demander_texte(
-                "Rentrez le nom du profil NACA que vous souhaitez utiliser").strip().lower()
+            nom_profil = interface.demander_texte("Rentrez le nom du profil NACA que vous souhaitez utiliser").strip().lower()
 
             polaire_profil_base = f"{coord_profil_base}-il_coef_aero.txt"
             coord_profil_base = f"{coord_profil_base}-il_coord_profil.dat"
