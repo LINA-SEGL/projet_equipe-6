@@ -362,9 +362,9 @@ if __name__ == "__main__":
                 base_vide = False
 
         except FileNotFoundError:
-            print(f"Erreur : Le dossier '{dossier_database}' n'existe pas.")
+            print(f"Erreur : Le dossier n'existe pas.")
         except PermissionError:
-            print(f"Erreur : Accès refusé au dossier '{dossier_database}'.")
+            print(f"Erreur : Accès refusé au dossier.")
 
         if base_vide == True:
             pass
@@ -379,8 +379,8 @@ if __name__ == "__main__":
 
             nom_profil = interface.demander_texte("Rentrez le nom du profil NACA que vous souhaitez utiliser").strip().lower()
 
-            polaire_profil_base = f"{coord_profil_base}-il_coef_aero.txt"
-            coord_profil_base = f"{coord_profil_base}-il_coord_profil.dat"
+            polaire_profil_base = f"{nom_profil}-il_coef_aero.txt"
+            coord_profil_base = f"{nom_profil}-il_coord_profil.dat"
 
             dossiers_possibles = [
                 "data/profils_importes",
