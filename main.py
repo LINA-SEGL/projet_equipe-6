@@ -541,9 +541,9 @@ if __name__ == "__main__":
     if comparaison.lower() == "oui":
 
         print("\nCHOIX 1:")
-        profil_1_obj, profil_1_nom = demande_profil()
+        profil_1_obj, profil_1_nom = demande_profil(interface)
         print("\nCHOIX 2:")
-        profil_2_obj, profil_2_nom = demande_profil()
+        profil_2_obj, profil_2_nom = demande_profil(interface)
 
         p_1 = Airfoil.depuis_airfoiltools(profil_1_nom)
         p_2 = Airfoil.depuis_airfoiltools(profil_2_nom)
