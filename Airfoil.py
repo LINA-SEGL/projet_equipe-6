@@ -595,6 +595,7 @@ if __name__ == "__main__":
     # 6) lancer XFoil sur le profil normal
     aero_norm = Aerodynamique(nom)
     dat_norm = os.path.join(dir_import, f"{nom}_coord_profil.dat")
+
     txt_norm = os.path.join(dir_import, f"{nom}_normale.txt")
     txt_norm = aero_norm.run_xfoil(
         dat_file=dat_norm, reynolds=reynolds, mach=mach,

@@ -238,7 +238,7 @@ class Aerodynamique:
 
         # Script pour XFOIL
         xfoil_input = f"""
-        LOAD {dat_file}
+        LOAD "{dat_file}"
         PANE
         OPER
         VISC {reynolds}
@@ -248,6 +248,8 @@ class Aerodynamique:
         {output_file}
         
         ASEQ {alpha_start} {alpha_end} {alpha_step}
+        
+        PACC
         QUIT
         """
 
