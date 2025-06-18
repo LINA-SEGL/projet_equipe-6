@@ -596,9 +596,7 @@ if __name__ == "__main__":
                 interface.msgbox(f"Profil {nom_profil_givre} introuvable dans la base !", titre="Erreur")
                 raise SystemExit
 
-            profil_a_givrer = Airfoil.depuis_airfoiltools(
-                nom_profil_givre)  # ou tu fais ta propre lecture depuis le .dat/CSV
-            # Charger la polaire normale si besoin
+            profil_a_givrer = Airfoil.depuis_airfoiltools(nom_profil_givre)
             polaire_txt = f"{nom_profil_givre}_coef_aero.txt"
             chemin_polaire_base = None
             for dossier in ["data/polaires_importees", "data/polaires_xfoil"]:
@@ -616,7 +614,7 @@ if __name__ == "__main__":
             interface.msgbox("Aucun profil à givrer sélectionné !", titre="Erreur")
             raise SystemExit
 
-        # 2. Demande des paramètres de givrage
+        #  Demande des paramètres de givrage
         ep = float(interface.demander_texte("Épaisseur du givrage (ex : 0.02)").replace(",", ".") or 0.02)
         zone_txt = interface.demander_texte("Zone de givrage x0,x1 (ex : 0.3,0.45)")
         if zone_txt:
@@ -624,25 +622,41 @@ if __name__ == "__main__":
         else:
             z0, z1 = 0.3, 0.45
 
-        # 3. Générer et sauvegarder le profil givré (CSV + DAT)
-        profil_a_givrer.tracer_givrage(epaisseur=ep, zone=(z0, z1))
+        #  Choix du mode de conditions pour le givrage
+        mode_cond = interface.demander_choix(
+            "Pour la simulation givrée, veux-tu :\n- Récupérer des conditions réelles de vol (OpenSky)\n- Saisir manuellement Mach et Reynolds ?",
+            ["Conditions de vol réelles", "Saisie manuelle"]
+        ).strip().lower()
 
-        # 4. Préparer le chemin pour le givré
+        if mode_cond == "conditions de vol réelles":
+            # == Sélectionner un vol réel
+            df_vols = choisir_vols(limit=100, sample_n=20)
+            sel = int(input("\nSélectionne le vol (numéro) : ").strip())
+            row = df_vols.loc[sel]
+            alt = row["altitude_m"]
+            vit = row["vitesse_m_s"]
+            Tstd = 288.15 - 0.0065 * alt
+            mach_givre = vit / ((1.4 * 287.05 * Tstd) ** 0.5)
+            corde = float(input("Corde du profil (m) : "))
+            # Calcul Reynolds
+            rho = 1.225 * (1 - 2.25577e-5 * alt) ** 5.25588  # densité ISA approx
+            mu = 1.7894e-5  # viscosité air (kg/ms) approx
+            reynolds_givre = (rho * vit * corde) / mu
+            print(f"Mach utilisé pour givrage : {mach_givre:.4f}")
+            print(f"Reynolds utilisé pour givrage : {reynolds_givre:.0f}")
+        else:
+            # == Saisie manuelle
+            reynolds_givre = float(interface.demander_texte("Reynolds pour givrage ? (ex : 50000)") or 50000)
+            mach_givre = float(interface.demander_texte("Mach pour givrage ? (ex : 0.1)") or 0.1)
+
+        #  Générer et sauvegarder le profil givré (CSV + DAT)
+        profil_a_givrer.tracer_givrage(epaisseur=ep, zone=(z0, z1))
         dir_givre = os.path.join("data", "profils_givre")
         dat_givre = os.path.join(dir_givre, f"{nom_profil_givre}_coord_givre.dat")
         txt_givre = os.path.join(dir_givre, f"{nom_profil_givre}_givree.txt")
 
-        # 5. Simulation XFoil sur profil givré
+        #  Simulation XFoil sur profil givré
         aero_givre = Aerodynamique(nom_profil_givre + "-givre")
-        # Pour Reynolds et Mach : demande si non dispo, sinon réutilise ceux du calcul normal
-        try:
-            reynolds_givre = reynolds
-            mach_givre = mach
-        except:
-            # Si pas défini dans le main, demande ici
-            reynolds_givre = float(interface.demander_texte("Reynolds pour givrage ? (ex : 50000)") or 50000)
-            mach_givre = float(interface.demander_texte("Mach pour givrage ? (ex : 0.1)") or 0.1)
-
         aero_givre.run_xfoil(
             dat_file=dat_givre,
             reynolds=reynolds_givre,
@@ -651,12 +665,11 @@ if __name__ == "__main__":
             output_file=txt_givre
         )
 
-        # 6. Charger la polaire givrée
+        #  Charger la polaire givrée
         if os.path.exists(txt_givre):
             df_givre = aero_givre.lire_txt_et_convertir_dataframe(txt_givre)
             if not df_givre.empty:
                 aero_givre.donnees = df_givre
-                # 7. Comparer les deux polaires sur le même graphe
                 polaires = {}
                 if aero_normale and getattr(aero_normale, "donnees", None) is not None:
                     polaires["Normal"] = aero_normale.donnees
@@ -672,4 +685,5 @@ if __name__ == "__main__":
 
     else:
         print("Fin du programme, sans simulation de givrage.")
+
 
