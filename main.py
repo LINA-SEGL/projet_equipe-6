@@ -388,16 +388,29 @@ if __name__ == "__main__":
     else:
         pass
 
-    #  MENU PRINCIPAL POUR LES CONDITIONS
-    print("\nVoulez-vous tester les performances de votre profil ?")
-    print("  0 - Non, passer cette étape")
-    print("  1 - Conditions réelles (vol existant)")
-    print("  2 - Conditions personnalisées")
-    print("  3 - Les deux")
+    # #  MENU PRINCIPAL POUR LES CONDITIONS
+    # print("\nVoulez-vous tester les performances de votre profil ?")
+    # print("  0 - Non, passer cette étape")
+    # print("  1 - Conditions réelles (vol existant)")
+    # print("  2 - Conditions personnalisées")
+    # print("  3 - Les deux")
 
-    choix_mode = ""
-    while choix_mode not in ("0", "1", "2", "3"):
-        choix_mode = input("Entrez 0, 1, 2 ou 3 : ").strip()
+    # MENU PRINCIPAL POUR LES CONDITIONS
+    message = "Voulez-vous tester les performances de votre profil ?"
+    options = [
+        "0 - Non, passer cette étape",
+        "1 - Conditions réelles (vol existant)",
+        "2 - Conditions personnalisées",
+        "3 - Les deux"
+    ]
+
+    reponse = interface.demander_choix(message, options)
+
+    # choix_mode = ""
+    # while choix_mode not in ("0", "1", "2", "3"):
+    #     choix_mode = input("Entrez 0, 1, 2 ou 3 : ").strip()
+
+    choix_mode = reponse.split(" ")[0]
 
     # 1) On collecte les conditions dans une liste
     conditions = []
@@ -455,14 +468,17 @@ if __name__ == "__main__":
     if len(polaires) >= 2 and input('Superposer polaires ? (Oui/Non) ').strip().lower() == 'oui':
         comparer_polaires(polaires)
 
-    while True:
-        comparaison = input("\nVoulez-vous comparer deux profils d'aile? (Oui / Non): ").strip().lower()
-        if comparaison in ["oui", "non"]:
-            break  # sortie de la boucle si la réponse est valide
-        else:
-            print("Réponse invalide. Veuillez écrire 'Oui' ou 'Non'.")
+    # while True:
+    #     comparaison = input("\nVoulez-vous comparer deux profils d'aile? (Oui / Non): ").strip().lower()
+    #     if comparaison in ["oui", "non"]:
+    #         break  # sortie de la boucle si la réponse est valide
+    #     else:
+    #         print("Réponse invalide. Veuillez écrire 'Oui' ou 'Non'.")
 
-    if comparaison == "oui":
+    comparaison = interface.demander_choix("Voulez-vous comparer deux profils d'aile?", ["Oui", "Non"])
+
+
+    if comparaison.lower() == "oui":
 
         print("\nCHOIX 1:")
         profil_1_obj, profil_1_nom = demande_profil()
@@ -472,10 +488,9 @@ if __name__ == "__main__":
         p_1 = Airfoil.depuis_airfoiltools(profil_1_nom)
         p_2 = Airfoil.depuis_airfoiltools(profil_2_nom)
 
-
         p_1.tracer_comparaison(p_2)
 
-    elif comparaison == "non":
+    elif comparaison.lower() == "non":
         pass
     else:
         pass
