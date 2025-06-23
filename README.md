@@ -105,6 +105,14 @@ Vous aurez besoin de:
 - Numpy
 - Pandas
 
+## Documentation
+
+La documentation est disponible en faisant:
+
+```
+pip install -r requirements.txt
+make html ou ./make.bat html sous Windows. 
+```
 ## Architecture
 
 L'architecture du projet est le suivant:
