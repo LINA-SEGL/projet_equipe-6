@@ -5,6 +5,7 @@ from gestion_base import *
 from VolOpenSkyAsync import *
 from interaction_graphique import *
 import matplotlib.pyplot as plt
+import streamlit as st
 
 def demande_profil(interface):
     nom_profil = interface.demander_texte("Entrez le nom du profil NACA (ex: naca2412)").strip().lower()
@@ -55,8 +56,9 @@ def comparer_polaires(profiles: dict[str, pd.DataFrame]):
     ax_lvsd.set_title("CL vs CD");  ax_lvsd.set_xlabel("CD"); ax_lvsd.set_ylabel("CL"); ax_lvsd.legend(); ax_lvsd.grid(True)
 
     # Ajuste les espacements
-    plt.tight_layout()
-    plt.show()
+    #plt.tight_layout()
+    #plt.show()
+    return fig
 
 def choisir_vols(limit: int = 100, sample_n: int = 20) -> pd.DataFrame:
     """
@@ -196,12 +198,6 @@ if __name__ == "__main__":
 
         recup_coef_aero = interface.demander_choix("Voulez-vous récupérer les performances aérodynamiques de votre profil?", ["Oui", "Non"])
 
-        # while True:
-        #     recup_coef_aero = input("\nVoulez-vous récupérer les performances aérodynamiques de votre profil? (Oui / Non): ").strip().lower()
-        #     if recup_coef_aero in ["oui", "non"]:
-        #         break  # sortie de la boucle si la réponse est valide
-        #     else:
-        #         print("Réponse invalide. Veuillez écrire 'Oui' ou 'Non'.")
 
         if recup_coef_aero.lower() == "oui":
 
@@ -425,13 +421,6 @@ if __name__ == "__main__":
             aero_base = Aerodynamique(polaire_profil_base)
 
         perfo_pour_finesse = "base"
-
-    # while True:
-    #     calcul_finesse = input("\nVoulez-vous calculer la finesse maximale? (Oui / Non): ").strip().lower()
-    #     if calcul_finesse in ["oui", "non"]:
-    #         break  # sortie de la boucle si la réponse est valide
-    #     else:
-    #         print("Réponse invalide. Veuillez écrire 'Oui' ou 'Non'.")
 
     calcul_finesse = interface.demander_choix("Voulez-vous calculer la finesse maximale?",["Oui", "Non"])
 
