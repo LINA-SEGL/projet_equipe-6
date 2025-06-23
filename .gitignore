@@ -31,3 +31,10 @@ Thumbs.db
 !pplot.exe
 !pxplot.exe
 !xfoil.exe
+
+# Sphinx documentation build files
+build/
+*.doctree
+*.html
+*.txt
+*.buildinfo
