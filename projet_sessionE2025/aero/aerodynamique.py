@@ -2,15 +2,14 @@ import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 from io import StringIO
-from Airfoil import Airfoil
 import subprocess
 import os
 
 # ─────────── dossier pour les imports AirfoilTools ───────────
 # (tous les .txt générés par telecharger_et_sauvegarder_txt iront ici)
 dossier_data = "data/"
-sous_dossier_data_import = os.path.join("data", "profils_importes")
-sous_dossier_data_genere = os.path.join("data", "profils_manuels")
+sous_dossier_data_import = os.path.join("../../data", "profils_importes")
+sous_dossier_data_genere = os.path.join("../../data", "profils_manuels")
 
 os.makedirs(sous_dossier_data_import, exist_ok=True)
 # ─────────────────────────────────────────────────────────────
@@ -161,7 +160,7 @@ class Aerodynamique:
                 for suffix in suffixes:
                     essais.append(f"{code_brut}{lettre}{suffix}")
 
-        dossier = os.path.join("data", "polaires_importees")
+        dossier = os.path.join("../../data", "polaires_importees")
         os.makedirs(dossier, exist_ok=True)
 
         for code_url in essais:
