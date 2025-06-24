@@ -16,7 +16,7 @@ def demande_profil(interface):
         interface.msgbox("Aucun nom saisi. Veuillez réessayer.", titre="Erreur")
         return None, None  # Ajouter cette ligne pour gérer explicitement le cas vide
 
-    nom_profil = f"{nom_profil}-il"
+    nom_profil = f"{nom_profil}"
 
     profil_obj = Airfoil.depuis_airfoiltools(nom_profil)
 

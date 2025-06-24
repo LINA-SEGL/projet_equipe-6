@@ -39,27 +39,45 @@ class Airfoil:
         Raises:
             Exception: Si la récupération échoue.
         """
-        # Patterns de suffixes et de préfixes à tester
-        suffixes = ['', '-il', '-sa', '-sm', 'h-sa', 'sm-il']
+        # Nettoyage de l'entrée utilisateur
+        code_naca = code_naca.strip().lower()
+        suffixes = ['', '-il', '-sa', '-sm', 'h-sa', 'sm-il', '-jf','a-il']
         prefixes = ['naca', 'n']
-        code_brut = code_naca.lower().replace("naca", "").replace("n", "")
+        lettres_variante = ['h', 'sm']
 
-        essais = []
+        # On retire tous les préfixes pour garder le cœur numérique
+        code_brut = code_naca.replace("naca", "").replace("n", "")
+        essais = set()
 
-        # Générer tous les patterns à tester
+        # 1. Patterns classiques
         for prefix in prefixes:
             for suffix in suffixes:
-                essais.append(f"{prefix}{code_brut}{suffix}")
+                essais.add(f"{prefix}{code_brut}{suffix}")
+        essais.add(code_brut)  # Ex : '2412' ou '22112'
 
-        # Ajouter le code brut seul (pour les profils déjà bien formatés)
-        essais.append(code_brut)
+        # 2. Si code brut 4 ou 5 chiffres, on tente des variantes avec 'h', 'sm'
+        if code_brut.isdigit() and len(code_brut) in (4, 5):
+            for prefix in prefixes:
+                for lettre in lettres_variante:
+                    for suffix in suffixes:
+                        essais.add(f"{prefix}{code_brut}{lettre}{suffix}")
+            for lettre in lettres_variante:
+                essais.add(f"{code_brut}{lettre}")
+                for suffix in suffixes:
+                    essais.add(f"{code_brut}{lettre}{suffix}")
+
+        # 3. On tente aussi le code NACA original (en cas d'entrée custom)
+        essais.add(code_naca)
+
+        # Optionnel : log des essais (pour debug)
+        print("Essais générés :", essais)
 
         for code_url in essais:
             url = f"http://airfoiltools.com/airfoil/seligdatfile?airfoil={code_url}"
             reponse = requests.get(url)
+            # Optionnel : print(f"Test URL: {url} | Status: {reponse.status_code}")
             if reponse.status_code == 200 and "Invalid airfoil name" not in reponse.text:
                 print(f"[INFO] Profil trouvé : {url}")
-                # Parsing identique à ton code original
                 lignes = reponse.text.strip().splitlines()
                 coordonnees = []
                 for ligne in lignes[1:]:
@@ -71,7 +89,7 @@ class Airfoil:
                     except (IndexError, ValueError):
                         continue
                 return cls(nom=f"{code_url}", coordonnees=coordonnees)
-        # Si aucun pattern ne fonctionne
+
         raise Exception(f"Aucune version trouvée pour le profil NACA {code_naca}")
 
     def sauvegarder_coordonnees(self, nom_fichier=None):

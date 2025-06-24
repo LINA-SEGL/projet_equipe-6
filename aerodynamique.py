@@ -131,29 +131,57 @@ class Aerodynamique:
         except Exception as e:
             print(f" Erreur : {e}")
 
-    def telecharger_et_sauvegarder_txt(self, re = 50000):
+    def telecharger_et_sauvegarder_txt(self, re=50000):
         """
-        Télécharge les performances depuis AirfoilTools (format .txt) et les enregistre.
-
-        Args:
-            nom_fichier (str): Nom du fichier de sortie.
+        Télécharge la polaire aérodynamique (format .txt) depuis AirfoilTools.
+        Teste toutes les combinaisons possibles de nom de profil jusqu'à trouver un fichier valide.
         """
-        url_txt = f"http://airfoiltools.com/polar/text?polar=xf-{self.nom}-{re}.txt"
-        #xf - naca4412 - il - 50000.txt
-        response = requests.get(url_txt)
+        suffixes = ['', '-il', '-sa', '-sm', 'h-sa', 'sm-il', '-jf','a-il']
+        prefixes = ['naca', 'n']
+        lettres_variante = ['h', 'sm']
 
-        if response.status_code != 200:
-            raise Exception(f"Erreur d'accès au fichier TXT : {url_txt}")
+        code_brut = self.nom.lower().replace("naca", "").replace("n", "")
 
-        nom_fichier=f"{self.nom}_coef_aero.txt"
-        chemin = os.path.join("data", "polaires_importees", nom_fichier)
+        essais = []
 
-        with open(chemin, "w", encoding="utf-8") as fichier:
-            fichier.write(response.text)
+        # Patterns classiques
+        for prefix in prefixes:
+            for suffix in suffixes:
+                essais.append(f"{prefix}{code_brut}{suffix}")
+        essais.append(code_brut)  # Tester aussi le code brut seul
 
-        #print(f"Performances aérodynamiques enregistrés dans le fichier: {chemin}")
+        # Ajout de variantes avec 'h' et 'sm' pour les profils à 4 chiffres
+        if code_brut.isdigit() and len(code_brut) == 4:
+            for prefix in prefixes:
+                for lettre in lettres_variante:
+                    for suffix in suffixes:
+                        essais.append(f"{prefix}{code_brut}{lettre}{suffix}")
+            for lettre in lettres_variante:
+                essais.append(f"{code_brut}{lettre}")
+                for suffix in suffixes:
+                    essais.append(f"{code_brut}{lettre}{suffix}")
 
-        return chemin
+        dossier = os.path.join("data", "polaires_importees")
+        os.makedirs(dossier, exist_ok=True)
+
+        for code_url in essais:
+            url_txt = f"http://airfoiltools.com/polar/text?polar=xf-{code_url}-{re}.txt"
+            response = requests.get(url_txt)
+            contenu = response.text
+            # Robustesse : ne prendre que les vrais fichiers contenant des données
+            if (response.status_code == 200 and
+                    "Invalid airfoil name" not in contenu and
+                    "Error" not in contenu and
+                    "Unknown polar file" not in contenu and
+                    len(contenu.splitlines()) > 5):
+                nom_fichier = f"{code_url}_coef_aero.txt"
+                chemin = os.path.join(dossier, nom_fichier)
+                with open(chemin, "w", encoding="utf-8") as fichier:
+                    fichier.write(contenu)
+                print(f"[INFO] Polaire trouvée et enregistrée: {url_txt}")
+                return chemin
+
+        raise Exception(f"Aucune version de polaire trouvée pour le profil {self.nom} (Re={re})")
 
     def lire_txt_et_convertir_dataframe(self, nom_fichier_txt):
         """
