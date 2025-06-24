@@ -8,7 +8,7 @@ from projet_sessionE2025.Interface.interaction_graphique import *
 from projet_sessionE2025.airfoil.Airfoil import Airfoil
 from projet_sessionE2025.BaseDonnees.gestion_base import GestionBase
 from projet_sessionE2025.aero.aerodynamique import Aerodynamique
-from projet_sessionE2025.donnees_vol.VolOpenSkyAsync import choisir_vols, fetch_vols, calcul_delta_isa
+from projet_sessionE2025.donnees_vol.VolOpenSkyAsync import *
 from projet_sessionE2025.donnees_vol.ConditionVol import *
 
 def demande_profil(interface):
