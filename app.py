@@ -457,6 +457,30 @@ if st.button("Comparer les deux profils"):
                         return [(float(x), float(y)) for x, y in (ligne.strip().split() for ligne in lignes)]
             return None
 
+        coords1 = charger_coord(profil_1)
+        coords2 = charger_coord(profil_2)
+
+        if coords1 and coords2:
+            fig, ax = plt.subplots()
+            x1, y1 = zip(*coords1)
+            x2, y2 = zip(*coords2)
+            ax.plot(x1, y1, label=profil_1, linewidth=2)
+            ax.plot(x2, y2, label=profil_2, linestyle="--", linewidth=2)
+            ax.set_title("Superposition des contours des profils")
+            ax.set_aspect("equal")
+            ax.grid(True)
+            ax.legend()
+            st.pyplot(fig)
+        else:
+            st.error("Impossible de charger les deux profils sélectionnés.")
+
+    except Exception as e:
+        st.error(f"Erreur lors de la comparaison : {e}")
+
+
+
+
+
 #  givrage...
 # ============================
 #         SIMULATION GIVRAGE
