@@ -32,9 +32,8 @@ if mode == "Importer":
         try:
             import os
 
-            # Ajouter -il si nécessaire
-            if not code.endswith("-il"):
-                code += "-il"
+
+            code = code.strip().lower()  # Pas d'ajout de suffixe automatique !
 
             st.write(f" Nom du profil demandé : {code}")
 
