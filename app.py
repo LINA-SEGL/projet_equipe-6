@@ -433,6 +433,21 @@ if st.session_state.profil and st.session_state.chemin_dat:
                 fig = comparer_polaires(polaires)
                 st.pyplot(fig, clear_figure=True)
 
+
+# ============================================
+    # SUPERPOSITION DE DEUX PROFILS NACA
+    # ============================================
+
+st.subheader("Comparaison de deux profils NACA")
+
+profils_disponibles = sorted(set(f.split("_coord")[0] for dossier in ["data/profils_importes", "data/profils_manuels"]
+                                 for f in os.listdir(dossier) if f.endswith(".dat")))
+
+profil_1 = st.selectbox("Choisissez le 1er profil", profils_disponibles, key="profil1")
+profil_2 = st.selectbox("Choisissez le 2e profil", profils_disponibles, key="profil2")
+
+
+
 #  givrage...
 # ============================
 #         SIMULATION GIVRAGE
@@ -572,3 +587,5 @@ if faire_givrage == "Oui":
                     st.error("Fichier de données givrées introuvable.")
             except Exception as e:
                 st.error(f"Erreur durant la simulation givrée : {e}")
+
+
