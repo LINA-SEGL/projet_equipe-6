@@ -433,6 +433,54 @@ if st.session_state.profil and st.session_state.chemin_dat:
                 fig = comparer_polaires(polaires)
                 st.pyplot(fig, clear_figure=True)
 
+
+# ============================================
+    # SUPERPOSITION DE DEUX PROFILS NACA
+    # ============================================
+
+st.subheader("Comparaison de deux profils NACA")
+
+profils_disponibles = sorted(set(f.split("_coord")[0] for dossier in ["data/profils_importes", "data/profils_manuels"]
+                                 for f in os.listdir(dossier) if f.endswith(".dat")))
+
+profil_1 = st.selectbox("Choisissez le 1er profil", profils_disponibles, key="profil1")
+profil_2 = st.selectbox("Choisissez le 2e profil", profils_disponibles, key="profil2")
+
+if st.button("Comparer les deux profils"):
+    try:
+        def charger_coord(nom):
+            for dossier in ["data/profils_importes", "data/profils_manuels"]:
+                chemin = os.path.join(dossier, f"{nom}_coord_profil.dat")
+                if os.path.exists(chemin):
+                    with open(chemin, "r") as f:
+                        lignes = f.readlines()[1:]  # sauter la première ligne
+                        return [(float(x), float(y)) for x, y in (ligne.strip().split() for ligne in lignes)]
+            return None
+
+        coords1 = charger_coord(profil_1)
+        coords2 = charger_coord(profil_2)
+
+        if coords1 and coords2:
+            fig, ax = plt.subplots()
+            x1, y1 = zip(*coords1)
+            x2, y2 = zip(*coords2)
+            ax.plot(x1, y1, label=profil_1, linewidth=2)
+            ax.plot(x2, y2, label=profil_2, linestyle="--", linewidth=2)
+            ax.set_title("Superposition des contours des profils")
+            ax.set_aspect("equal")
+            ax.grid(True)
+            ax.legend()
+            st.pyplot(fig)
+        else:
+            st.error("Impossible de charger les deux profils sélectionnés.")
+
+    except Exception as e:
+        st.error(f"Erreur lors de la comparaison : {e}")
+
+
+
+
+
 #  givrage...
 # ============================
 #         SIMULATION GIVRAGE
@@ -572,3 +620,5 @@ if faire_givrage == "Oui":
                     st.error("Fichier de données givrées introuvable.")
             except Exception as e:
                 st.error(f"Erreur durant la simulation givrée : {e}")
+
+
