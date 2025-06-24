@@ -446,7 +446,16 @@ profils_disponibles = sorted(set(f.split("_coord")[0] for dossier in ["data/prof
 profil_1 = st.selectbox("Choisissez le 1er profil", profils_disponibles, key="profil1")
 profil_2 = st.selectbox("Choisissez le 2e profil", profils_disponibles, key="profil2")
 
-
+if st.button("Comparer les deux profils"):
+    try:
+        def charger_coord(nom):
+            for dossier in ["data/profils_importes", "data/profils_manuels"]:
+                chemin = os.path.join(dossier, f"{nom}_coord_profil.dat")
+                if os.path.exists(chemin):
+                    with open(chemin, "r") as f:
+                        lignes = f.readlines()[1:]  # sauter la première ligne
+                        return [(float(x), float(y)) for x, y in (ligne.strip().split() for ligne in lignes)]
+            return None
 
 #  givrage...
 # ============================
