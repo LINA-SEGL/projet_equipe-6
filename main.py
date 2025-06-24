@@ -1,11 +1,15 @@
-from Airfoil import *
-from aerodynamique import *
-from ConditionVol import *
-from gestion_base import *
-from VolOpenSkyAsync import *
-from interaction_graphique import *
+import os
+import pandas as pd
+import asyncio
 import matplotlib.pyplot as plt
 import streamlit as st
+
+from projet_sessionE2025.Interface.interaction_graphique import *
+from projet_sessionE2025.airfoil.Airfoil import Airfoil
+from projet_sessionE2025.BaseDonnees.gestion_base import GestionBase
+from projet_sessionE2025.aero.aerodynamique import Aerodynamique
+from projet_sessionE2025.donnees_vol.VolOpenSkyAsync import *
+from projet_sessionE2025.donnees_vol.ConditionVol import *
 
 def demande_profil(interface):
     nom_profil = interface.demander_texte("Entrez le nom du profil NACA (ex: naca2412)").strip().lower()
@@ -138,7 +142,7 @@ if __name__ == "__main__":
     interface = FenetreInteraction()
 
     API_KEY = "c6bf5947268d141c6ca08f54c7d65b63"
-    #Initialisation de la base de données des profils
+    #Initialisation de la BaseDonnees de données des profils
     gestion = GestionBase()
     # on réserve les variables pour stocker chacun des trois objets Aerodynamique
     aero_import = None
@@ -158,7 +162,7 @@ if __name__ == "__main__":
     """
     print("\n---- Lancement du programme Airfoil ----\n")
 
-    generation = interface.demander_choix("Voulez-vous importer de AirfoilTools, de votre base ou générer un profil ?", ["importer", "générer", "base"])
+    generation = interface.demander_choix("Voulez-vous importer de AirfoilTools, de votre BaseDonnees ou générer un profil ?", ["importer", "générer", "BaseDonnees"])
 
     # #On demande à l'utilisateur s'il veut créer ou importer un profil
     # while True:
@@ -238,7 +242,7 @@ if __name__ == "__main__":
         else:
             chemin_txt = None
 
-            # on enregistre le profil dans la base et on deplace les fichiers
+            # on enregistre le profil dans la BaseDonnees et on deplace les fichiers
         gestion.ajouter_profil(
             nom_profil,
             "importé",
@@ -347,12 +351,12 @@ if __name__ == "__main__":
 
         chemin_pol_csv = None
 
-        # on enregistre le profil dans la base et on deplace les fichiers
+        # on enregistre le profil dans la BaseDonnees et on deplace les fichiers
         # gestion.ajouter_profil(nom_profil, "manuel",
         #                        chemin_csv, chemin_dat, chemin_txt, chemin_pol_csv)
 
-    elif generation == "base":
-        #Lecture des dossiers de la base
+    elif generation == "BaseDonnees":
+        #Lecture des dossiers de la BaseDonnees
         dossier_database_import = "data/profils_importes"  #
         dossier_database_genere = "data/profils_manuels"   #
 
@@ -362,7 +366,7 @@ if __name__ == "__main__":
 
             # Vérifier si les deux dossiers sont vides
             if not contenu_import and not contenu_genere:
-                interface.msgbox("Aucun profil NACA trouvé dans la base de données.", titre="Base vide")
+                interface.msgbox("Aucun profil NACA trouvé dans la BaseDonnees de données.", titre="Base vide")
                 base_vide = True
 
             else:
@@ -376,7 +380,7 @@ if __name__ == "__main__":
         if base_vide == True:
             pass
         elif base_vide == False:
-            print("Les fichiers de profils NACA existants dans la base sont listés ci-dessous:\n")
+            print("Les fichiers de profils NACA existants dans la BaseDonnees sont listés ci-dessous:\n")
             for element in contenu_import:
                 fichier_import = element.split("-il_coord")[0]
                 print(fichier_import)
@@ -416,11 +420,11 @@ if __name__ == "__main__":
                     break
 
             if chemin_txt is None:
-                interface.msgbox(f"Le fichier '{polaire_profil_base}' n'a pas été trouvé dans la base de données, les performances n'ont peut être pas été générées.")
+                interface.msgbox(f"Le fichier '{polaire_profil_base}' n'a pas été trouvé dans la BaseDonnees de données, les performances n'ont peut être pas été générées.")
 
             aero_base = Aerodynamique(polaire_profil_base)
 
-        perfo_pour_finesse = "base"
+        perfo_pour_finesse = "BaseDonnees"
 
     calcul_finesse = interface.demander_choix("Voulez-vous calculer la finesse maximale?",["Oui", "Non"])
 
@@ -430,7 +434,7 @@ if __name__ == "__main__":
             aero = aero_manuel
         elif perfo_pour_finesse == "importer":
             aero = aero_import
-        elif perfo_pour_finesse == "base":
+        elif perfo_pour_finesse == "BaseDonnees":
             aero = aero_base
 
         if chemin_txt is None or not os.path.exists(chemin_txt):
@@ -570,7 +574,7 @@ if __name__ == "__main__":
         # 1. Sélection du profil à givrer
         profil_givre_label = interface.demander_choix(
             "Sur quel type de profil veux-tu simuler le givrage ?",
-            ["Profil importé actuel", "Profil depuis la base"]
+            ["Profil importé actuel", "Profil depuis la BaseDonnees"]
         ).strip().lower()
 
         # --- Profil importé ---
@@ -580,10 +584,10 @@ if __name__ == "__main__":
             aero_normale = aero_import
             chemin_dat_givre = chemin_dat
 
-        # --- Profil depuis la base ---
-        elif profil_givre_label == "profil depuis la base":
+        # --- Profil depuis la BaseDonnees ---
+        elif profil_givre_label == "profil depuis la BaseDonnees":
             nom_profil_base = interface.demander_texte(
-                "Rentrez le nom du profil de la base à givrer (ex : naca2412)").strip().lower()
+                "Rentrez le nom du profil de la BaseDonnees à givrer (ex : naca2412)").strip().lower()
             nom_profil_givre = f"{nom_profil_base}-il"
             coord_profil_base = f"{nom_profil_givre}_coord_profil.dat"
             chemin_dat_givre = None
@@ -593,7 +597,7 @@ if __name__ == "__main__":
                     chemin_dat_givre = chemin_test
                     break
             if chemin_dat_givre is None:
-                interface.msgbox(f"Profil {nom_profil_givre} introuvable dans la base !", titre="Erreur")
+                interface.msgbox(f"Profil {nom_profil_givre} introuvable dans la BaseDonnees !", titre="Erreur")
                 raise SystemExit
 
             profil_a_givrer = Airfoil.depuis_airfoiltools(nom_profil_givre)

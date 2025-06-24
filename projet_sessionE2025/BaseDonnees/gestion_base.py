@@ -1,4 +1,4 @@
-# ce module sert à etablir une data base avec des profils déjà manipuler et de la manipuler
+# ce module sert à etablir une data BaseDonnees avec des profils déjà manipuler et de la manipuler
 import os
 import pandas as pd
 from datetime import datetime
@@ -14,7 +14,7 @@ profils_givre = os.path.join(Dossier_data, "profils_givre")
 class GestionBase:
     """
 
-    Classe pour gérer la base de données centrale des profils d'ailes elle crée automatiquement un dossier 'data/' et
+    Classe pour gérer la BaseDonnees de données centrale des profils d'ailes elle crée automatiquement un dossier 'data/' et
     un fichier CSV qui contient un historique des profils enregistrés.
     """
 
@@ -97,7 +97,7 @@ class GestionBase:
                        fichier_polaire_txt=None, fichier_polaire_csv=None):
 
         """
-        Ajoute un nouveau profil à la base de données avec les chemins associés aux fichiersgénérés
+        Ajoute un nouveau profil à la BaseDonnees de données avec les chemins associés aux fichiersgénérés
 
         :param nom_profil: nom du profil
         :param type_profil: manuel ou importé et givre
@@ -137,14 +137,14 @@ class GestionBase:
             "fichier_polaire_csv": chemin_polaire_csv
         }
 
-        df = pd.concat([df, pd.DataFrame([nouvelle_entree])],ignore_index=True)  # on ajoute la nouvelle entree a la base de donnée
+        df = pd.concat([df, pd.DataFrame([nouvelle_entree])],ignore_index=True)  # on ajoute la nouvelle entree a la BaseDonnees de donnée
         df.to_csv(self.chemin_fichier, index=False)  # on retire les index automatique
-        #print(f"[info] Profil '{nom_profil}' ajouté à la base de données.")
+        #print(f"[info] Profil '{nom_profil}' ajouté à la BaseDonnees de données.")
 
 
     def afficher_base(self):
         """
-        Affiche le contenu actuel de la base de données
+        Affiche le contenu actuel de la BaseDonnees de données
         """
         df = pd.read_csv(self.chemin_fichier)
         print(df)
@@ -152,22 +152,22 @@ class GestionBase:
 
     def charger_base(self):
         """
-        Charge et retourne la base de données des profils sous forme de DataFrame.
+        Charge et retourne la BaseDonnees de données des profils sous forme de DataFrame.
         """
         return pd.read_csv(self.chemin_fichier)
 
 
     def supprimer_profil(self, nom_profil):
         """
-        Supprime un profil de la base de données et ses fichiers associers
+        Supprime un profil de la BaseDonnees de données et ses fichiers associers
         :param nom_profil: Nom du profil à supprimer
         """
         df = pd.read_csv(self.chemin_fichier)
 
-        #On verifie si le profil est dans la base
+        #On verifie si le profil est dans la BaseDonnees
         filtre = df["nom_profil"] == nom_profil
         if not filtre.any():
-            print(f"[alerte] Aucun profil nommé '{nom_profil}' trouvé dans la base.")
+            print(f"[alerte] Aucun profil nommé '{nom_profil}' trouvé dans la BaseDonnees.")
             return False
 
         #recuperation des fichiers à supprimer
@@ -186,17 +186,17 @@ class GestionBase:
                     print(f"[alerte] Erreur lors de la suppression du fichier '{chemin}': {e}")
 
 
-        #mise à jour de la base
+        #mise à jour de la BaseDonnees
         df = df[~filtre]
         df.to_csv(self.chemin_fichier, index=False)
-        print(f"[info] Profil '{nom_profil}' supprimé de la base et fichiers associés supprimés")
+        print(f"[info] Profil '{nom_profil}' supprimé de la BaseDonnees et fichiers associés supprimés")
 
 
     #rechercher si un profil existe deja
 
     def profil_existe(self, nom_profil):
         """
-        Vérifie si un profil existe deja dans la base de données
+        Vérifie si un profil existe deja dans la BaseDonnees de données
         :param nom_profil: Nom du profil a rechercher
         :return: True s'il est present falsie sinon
         """

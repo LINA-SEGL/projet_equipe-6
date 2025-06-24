@@ -2,9 +2,7 @@ import requests
 import matplotlib.pyplot as plt
 import numpy as np
 import csv
-from gestion_base import *
-import os
-from interaction_graphique import *
+from projet_sessionE2025.BaseDonnees.gestion_base import *
 
 class Airfoil:
     """
@@ -318,7 +316,6 @@ class Airfoil:
             mode (str): Type de bruit ('gaussien' ou 'uniforme').
             zone (tuple): Intervalle x où le bruit est appliqué.
         """
-        from math import isfinite
         bruit = BruitProfil(amplitude=amplitude, mode=mode, zone=zone)
         coord_bruitees = bruit.appliquer(self.coordonnees)
 
@@ -385,7 +382,7 @@ class Airfoil:
         import os, csv
 
         # ─── dossiers et chemins ───────────────────────────────────────────────────────
-        dossier = os.path.join("data", "profils_givre")
+        dossier = os.path.join("../../data", "profils_givre")
         os.makedirs(dossier, exist_ok=True)
         fichier_csv = os.path.join(dossier, f"{self.nom}_coord_givre.csv")
         fichier_dat = os.path.join(dossier, f"{self.nom}_coord_givre.dat")
@@ -596,10 +593,10 @@ def generer_pale_vrillee(profil_2d, angle_max_deg=30, z_max=1.0, sections=50):
 
 if __name__ == "__main__":
     from main import demande_profil, comparer_polaires
-    from aerodynamique import Aerodynamique
+    from projet_sessionE2025.aero.aerodynamique import Aerodynamique
     import os
 
-    from interaction_graphique import *
+    from projet_sessionE2025.Interface.interaction_graphique import *
 
     # 1) importer et afficher le profil brut
     interface = FenetreInteraction()
@@ -621,8 +618,8 @@ if __name__ == "__main__":
     mach = float(input("Mach     (ex: 0.1)    : ") or 0.1)
 
     # 5) créer les dossiers
-    dir_import = os.path.join("data", "profils_importes")
-    dir_givre = os.path.join("data", "profils_givre")
+    dir_import = os.path.join("../../data", "profils_importes")
+    dir_givre = os.path.join("../../data", "profils_givre")
     os.makedirs(dir_import, exist_ok=True)
     os.makedirs(dir_givre, exist_ok=True)
 

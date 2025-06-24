@@ -1,14 +1,6 @@
 import streamlit as st
-import os
 import matplotlib.pyplot as plt
-import pandas as pd
-import asyncio
 
-from Airfoil import*
-from aerodynamique import *
-from gestion_base import *
-from VolOpenSkyAsync import*
-from ConditionVol import *
 from main import *
 # Initialisation
 st.set_page_config(page_title="Interface NACA", layout="centered")
@@ -23,7 +15,7 @@ if "profil" not in st.session_state:
     st.session_state.chemin_dat = ""
     st.session_state.df_polaires = None
 
-mode = st.radio("Choisissez la méthode :", ["Importer", "Générer", "Depuis la base"])
+mode = st.radio("Choisissez la méthode :", ["Importer", "Générer", "Depuis la BaseDonnees"])
 
 if mode == "Importer":
     code = st.text_input("Nom du profil (ex: naca2412-il)")
@@ -96,7 +88,8 @@ elif mode == "Générer":
                         return {"m": m, "p": p, "t": t, "c": c}
 
                 #  2. On remplace temporairement FenetreInteraction
-                import Airfoil
+                from projet_sessionE2025.airfoil import Airfoil
+
                 Airfoil.FenetreInteraction = lambda: FauxInterface()
 
                 # 3. Génération classique
@@ -137,7 +130,7 @@ elif mode == "Générer":
                 st.error(f" Erreur : {type(e).__name__} – {e}")
 
 
-elif mode == "Depuis la base":
+elif mode == "Depuis la BaseDonnees":
     import os
 
     fichiers = os.listdir("data/profils_manuels") + os.listdir("data/profils_importes")
@@ -171,7 +164,7 @@ elif mode == "Depuis la base":
             st.session_state.nom = choix
             st.session_state.chemin_dat = chemin
 
-            st.success(f" Profil {choix} chargé depuis la base")
+            st.success(f" Profil {choix} chargé depuis la BaseDonnees")
 
             # Affichage du contour
             x = [pt[0] for pt in coordonnees]
@@ -194,7 +187,7 @@ if st.session_state.profil and st.session_state.chemin_dat:
     reynolds = st.number_input("Nombre de Reynolds", value=50000)
     mach = st.number_input("Nombre de Mach", value=0.1)
 
-    if st.button("Lancer l'analyse aérodynamique"):
+    if st.button("Lancer l'aero aérodynamique"):
         aero = Aerodynamique(st.session_state.nom)
 
         # CAS 1 : Profil importé depuis AirfoilTools
@@ -207,7 +200,7 @@ if st.session_state.profil and st.session_state.chemin_dat:
                 st.error(f" Erreur AirfoilTools : {e}")
                 df = None
 
-        # CAS 2 : Profil généré ou CAS 3 : Profil chargé depuis la base
+        # CAS 2 : Profil généré ou CAS 3 : Profil chargé depuis la BaseDonnees
         else:
             try:
                 chemin = aero.run_xfoil(
@@ -455,7 +448,7 @@ faire_givrage = st.radio(
 if faire_givrage == "Oui":
     profil_givre_label = st.radio(
         "Sur quel type de profil veux-tu simuler le givrage ?",
-        ["Profil importé actuel", "Profil depuis la base"]
+        ["Profil importé actuel", "Profil depuis la BaseDonnees"]
     )
 
     profil_a_givrer = None
@@ -469,8 +462,8 @@ if faire_givrage == "Oui":
         chemin_dat_givre = st.session_state.chemin_dat
         aero_normale = st.session_state.aero_import
 
-    elif profil_givre_label == "Profil depuis la base":
-        nom_profil_base = st.text_input("Nom du profil de la base à givrer (ex: naca2412)").strip().lower()
+    elif profil_givre_label == "Profil depuis la BaseDonnees":
+        nom_profil_base = st.text_input("Nom du profil de la BaseDonnees à givrer (ex: naca2412)").strip().lower()
         if nom_profil_base:
             nom_profil_givre = f"{nom_profil_base}-il"
             coord_profil_base = f"{nom_profil_givre}_coord_profil.dat"
