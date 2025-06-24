@@ -39,25 +39,40 @@ class Airfoil:
         Raises:
             Exception: Si la récupération échoue.
         """
-        url = f"http://airfoiltools.com/airfoil/seligdatfile?airfoil={code_naca.lower()}"
-        reponse = requests.get(url)
+        # Patterns de suffixes et de préfixes à tester
+        suffixes = ['', '-il', '-sa', '-sm', 'h-sa', 'sm-il']
+        prefixes = ['naca', 'n']
+        code_brut = code_naca.lower().replace("naca", "").replace("n", "")
 
-        if reponse.status_code != 200:
-            raise Exception(f"Erreur lors de la récupération du profil NACA {code_naca}")
+        essais = []
 
-        lignes = reponse.text.strip().splitlines()
-        coordonnees = []
+        # Générer tous les patterns à tester
+        for prefix in prefixes:
+            for suffix in suffixes:
+                essais.append(f"{prefix}{code_brut}{suffix}")
 
-        for ligne in lignes[1:]:  # ignorer la première ligne (titre)
-            try:
-                parties = ligne.strip().split()
-                x = float(parties[0])
-                y = float(parties[1])
-                coordonnees.append((x, y))
-            except (IndexError, ValueError):
-                continue  # ignorer les lignes mal formatées
+        # Ajouter le code brut seul (pour les profils déjà bien formatés)
+        essais.append(code_brut)
 
-        return cls(nom=f"{code_naca}", coordonnees=coordonnees)
+        for code_url in essais:
+            url = f"http://airfoiltools.com/airfoil/seligdatfile?airfoil={code_url}"
+            reponse = requests.get(url)
+            if reponse.status_code == 200 and "Invalid airfoil name" not in reponse.text:
+                print(f"[INFO] Profil trouvé : {url}")
+                # Parsing identique à ton code original
+                lignes = reponse.text.strip().splitlines()
+                coordonnees = []
+                for ligne in lignes[1:]:
+                    try:
+                        parties = ligne.strip().split()
+                        x = float(parties[0])
+                        y = float(parties[1])
+                        coordonnees.append((x, y))
+                    except (IndexError, ValueError):
+                        continue
+                return cls(nom=f"{code_url}", coordonnees=coordonnees)
+        # Si aucun pattern ne fonctionne
+        raise Exception(f"Aucune version trouvée pour le profil NACA {code_naca}")
 
     def sauvegarder_coordonnees(self, nom_fichier=None):
         """
