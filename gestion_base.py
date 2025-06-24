@@ -72,11 +72,21 @@ class GestionBase:
         :return: chemin du fichier déplacé
         """
 
-        if chemin_fichier and os.path.exists(self.chemin_dossier):
-            nom_fichier = os.path.basename(chemin_fichier)
-            nouveau_chemin = os.path.join(self.chemin_dossier, dossier_cible, nom_fichier)
-            os.replace(chemin_fichier, nouveau_chemin) # déplace (écrase si même nom)
-            return nouveau_chemin
+        if chemin_fichier is None:
+            return None
+
+        if not os.path.exists(chemin_fichier):
+            print(f"[alerte] Fichier introuvable : {chemin_fichier}")
+            return None
+
+        nom_fichier = os.path.basename(chemin_fichier)
+        nouveau_chemin = os.path.join(self.chemin_dossier, dossier_cible, nom_fichier)
+
+        if os.path.abspath(chemin_fichier) == os.path.abspath(nouveau_chemin):
+            return nouveau_chemin  # déjà à la bonne place
+
+        os.replace(chemin_fichier, nouveau_chemin)
+        return nouveau_chemin
 
         return None
 
