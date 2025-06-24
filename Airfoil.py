@@ -444,6 +444,7 @@ class Airfoil:
         plt.show()
 
 
+
 class GivreProfil:
     """
     Applique une couche de givrage uniformément sur l'extrados,

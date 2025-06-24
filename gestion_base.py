@@ -9,7 +9,7 @@ profils_importes = os.path.join(Dossier_data, "profils_importes")
 profils_manuels = os.path.join(Dossier_data, "profils_manuels")
 polaires_xfoil = os.path.join(Dossier_data, "polaires_xfoil")
 polaires_importees = os.path.join(Dossier_data, "polaires_importees")
-
+profils_givre = os.path.join(Dossier_data, "profils_givre")
 
 class GestionBase:
     """
@@ -55,7 +55,8 @@ class GestionBase:
             "profils_importes",
             "profils_manuels",
             "polaires_xfoil",
-            "polaires_importees"
+            "polaires_importees",
+            "profils_givre"
 
         ]
         for dossier in sous_dossiers:
@@ -71,11 +72,21 @@ class GestionBase:
         :return: chemin du fichier déplacé
         """
 
-        if chemin_fichier and os.path.exists(self.chemin_dossier):
-            nom_fichier = os.path.basename(chemin_fichier)
-            nouveau_chemin = os.path.join(self.chemin_dossier, dossier_cible, nom_fichier)
-            os.replace(chemin_fichier, nouveau_chemin) # déplace (écrase si même nom)
-            return nouveau_chemin
+        if chemin_fichier is None:
+            return None
+
+        if not os.path.exists(chemin_fichier):
+            print(f"[alerte] Fichier introuvable : {chemin_fichier}")
+            return None
+
+        nom_fichier = os.path.basename(chemin_fichier)
+        nouveau_chemin = os.path.join(self.chemin_dossier, dossier_cible, nom_fichier)
+
+        if os.path.abspath(chemin_fichier) == os.path.abspath(nouveau_chemin):
+            return nouveau_chemin  # déjà à la bonne place
+
+        os.replace(chemin_fichier, nouveau_chemin)
+        return nouveau_chemin
 
         return None
 
@@ -89,7 +100,7 @@ class GestionBase:
         Ajoute un nouveau profil à la base de données avec les chemins associés aux fichiersgénérés
 
         :param nom_profil: nom du profil
-        :param type_profil: manuel ou importé
+        :param type_profil: manuel ou importé et givre
         :param fichier_coord_csv: chemin vers le fichier csv des coordonnées
         :param fichier_coord_dat: chemins vers le fichier .dat de XFOIL
         :param fichier_polaire_txt:chemin vers le fichier texte , résultats de XFOIL
@@ -100,7 +111,14 @@ class GestionBase:
 
         # on déplace chaque fichier dans son sous-dossier
 
-        dossier_coords = "profils_manuels" if type_profil == "manuel" else "profils_importes"
+        if type_profil == "manuel":
+            dossier_coords = "profils_manuels"
+        elif type_profil == "importé":
+            dossier_coords = "profils_importes"
+        elif type_profil == "givre":
+            dossier_coords = "profils_givre"
+        else:
+            dossier_coords = "profils_importes"  # par défaut
         chemin_coord_csv = self._deplacer_fichier(fichier_coord_csv, dossier_coords)
         chemin_coord_dat = self._deplacer_fichier(fichier_coord_dat, dossier_coords)
         chemin_polaire_txt = self._deplacer_fichier(fichier_polaire_txt, "polaires_importees")

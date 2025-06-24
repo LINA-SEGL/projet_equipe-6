@@ -665,6 +665,15 @@ if __name__ == "__main__":
             output_file=txt_givre
         )
 
+        gestion.ajouter_profil(
+            nom_profil=nom_profil_givre + "-givre",
+            type_profil="givre",
+            fichier_coord_csv=None,  # Ne pas redéplacer !
+            fichier_coord_dat=None,
+            fichier_polaire_txt=txt_givre,
+            fichier_polaire_csv=None
+        )
+
         #  Charger la polaire givrée
         if os.path.exists(txt_givre):
             df_givre = aero_givre.lire_txt_et_convertir_dataframe(txt_givre)
