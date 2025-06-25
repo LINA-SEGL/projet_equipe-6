@@ -439,7 +439,8 @@ class Airfoil:
         plt.grid(True)
         plt.legend()
         plt.show()
-
+        #renvoie les chemins
+        return fichier_csv, fichier_dat
 
 
 class GivreProfil:

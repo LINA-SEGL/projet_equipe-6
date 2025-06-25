@@ -696,11 +696,8 @@ if __name__ == "__main__":
             mach_givre = float(interface.demander_texte("Mach pour givrage ? (ex : 0.1)") or 0.1)
 
         #  Générer et sauvegarder le profil givré (CSV + DAT)
-        profil_a_givrer.tracer_givrage(epaisseur=ep, zone=(z0, z1))
-        dir_givre = os.path.join("data", "profils_givre")
-        dat_givre = os.path.join(dir_givre, f"{nom_profil_givre}_coord_givre.dat")
-        txt_givre = os.path.join(dir_givre, f"{nom_profil_givre}_givree.txt")
-
+        csv_givre, dat_givre = profil_a_givrer.tracer_givrage(epaisseur=ep, zone=(z0, z1))
+        txt_givre = f"{nom_profil_givre}_coef_aero_givre.txt"
         #  Simulation XFoil sur profil givré
         aero_givre = Aerodynamique(nom_profil_givre + "-givre")
         aero_givre.run_xfoil(
