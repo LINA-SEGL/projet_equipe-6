@@ -305,7 +305,6 @@ if __name__ == "__main__":
 
         if tracer == "oui":
             profil_manuel.tracer_profil_manuel(x_up, y_up, x_low, y_low)
-
         elif tracer == "non":
             pass
         else:
@@ -323,8 +322,6 @@ if __name__ == "__main__":
             mach = params["mach"]
             reynolds = params["reynolds"]
             print(mach, reynolds)
-            # mach = float(input("\nRentrez une valeur de Mach (0 à 0.7): "))
-            # reynolds = int(input("\nRentrez un nombre de Reynolds: "))
 
             # Générer la polaire avec XFOIL
             output_file = os.path.join("data", "polaires_xfoil", f"{nom_profil}_coef_aero.txt")
@@ -338,11 +335,12 @@ if __name__ == "__main__":
             print("chemin_txt", chemin_txt)
             print("output_file", output_file)
 
+            #Lire fichier output
             df_manuel = aero_manuel.lire_txt_et_convertir_dataframe(output_file)
             aero_manuel.donnees = df_manuel
             aero_manuel.tracer_polaires_depuis_txt()
 
-            #Variable qui enregistre l'existance de courbes aéro nécessaires pour connaitre la finesse.
+            #Variable qui enregistre l'existence de courbes aéro nécessaires pour connaitre la finesse.
             perfo_pour_finesse = "générer"
 
         elif lancement_xfoil.lower() == "non":
@@ -368,7 +366,6 @@ if __name__ == "__main__":
             if not contenu_import and not contenu_genere:
                 interface.msgbox("Aucun profil NACA trouvé dans la BaseDonnees de données.", titre="Base vide")
                 base_vide = True
-
             else:
                 base_vide = False
 
@@ -382,16 +379,61 @@ if __name__ == "__main__":
         elif base_vide == False:
             print("Les fichiers de profils NACA existants dans la BaseDonnees sont listés ci-dessous:\n")
             for element in contenu_import:
-                fichier_import = element.split("-il_coord")[0]
-                print(fichier_import)
+                # fichier_import = element.split("-il_coord")[0]
+                # print(fichier_import)
+                print(element)
             for element in contenu_genere:
-                fichier_genere = element.split("-il_coord")[0]
-                print(fichier_genere)
+                # fichier_genere = element.split("-il_coord")[0]
+                # print(fichier_genere)
+                print(element)
 
             nom_profil = interface.demander_texte("Rentrez le nom du profil NACA que vous souhaitez utiliser").strip().lower()
 
-            polaire_profil_base = f"{nom_profil}-il_coef_aero.txt"
-            coord_profil_base = f"{nom_profil}-il_coord_profil.dat"
+            # Nettoyage de l'entrée utilisateur
+            code_naca = nom_profil.strip().lower()
+            suffixes = ['', '-il', '-sa', '-sm', 'h-sa', 'sm-il', '-jf', 'a-il']
+            prefixes = ['naca', 'n']
+            lettres_variante = ['h', 'sm']
+
+            # On retire tous les préfixes pour garder le cœur numérique
+            code_brut = code_naca.replace("naca", "").replace("n", "")
+            essais = set()
+
+            # 1. Patterns classiques
+            for prefix in prefixes:
+                for suffix in suffixes:
+                    essais.add(f"{prefix}{code_brut}{suffix}")
+            essais.add(code_brut)  # Ex : '2412' ou '22112'
+
+            # 2. Si code brut 4 ou 5 chiffres, on tente des variantes avec 'h', 'sm'
+            if code_brut.isdigit() and len(code_brut) in (4, 5):
+                for prefix in prefixes:
+                    for lettre in lettres_variante:
+                        for suffix in suffixes:
+                            essais.add(f"{prefix}{code_brut}{lettre}{suffix}")
+                for lettre in lettres_variante:
+                    essais.add(f"{code_brut}{lettre}")
+                    for suffix in suffixes:
+                        essais.add(f"{code_brut}{lettre}{suffix}")
+
+            # 3. On tente aussi le code NACA original (en cas d'entrée custom)
+            essais.add(code_naca)
+
+            for noms in essais:
+                chemin_fichier = f"data/profils_importes/{noms}_coord_profil.dat"
+                if os.path.exists(chemin_fichier):
+                    for nom_polaire in essais:
+                        if os.path.exists(f"data/polaires_importees/{nom_polaire}_coef_aero.txt"):
+                            polaire_profil_base = f"{nom_polaire}_coef_aero.txt"
+                    coord_profil_base = f"{noms}_coord_profil.dat"
+                else:
+                    chemin_fichier = f"data/profils_manuels/{noms}_coord_profil.dat"
+                    if os.path.exists(chemin_fichier):
+                        polaire_profil_base = f"{noms}_coef_aero.txt"
+                        coord_profil_base = f"{noms}_coord_profil.dat"
+                    else:
+                        pass
+
 
             dossiers_possibles = [
                 "data/profils_importes",
