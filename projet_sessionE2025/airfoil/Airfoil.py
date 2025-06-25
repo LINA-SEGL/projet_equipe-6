@@ -382,7 +382,7 @@ class Airfoil:
         import os, csv
 
         # ─── dossiers et chemins ───────────────────────────────────────────────────────
-        dossier = os.path.join("../../data", "profils_givre")
+        dossier = os.path.join("data", "profils_givre")
         os.makedirs(dossier, exist_ok=True)
         fichier_csv = os.path.join(dossier, f"{self.nom}_coord_givre.csv")
         fichier_dat = os.path.join(dossier, f"{self.nom}_coord_givre.dat")
@@ -618,8 +618,8 @@ if __name__ == "__main__":
     mach = float(input("Mach     (ex: 0.1)    : ") or 0.1)
 
     # 5) créer les dossiers
-    dir_import = os.path.join("../../data", "profils_importes")
-    dir_givre = os.path.join("../../data", "profils_givre")
+    dir_import = os.path.join("data", "profils_importes")
+    dir_givre = os.path.join("data", "profils_givre")
     os.makedirs(dir_import, exist_ok=True)
     os.makedirs(dir_givre, exist_ok=True)
 
