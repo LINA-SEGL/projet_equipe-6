@@ -389,35 +389,7 @@ if __name__ == "__main__":
 
             nom_profil = interface.demander_texte("Rentrez le nom du profil NACA que vous souhaitez utiliser").strip().lower()
 
-            # Nettoyage de l'entrée utilisateur
-            code_naca = nom_profil.strip().lower()
-            suffixes = ['', '-il', '-sa', '-sm', 'h-sa', 'sm-il', '-jf', 'a-il']
-            prefixes = ['naca', 'n']
-            lettres_variante = ['h', 'sm']
-
-            # On retire tous les préfixes pour garder le cœur numérique
-            code_brut = code_naca.replace("naca", "").replace("n", "")
-            essais = set()
-
-            # 1. Patterns classiques
-            for prefix in prefixes:
-                for suffix in suffixes:
-                    essais.add(f"{prefix}{code_brut}{suffix}")
-            essais.add(code_brut)  # Ex : '2412' ou '22112'
-
-            # 2. Si code brut 4 ou 5 chiffres, on tente des variantes avec 'h', 'sm'
-            if code_brut.isdigit() and len(code_brut) in (4, 5):
-                for prefix in prefixes:
-                    for lettre in lettres_variante:
-                        for suffix in suffixes:
-                            essais.add(f"{prefix}{code_brut}{lettre}{suffix}")
-                for lettre in lettres_variante:
-                    essais.add(f"{code_brut}{lettre}")
-                    for suffix in suffixes:
-                        essais.add(f"{code_brut}{lettre}{suffix}")
-
-            # 3. On tente aussi le code NACA original (en cas d'entrée custom)
-            essais.add(code_naca)
+            essais = gestion.chercher_nom(nom_profil)
 
             for noms in essais:
                 chemin_fichier = f"data/profils_importes/{noms}_coord_profil.dat"
@@ -433,7 +405,6 @@ if __name__ == "__main__":
                         coord_profil_base = f"{noms}_coord_profil.dat"
                     else:
                         pass
-
 
             dossiers_possibles = [
                 "data/profils_importes",
@@ -494,13 +465,6 @@ if __name__ == "__main__":
     else:
         pass
 
-    # #  MENU PRINCIPAL POUR LES CONDITIONS
-    # print("\nVoulez-vous tester les performances de votre profil ?")
-    # print("  0 - Non, passer cette étape")
-    # print("  1 - Conditions réelles (vol existant)")
-    # print("  2 - Conditions personnalisées")
-    # print("  3 - Les deux")
-
     # MENU PRINCIPAL POUR LES CONDITIONS
     message = "Voulez-vous tester les performances de votre profil ?"
     options = [
@@ -511,11 +475,6 @@ if __name__ == "__main__":
     ]
 
     reponse = interface.demander_choix(message, options)
-
-    # choix_mode = ""
-    # while choix_mode not in ("0", "1", "2", "3"):
-    #     choix_mode = input("Entrez 0, 1, 2 ou 3 : ").strip()
-
     choix_mode = reponse.split(" ")[0]
 
     # 1) On collecte les conditions dans une liste
@@ -574,15 +533,11 @@ if __name__ == "__main__":
     if len(polaires) >= 2 and input('Superposer polaires ? (Oui/Non) ').strip().lower() == 'oui':
         comparer_polaires(polaires)
 
-    # while True:
-    #     comparaison = input("\nVoulez-vous comparer deux profils d'aile? (Oui / Non): ").strip().lower()
-    #     if comparaison in ["oui", "non"]:
-    #         break  # sortie de la boucle si la réponse est valide
-    #     else:
-    #         print("Réponse invalide. Veuillez écrire 'Oui' ou 'Non'.")
+    # ===================================
+    #         COMPARAISON PROFILS
+    # ===================================
 
     comparaison = interface.demander_choix("Voulez-vous comparer deux profils d'aile?", ["Oui", "Non"])
-
 
     if comparaison.lower() == "oui":
 
@@ -621,17 +576,53 @@ if __name__ == "__main__":
 
         # --- Profil importé ---
         if profil_givre_label == "profil importé actuel" and aero_import is not None:
-            profil_a_givrer = profil_obj_import
-            nom_profil_givre = nom_profil
-            aero_normale = aero_import
-            chemin_dat_givre = chemin_dat
+            if generation == "importer":
+                profil_a_givrer = profil_obj_import
+                nom_profil_givre = nom_profil
+                aero_normale = aero_import
+                chemin_dat_givre = chemin_dat
+
+            elif generation == "générer":
+                profil_a_givrer = profil_manuel
+                nom_profil_givre = nom_profil
+                aero_normale = aero_manuel
+                chemin_dat_givre = chemin_dat
 
         # --- Profil depuis la BaseDonnees ---
-        elif profil_givre_label == "profil depuis la BaseDonnees":
-            nom_profil_base = interface.demander_texte(
-                "Rentrez le nom du profil de la BaseDonnees à givrer (ex : naca2412)").strip().lower()
-            nom_profil_givre = f"{nom_profil_base}-il"
-            coord_profil_base = f"{nom_profil_givre}_coord_profil.dat"
+        elif profil_givre_label == "profil depuis la basedonnees":
+            #demander le nom
+            nom_profil = interface.demander_texte("Rentrez le nom du profil de la BaseDonnees à givrer (ex : naca2412)").strip().lower()
+
+            essais = gestion.chercher_nom(nom_profil)
+
+            for noms in essais:
+                chemin_fichier = f"data/profils_importes/{noms}_coord_profil.dat"
+                if os.path.exists(chemin_fichier):
+                    for nom_polaire in essais:
+                        if os.path.exists(f"data/polaires_importees/{nom_polaire}_coef_aero.txt"):
+                            polaire_profil_base = f"{nom_polaire}_coef_aero.txt"
+                    coord_profil_base_dat = f"{noms}_coord_profil.dat"
+                else:
+                    chemin_fichier = f"data/profils_manuels/{noms}_coord_profil.dat"
+                    if os.path.exists(chemin_fichier):
+                        polaire_profil_base = f"{noms}_coef_aero.txt"
+                        coord_profil_base_dat = f"{noms}_coord_profil.dat"
+                    else:
+                        pass
+
+            dossiers_possibles = [
+                "data/profils_importes",
+                "data/profils_manuels"
+            ]
+            # On va cherche le chemin qui mène au fichier : coord_profil_base
+            chemin_dat = None
+            for dossier in dossiers_possibles:
+                chemin_possible = os.path.join(dossier, coord_profil_base_dat)
+                #print(chemin_possible)
+                if os.path.exists(chemin_possible):
+                    chemin_dat = chemin_possible
+                    break
+
             chemin_dat_givre = None
             for dossier in ["data/profils_importes", "data/profils_manuels"]:
                 chemin_test = os.path.join(dossier, coord_profil_base)
@@ -639,26 +630,24 @@ if __name__ == "__main__":
                     chemin_dat_givre = chemin_test
                     break
             if chemin_dat_givre is None:
-                interface.msgbox(f"Profil {nom_profil_givre} introuvable dans la BaseDonnees !", titre="Erreur")
+                interface.msgbox(f"Profil {nom_profil} introuvable dans la BaseDonnees !", titre="Erreur")
                 raise SystemExit
 
-            profil_a_givrer = Airfoil.depuis_airfoiltools(nom_profil_givre)
-            polaire_txt = f"{nom_profil_givre}_coef_aero.txt"
-            chemin_polaire_base = None
-            for dossier in ["data/polaires_importees", "data/polaires_xfoil"]:
-                test = os.path.join(dossier, polaire_txt)
-                if os.path.exists(test):
-                    chemin_polaire_base = test
+            # On va cherche le chemin qui mène au fichier : polaire_profil_base
+            chemin_txt = None
+            for dossier in dossiers_possibles:
+                chemin_possible = os.path.join(dossier, polaire_profil_base)
+                if os.path.exists(chemin_possible):
+                    chemin_txt = chemin_possible
                     break
-            if chemin_polaire_base:
-                aero_normale = Aerodynamique(nom_profil_givre)
-                aero_normale.donnees = aero_normale.lire_txt_et_convertir_dataframe(chemin_polaire_base)
-            else:
-                aero_normale = None
 
-        else:
-            interface.msgbox("Aucun profil à givrer sélectionné !", titre="Erreur")
-            raise SystemExit
+            if chemin_txt is None:
+                interface.msgbox(
+                    f"Le fichier '{polaire_profil_base}' n'a pas été trouvé dans la BaseDonnees de données, les performances n'ont peut être pas été générées.")
+
+            print("polaire_profil_base", polaire_profil_base)
+            aero_base = Aerodynamique(polaire_profil_base)
+            aero_normale = aero_base
 
         #  Demande des paramètres de givrage
         ep = float(interface.demander_texte("Épaisseur du givrage (ex : 0.02)").replace(",", ".") or 0.02)
@@ -674,6 +663,7 @@ if __name__ == "__main__":
             ["Conditions de vol réelles", "Saisie manuelle"]
         ).strip().lower()
 
+        """
         if mode_cond == "conditions de vol réelles":
             # == Sélectionner un vol réel
             df_vols = choisir_vols(limit=100, sample_n=20)
@@ -690,14 +680,57 @@ if __name__ == "__main__":
             reynolds_givre = (rho * vit * corde) / mu
             print(f"Mach utilisé pour givrage : {mach_givre:.4f}")
             print(f"Reynolds utilisé pour givrage : {reynolds_givre:.0f}")
+        
         else:
-            # == Saisie manuelle
-            reynolds_givre = float(interface.demander_texte("Reynolds pour givrage ? (ex : 50000)") or 50000)
-            mach_givre = float(interface.demander_texte("Mach pour givrage ? (ex : 0.1)") or 0.1)
+        """
+        # == Saisie manuelle
+        reynolds_givre = float(interface.demander_texte("Reynolds pour givrage ? (ex : 50000)") or 50000)
+        mach_givre = float(interface.demander_texte("Mach pour givrage ? (ex : 0.1)") or 0.1)
 
-        #  Générer et sauvegarder le profil givré (CSV + DAT)
+        #Creation objet pour profil givre issu de la base
+        if profil_givre_label == "profil depuis la basedonnees":
+
+            # Charger les coordonnées depuis le fichier .dat
+            coordonnees_profil = []
+            with open(chemin_dat, "r") as f_dat:
+                lignes = f_dat.readlines()[1:]  # Ignorer l'entête (nom du profil)
+                for ligne in lignes:
+                    parts = ligne.strip().split()
+                    if len(parts) == 2:
+                        x_str, y_str = parts
+                        coordonnees_profil.append((float(x_str), float(y_str)))
+
+            # Création de l'objet Airfoil avec les coordonnées récupérées
+            profil_a_givrer = Airfoil(nom_profil, coordonnees_profil)
+            nom_profil_givre = nom_profil
+
+            #polaire_txt = f"{nom_polaire}_coef_aero.txt"
+            #polaire_txt = "n0009sm_il_coef_aero.txt"
+            """
+            chemin_polaire_base = None
+            for dossier in ["data/polaires_importees", "data/polaires_xfoil"]:
+                test = os.path.join(dossier, polaire_txt)
+                if os.path.exists(test):
+                    chemin_polaire_base = test
+                    break
+            if chemin_polaire_base:
+                aero_normale = aero_base
+                aero_normale.donnees = aero_normale.lire_txt_et_convertir_dataframe(chemin_polaire_base)
+            else:
+                aero_normale = None
+            """
+
+        else:
+            interface.msgbox("Aucun profil à givrer sélectionné !", titre="Erreur")
+            raise SystemExit
+
+        # Optionnel : afficher immédiatement le profil chargé pour vérifier
+        profil_a_givrer.tracer_contour(nom_profil_givre)
+
         csv_givre, dat_givre = profil_a_givrer.tracer_givrage(epaisseur=ep, zone=(z0, z1))
-        txt_givre = f"{nom_profil_givre}_coef_aero_givre.txt"
+
+        txt_givre = os.path.join("data", "polaires_importees", f"{nom_profil_givre}_coef_aero_givre.txt")
+
         #  Simulation XFoil sur profil givré
         aero_givre = Aerodynamique(nom_profil_givre + "-givre")
         aero_givre.run_xfoil(
@@ -717,23 +750,37 @@ if __name__ == "__main__":
             fichier_polaire_csv=None
         )
 
-        #  Charger la polaire givrée
-        if os.path.exists(txt_givre):
-            df_givre = aero_givre.lire_txt_et_convertir_dataframe(txt_givre)
-            if not df_givre.empty:
-                aero_givre.donnees = df_givre
-                polaires = {}
-                if aero_normale and getattr(aero_normale, "donnees", None) is not None:
-                    polaires["Normal"] = aero_normale.donnees
-                polaires["Givré"] = aero_givre.donnees
-                if len(polaires) >= 2:
-                    comparer_polaires(polaires)
+        while True:
+            affiche_polaire = interface.demander_choix(
+                "Voulez-vous afficher les performances avec le givrage?", ["Oui", "Non"]
+            ).strip().lower()
+            if affiche_polaire in ("oui", "non"):
+                break
+
+        if affiche_polaire == "oui":
+            #  Charger la polaire givrée
+            if os.path.exists(txt_givre):
+                df_givre = aero_givre.lire_txt_et_convertir_dataframe(txt_givre)
+                if not df_givre.empty:
+                    aero_givre.donnees = df_givre
+                    polaires = {}
+                    if aero_normale and getattr(aero_normale, "donnees", None) is not None:
+                        polaires["Normal"] = aero_normale.donnees
+
+                        print("aero_normale.donnees", aero_normale.donnees)
+
+                    polaires["Givré"] = aero_givre.donnees
+
+                    if len(polaires) >= 2:
+                        comparer_polaires(polaires)
+                    else:
+                        aero_givre.tracer_polaires_depuis_txt()
                 else:
-                    aero_givre.tracer_polaires_depuis_txt()
+                    print("Données givrées vides ou invalides !")
             else:
-                print("Données givrées vides ou invalides !")
-        else:
-            print("Fichier givré non trouvé ou erreur.")
+                print("Fichier givré non trouvé ou erreur.")
+        elif affiche_polaire == "non":
+            pass
 
     else:
         print("Fin du programme, sans simulation de givrage.")

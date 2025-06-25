@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import csv
 from projet_sessionE2025.BaseDonnees.gestion_base import *
-
+from projet_sessionE2025.Interface.interaction_graphique import *
 class Airfoil:
     """
     Représente un profil aérodynamique (type NACA ou autre) à partir de ses coordonnées ou généré manuellement.

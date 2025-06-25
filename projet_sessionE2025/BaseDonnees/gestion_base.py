@@ -203,3 +203,37 @@ class GestionBase:
 
         df = pd.read_csv(self.chemin_fichier)
         return nom_profil in df ["nom_profil"].values
+
+    def chercher_nom(self, nom_profil):
+
+        # Nettoyage de l'entrée utilisateur
+        code_naca = nom_profil.strip().lower()
+        suffixes = ['', '-il', '-sa', '-sm', 'h-sa', 'sm-il', '-jf', 'a-il']
+        prefixes = ['naca', 'n']
+        lettres_variante = ['h', 'sm']
+
+        # On retire tous les préfixes pour garder le cœur numérique
+        code_brut = code_naca.replace("naca", "").replace("n", "")
+        essais = set()
+
+        # 1. Patterns classiques
+        for prefix in prefixes:
+            for suffix in suffixes:
+                essais.add(f"{prefix}{code_brut}{suffix}")
+        essais.add(code_brut)  # Ex : '2412' ou '22112'
+
+        # 2. Si code brut 4 ou 5 chiffres, on tente des variantes avec 'h', 'sm'
+        if code_brut.isdigit() and len(code_brut) in (4, 5):
+            for prefix in prefixes:
+                for lettre in lettres_variante:
+                    for suffix in suffixes:
+                        essais.add(f"{prefix}{code_brut}{lettre}{suffix}")
+            for lettre in lettres_variante:
+                essais.add(f"{code_brut}{lettre}")
+                for suffix in suffixes:
+                    essais.add(f"{code_brut}{lettre}{suffix}")
+
+        # 3. On tente aussi le code NACA original (en cas d'entrée custom)
+        essais.add(code_naca)
+
+        return essais
