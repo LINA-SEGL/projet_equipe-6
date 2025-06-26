@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "projet_sessione2025"
+version = "0.1.0"
+description = "Module Python pour le projet session E2025"
+readme = "README.md"
+license = { file = "LICENSE.md" }
+authors = [
+  { name = "Lina Segjilani, Noé Morance, Cyril Traineau" }
+]
+requires-python = ">=3.8"
+
+dependencies = [
+  "numpy>=2.0",
+  "pandas>=2.0",
+  "matplotlib>=3.5",
+  "scipy>=1.10",
+
+  "streamlit>=1.40",
+  "pydeck>=0.9",
+
+  "requests>=2.30",
+  "python_opensky>=1.0",
+
+  "GitPython>=3.1",
+
+  "Sphinx>=8.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["projet_sessionE2025*"]
+
+[project.scripts]
+projet-main = "projet_sessionE2025.main:main"
+projet-app  = "projet_sessionE2025.app:main"
