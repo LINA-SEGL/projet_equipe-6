@@ -249,6 +249,7 @@ class Aerodynamique:
         if self.donnees is None:
             print("Aucune donnée à tracer.")
             return
+        plt.clf()  # <-- Nettoie explicitement la figure précédente
 
         fig, axes = plt.subplots(3, 1, figsize=(5, 7), sharex=True)  # 3 lignes, 1 colonne
 
@@ -271,6 +272,8 @@ class Aerodynamique:
 
         plt.tight_layout()
         plt.show()
+
+        return fig
 
     def run_xfoil(self, dat_file, reynolds, mach, alpha_start=-6, alpha_end=15, alpha_step=0.5, output_file="polar_output.txt"):
         """

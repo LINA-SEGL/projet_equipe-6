@@ -8,6 +8,18 @@ st.title("✈️ Interface Streamlit – Simulation profil NACA")
 API_KEY = "955814a8002a56c995edec56283f7caf"  # à remplacer si besoin
 gestion = GestionBase()
 
+# Comparaison de deux profils avec conditions personnalisées
+import os
+import glob
+
+chemins = ["data/profils_importes", "data/profils_manuels"]
+noms_profils = []
+for dossier in chemins:
+    fichiers = glob.glob(os.path.join(dossier, "*_coord_profil.dat"))
+    noms_profils += [os.path.basename(f).split("_coord")[0] for f in fichiers]
+noms_profils = sorted(set(noms_profils))
+
+
 # Session state init
 if "profil" not in st.session_state:
     st.session_state.profil = None
@@ -15,7 +27,12 @@ if "profil" not in st.session_state:
     st.session_state.chemin_dat = ""
     st.session_state.df_polaires = None
 
+    for var in ["aero_import", "aero_manuel", "aero_base", "aero_volperso", "aero_volreel"]:
+        if var not in st.session_state:
+            st.session_state[var] = None
+
 mode = st.radio("Choisissez la méthode :", ["Importer", "Générer", "Depuis la BaseDonnees"])
+st.session_state["methode_utilisee"] = mode
 
 if mode == "Importer":
     code = st.text_input("Nom du profil (ex: naca2412-il)")
@@ -187,11 +204,14 @@ if st.session_state.profil and st.session_state.chemin_dat:
     reynolds = st.number_input("Nombre de Reynolds", value=50000)
     mach = st.number_input("Nombre de Mach", value=0.1)
 
+    # Ajout : checkbox pour forcer la régénération
+    forcer_xfoil = st.checkbox("🔄 Forcer la régénération XFOIL")
+
     if st.button("Lancer l'aero aérodynamique"):
         aero = Aerodynamique(st.session_state.nom)
+        methode = st.session_state.get("methode_utilisee", "")
 
-        # CAS 1 : Profil importé depuis AirfoilTools
-        if "-il" in st.session_state.nom:
+        if methode == "Importer":
             try:
                 chemin = aero.telecharger_et_sauvegarder_txt(re=reynolds)
                 df = aero.lire_txt_et_convertir_dataframe(chemin)
@@ -200,46 +220,74 @@ if st.session_state.profil and st.session_state.chemin_dat:
                 st.error(f" Erreur AirfoilTools : {e}")
                 df = None
 
-        # CAS 2 : Profil généré ou CAS 3 : Profil chargé depuis la BaseDonnees
-        else:
+
+
+        elif methode == "Générer":
             try:
+                chemin_polaire = os.path.join("data", "polaires_xfoil", f"{st.session_state.nom}_polar.txt")
+                if forcer_xfoil and os.path.exists(chemin_polaire):
+                    os.remove(chemin_polaire)
+                    st.info("Ancien fichier supprimé. Nouvelle analyse XFOIL en cours...")
+
                 chemin = aero.run_xfoil(
                     dat_file=st.session_state.chemin_dat,
                     reynolds=reynolds,
                     mach=mach,
-                    output_file=os.path.join("data", "polaires_xfoil", f"{st.session_state.nom}_polar.txt")
+                    output_file=chemin_polaire
                 )
                 df = aero.lire_txt_et_convertir_dataframe(chemin)
-                st.success(" Analyse XFOIL terminée.")
+                st.success("✅ Analyse XFOIL terminée.")
             except Exception as e:
-                st.error(f" Erreur XFOIL : {e}")
+                st.error(f"❌ Erreur XFOIL : {e}")
                 df = None
 
+
+        elif methode == "Depuis la BaseDonnees":
+            try:
+                chemin_polaire = os.path.join("data", "polaires_importees", f"{st.session_state.nom}_coef_aero.txt")
+
+                if not os.path.exists(chemin_polaire):
+                    raise FileNotFoundError(f"Fichier introuvable : {chemin_polaire}")
+
+                df = aero.lire_txt_et_convertir_dataframe(chemin_polaire)
+                st.success("✅ Données de la base récupérées avec succès.")
+            except Exception as e:
+                st.error(f"❌ Erreur lors de la lecture depuis la base : {e}")
+
+        else:
+            st.error(f"❌ Méthode inconnue : {methode}")
+
+            # Si on a des données valides : sauvegarde et affichage
         if df is not None:
             st.session_state.df_polaires = df
-            st.success(" Données polaires prêtes à tracer")
+            st.success("📊 Données prêtes à tracer.")
 
 # ───── Tracé des polaires si données présentes ─────
 if "df_polaires" in st.session_state and st.session_state.df_polaires is not None:
     df = st.session_state.df_polaires
     st.subheader(" Courbes Cl, Cd et Cm")
+    st.write("Aperçu des données :", df.head())  # Debug
 
-    fig, axs = plt.subplots(3, 1, figsize=(8, 9), sharex=True)
+    try:
+        plt.clf()
+        fig, axs = plt.subplots(3, 1, figsize=(8, 9), sharex=True)
 
-    axs[0].plot(df["alpha"], df["CL"], color="blue")
-    axs[0].set_ylabel("Cl")
-    axs[0].grid(True)
+        axs[0].plot(df["alpha"], df["CL"], color="blue")
+        axs[0].set_ylabel("Cl")
+        axs[0].grid(True)
 
-    axs[1].plot(df["alpha"], df["CD"], color="red")
-    axs[1].set_ylabel("Cd")
-    axs[1].grid(True)
+        axs[1].plot(df["alpha"], df["CD"], color="red")
+        axs[1].set_ylabel("Cd")
+        axs[1].grid(True)
 
-    axs[2].plot(df["alpha"], df["CM"], color="green")
-    axs[2].set_ylabel("Cm")
-    axs[2].set_xlabel("Angle d’attaque (°)")
-    axs[2].grid(True)
+        axs[2].plot(df["alpha"], df["CM"], color="green")
+        axs[2].set_ylabel("Cm")
+        axs[2].set_xlabel("Angle d’attaque (°)")
+        axs[2].grid(True)
 
-    st.pyplot(fig)
+        st.pyplot(fig)
+    except Exception as e:
+        st.error(f"Erreur dans le tracé : {e}")
 
 
 # Étape 5 : Calcul finesse
@@ -384,7 +432,8 @@ if st.session_state.profil and st.session_state.chemin_dat:
 
             aero = Aerodynamique(st.session_state.nom)
             suffix = "_vol_reel" if tag == "vol_reel" else "_vol_perso"
-            dossier = "profils_importes" if "-il" in st.session_state.nom else "profils_manuels"
+            #dossier = "profils_importes" if "-il" in st.session_state.nom else "profils_manuels"
+            dossier = "profils_importes"
             txt_out = os.path.join("data", dossier, f"{st.session_state.nom}{suffix}.txt")
 
             try:
@@ -408,30 +457,245 @@ if st.session_state.profil and st.session_state.chemin_dat:
                     st.pyplot(fig, clear_figure=True)
 
                 if tag == "vol_reel":
-                    aero_volreel = aero
+                    st.session_state.aero_volreel = aero
                 else:
-                    aero_volperso = aero
+                    st.session_state.aero_volperso = aero
+
 
             except Exception as e:
                 st.error(f" Échec de la simulation XFoil : {e}")
 
-        #  Collecte globale des polaires disponibles
-        polaires = {}
-        if 'aero_import' in locals() and aero_import:
-            polaires["Importé"] = aero_import.donnees
-        if 'aero_manuel' in locals() and aero_manuel:
-            polaires["Manuel"] = aero_manuel.donnees
-        if aero_volreel:
-            polaires["Vol réel"] = aero_volreel.donnees
-        if aero_volperso:
-            polaires["Vol perso"] = aero_volperso.donnees
+    # 📊 Collecte des polaires disponibles
+    # ============================
+    polaires = {}
 
-        if len(polaires) >= 2:
-            st.markdown("###  Comparaison des polaires disponibles")
-            if st.button("Afficher les courbes Cl / Cd / Cm"):
-                st.write("→ Données prêtes :", list(polaires.keys()))
+    # Polaire de base selon le mode choisi
+    if mode == "Importer" and st.session_state.aero_import is not None:
+        polaires["Importé"] = st.session_state.aero_import.donnees
+    elif mode == "Générer" and st.session_state.aero_manuel is not None:
+        polaires["Manuel"] = st.session_state.aero_manuel.donnees
+    elif mode == "Depuis la base" and st.session_state.aero_base is not None:
+        polaires["Base"] = st.session_state.aero_base.donnees
+
+    # Ajout des polaires simulées
+    if st.session_state.aero_volreel is not None:
+        polaires["Vol réel"] = st.session_state.aero_volreel.donnees
+    if st.session_state.aero_volperso is not None:
+        polaires["Vol perso"] = st.session_state.aero_volperso.donnees
+
+    # Superposition si au moins 2 polaires
+    if len(polaires) >= 2:
+        st.markdown("### Comparaison des polaires disponibles")
+        if st.button("Afficher les courbes CL / CD / CM"):
+            try:
+                st.write(" Profils détectés pour comparaison :", list(polaires.keys()))
+                for nom, df in polaires.items():
+                    st.write(f" Aperçu du profil : {nom}")
+                    st.write(df.head())
                 fig = comparer_polaires(polaires)
-                st.pyplot(fig, clear_figure=True)
+                st.pyplot(fig)
+            except Exception as e:
+                st.error(f"Erreur lors de l'affichage : {e}")
+
+
+
+st.markdown("## Comparaison de deux profils NACA")
+
+choix_mode = st.radio("Méthode de simulation :", ["Conditions personnalisées", "VOL REEL OPENSKY"], key="choix_mode_comparaison")
+
+# Chargement des noms disponibles
+import os
+import glob
+
+chemins = ["data/profils_importes", "data/profils_manuels"]
+noms_profils = []
+for dossier in chemins:
+    fichiers = glob.glob(os.path.join(dossier, "*_coord_profil.dat"))
+    noms_profils += [os.path.basename(f).split("_coord")[0] for f in fichiers]
+noms_profils = sorted(set(noms_profils))
+
+# Sélection des profils à comparer
+col1, col2 = st.columns(2)
+with col1:
+    profil1_nom = st.selectbox("Choisissez le 1er profil :", noms_profils, key="profil1_key")
+with col2:
+    profil2_nom = st.selectbox("Choisissez le 2e profil :", noms_profils, key="profil2_key")
+
+# Contrôle pour éviter d'afficher l'erreur avant simulation
+if "simulation_effectuee" not in st.session_state:
+    st.session_state.simulation_effectuee = False
+
+def charger_et_simuler(nom_profil, reynolds, mach, alpha_start, alpha_end, alpha_step, forcer=False):
+    chemin =  None
+    for dossier in chemins:
+        test = os.path.join(dossier, f"{nom_profil}_coord_profil.dat")
+        if os.path.exists(test):
+            chemin = test
+            break
+    if not chemin:
+        st.error(f"❌ Fichier .dat introuvable pour {nom_profil}")
+        return None
+
+    coordonnees = []
+    with open(chemin, "r") as f:
+        for ligne in f.readlines()[1:]:
+            if ligne.strip():
+                try:
+                    x, y = map(float, ligne.strip().split())
+                    coordonnees.append((x, y))
+                except:
+                    continue
+
+    profil = Airfoil(nom_profil, coordonnees)
+    aero = Aerodynamique(nom_profil)
+
+    dossier = "profils_importes"
+    txt_path = os.path.join("data", dossier, f"{nom_profil}_simule_coef_aero.txt")
+    aero.fichier_resultat = txt_path
+
+    if forcer and os.path.exists(txt_path):
+        os.remove(txt_path)
+
+    try:
+        aero.run_xfoil(
+            dat_file=chemin,
+            reynolds=reynolds,
+            mach=mach,
+            alpha_start=alpha_start,
+            alpha_end=alpha_end,
+            alpha_step=alpha_step,
+            output_file=txt_path
+        )
+        df = aero.lire_txt_et_convertir_dataframe(txt_path)
+        aero.donnees = df
+    except Exception as e:
+        st.error(f"❌ Erreur XFOIL pour {nom_profil} : {e}")
+        aero.donnees = None
+
+    return aero
+
+if choix_mode == "Conditions personnalisées":
+    st.markdown("### Paramètres pour XFoil")
+    Re = st.number_input("Nombre de Reynolds", value=1_000_000)
+    Mach = st.number_input("Mach", value=0.1)
+    alpha_start = st.number_input("Alpha début (°)", value=-5)
+    alpha_end = st.number_input("Alpha fin (°)", value=15)
+    alpha_step = st.number_input("Pas d’alpha (°)", value=1)
+    corde = st.number_input("Longueur de corde (m)", value=1.0)
+    forcer_xfoil = st.checkbox("🔄 Forcer la régénération des résultats XFOIL", value=False)
+
+    if st.button("Simuler et comparer", key="simuler_comparer_btn"):
+        aero1 = charger_et_simuler(profil1_nom, Re, Mach, alpha_start, alpha_end, alpha_step, forcer=forcer_xfoil)
+        aero2 = charger_et_simuler(profil2_nom, Re, Mach, alpha_start, alpha_end, alpha_step, forcer=forcer_xfoil)
+        st.session_state.simulation_effectuee = True
+
+elif choix_mode == "VOL REEL OPENSKY":
+    st.subheader(" Sélection d’un vol réel (via OpenSky)")
+
+    couche = st.radio("Filtrer les vols par couche atmosphérique :", [
+        "1 – Troposphère (< 11 000 m)",
+        "2 – Stratosphère (≥ 11 000 m)",
+        "3 – Aucun filtre"
+    ], key="filtre_couche_opensky")
+    couche_id = couche.split(" ")[0]
+
+    if st.button(" Générer une nouvelle liste de vols filtrés") or "df_vols_ok" not in st.session_state:
+        vols = asyncio.run(fetch_vols(limit=100))
+        rows = [{
+            "icao24": v.icao24,
+            "callsign": (v.callsign or "").strip(),
+            "origin_country": v.origin_country,
+            "altitude_m": v.geo_altitude or 0.0,
+            "vitesse_m_s": v.velocity or 0.0,
+            "latitude": v.latitude,
+            "longitude": v.longitude
+        } for v in vols]
+        df = pd.DataFrame(rows)
+
+        if couche_id == "1":
+            df_filt = df[df["altitude_m"] < 11000]
+        elif couche_id == "2":
+            df_filt = df[df["altitude_m"] >= 11000]
+        else:
+            df_filt = df
+
+        if df_filt.empty:
+            st.warning(" Aucun vol trouvé pour ce filtre. Essayez à nouveau.")
+        else:
+            df_sample = df_filt.sample(n=min(20, len(df_filt))).reset_index(drop=True)
+            st.session_state.df_vols_proposee = df_sample
+            st.session_state.df_vols_ok = False
+
+    if "df_vols_proposee" in st.session_state:
+        st.dataframe(st.session_state.df_vols_proposee)
+        valider = st.radio(" Cette liste vous convient-elle ?", ["Oui", "Non"], key="valide_liste")
+        if valider == "Oui":
+            st.session_state.df_vols_ok = True
+
+    if st.session_state.get("df_vols_ok", False):
+        df_vols = st.session_state.df_vols_proposee
+        idx = st.number_input("Sélectionnez le vol (index)", min_value=0, max_value=len(df_vols)-1, step=1, key="idx_vol")
+        row = df_vols.loc[idx]
+        alt = row["altitude_m"]
+        vit = row["vitesse_m_s"]
+        Tstd = 288.15 - 0.0065 * alt
+        mach = vit / ((1.4 * 287.05 * Tstd) ** 0.5)
+        angle = st.number_input("Angle d’attaque (°)", value=2.0, key="angle_reel")
+        st.success(f"Conditions extraites : Mach = {mach:.3f}, Altitude = {alt:.1f} m")
+
+        alpha_start = -15
+        alpha_end = +15
+        alpha_step = 1
+        Re = 1e6
+        forcer_xfoil = st.checkbox("🔄 Forcer la régénération des résultats XFOIL", value=False)
+
+        if st.button("Simuler et comparer", key="simuler_comparer_reel"):
+            aero1 = charger_et_simuler(profil1_nom, Re, mach, alpha_start, alpha_end, alpha_step, forcer=forcer_xfoil)
+            aero2 = charger_et_simuler(profil2_nom, Re, mach, alpha_start, alpha_end, alpha_step, forcer=forcer_xfoil)
+            st.session_state.simulation_effectuee = True
+
+if 'aero1' in locals() and 'aero2' in locals() and aero1 and aero2 and aero1.donnees is not None and aero2.donnees is not None:
+    df1 = aero1.donnees
+    df2 = aero2.donnees
+
+    fig, axs = plt.subplots(2, 2, figsize=(10, 8))
+
+    axs[0, 0].plot(df1["alpha"], df1["CL"], label=profil1_nom)
+    axs[0, 0].plot(df2["alpha"], df2["CL"], label=profil2_nom)
+    axs[0, 0].set_title("CL vs α")
+    axs[0, 0].set_xlabel("α (°)")
+    axs[0, 0].set_ylabel("Cl")
+    axs[0, 0].grid(True)
+
+    axs[0, 1].plot(df1["alpha"], df1["CD"], label=profil1_nom)
+    axs[0, 1].plot(df2["alpha"], df2["CD"], label=profil2_nom)
+    axs[0, 1].set_title("CD vs α")
+    axs[0, 1].set_xlabel("α (°)")
+    axs[0, 1].set_ylabel("Cd")
+    axs[0, 1].grid(True)
+
+    axs[1, 0].plot(df1["alpha"], df1["CM"], label=profil1_nom)
+    axs[1, 0].plot(df2["alpha"], df2["CM"], label=profil2_nom)
+    axs[1, 0].set_title("CM vs α")
+    axs[1, 0].set_xlabel("α (°)")
+    axs[1, 0].set_ylabel("Cm")
+    axs[1, 0].grid(True)
+
+    axs[1, 1].plot(df1["CD"], df1["CL"], label=profil1_nom)
+    axs[1, 1].plot(df2["CD"], df2["CL"], label=profil2_nom)
+    axs[1, 1].set_title("CL vs CD")
+    axs[1, 1].set_xlabel("Cd")
+    axs[1, 1].set_ylabel("Cl")
+    axs[1, 1].grid(True)
+
+    for ax in axs.flat:
+        ax.legend()
+
+    plt.tight_layout()
+    st.pyplot(fig)
+elif st.session_state.get("simulation_effectuee", False):
+    st.error("❌ Données indisponibles pour l’un des profils. Vérifie si XFOIL a bien généré les résultats.")
+
 
 
 # ============================================
@@ -481,144 +745,153 @@ if st.button("Comparer les deux profils"):
 
 
 
-#  givrage...
-# ============================
+# ===================================
 #         SIMULATION GIVRAGE
-# ============================
+# ===================================
+import os
+import glob
 
-st.subheader("❄️ Simulation de givrage")
+st.subheader("❄️ Simulation de givrage sur un profil NACA")
+choix = st.radio("Choix du profil :", ["Profil importé actuel", "Profil depuis la base"])
 
-faire_givrage = st.radio(
-    "Voulez-vous simuler un givrage sur un profil ?",
-    ["Non", "Oui"], index=0
-)
+# Chargement des noms de profils depuis les dossiers
+chemins = ['data/profils_importes', 'data/profils_manuels']
+noms_profils = []
+for dossier in chemins:
+    fichiers = glob.glob(os.path.join(dossier, "*_coord_profil.dat"))
+    noms_profils += [os.path.basename(f).split("_coord")[0] for f in fichiers]
+noms_profils = sorted(set(noms_profils))
 
-if faire_givrage == "Oui":
-    profil_givre_label = st.radio(
-        "Sur quel type de profil veux-tu simuler le givrage ?",
-        ["Profil importé actuel", "Profil depuis la BaseDonnees"]
-    )
+# Interface de sélection
+if choix == "Profil depuis la base":
+    nom_profil = st.selectbox("Nom du profil dans la base :", noms_profils)
+else:
+    nom_profil = st.session_state.nom
 
-    profil_a_givrer = None
-    nom_profil_givre = ""
-    chemin_dat_givre = ""
-    aero_normale = None
+epaisseur = st.text_input("Épaisseur du givrage (ex: 0.02)", "0.02").replace(",", ".")
+z0 = st.text_input("x0 (zone de givrage)", "0.30").replace(",", ".")
+z1 = st.text_input("x1 (zone de givrage)", "0.45").replace(",", ".")
+reynolds_givre = st.text_input("Reynolds pour givrage", "50000")
+mach_givre = st.text_input("Mach pour givrage", "0.30")
 
-    if profil_givre_label == "Profil importé actuel" and "aero_import" in st.session_state:
-        profil_a_givrer = st.session_state.profil_obj_import
-        nom_profil_givre = st.session_state.nom
-        chemin_dat_givre = st.session_state.chemin_dat
-        aero_normale = st.session_state.aero_import
+# ✅ Ajout : option pour forcer XFOIL
+forcer_xfoil = st.checkbox("🔄 Forcer la régénération XFOIL", key="forcer_xfoil_givre")
 
-    elif profil_givre_label == "Profil depuis la BaseDonnees":
-        nom_profil_base = st.text_input("Nom du profil de la BaseDonnees à givrer (ex: naca2412)").strip().lower()
-        if nom_profil_base:
-            nom_profil_givre = f"{nom_profil_base}-il"
-            coord_profil_base = f"{nom_profil_givre}_coord_profil.dat"
-            chemin_dat_givre = None
+if st.button("Lancer simulation givrage"):
+    try:
+        ep = float(epaisseur)
+        z0, z1 = float(z0), float(z1)
+        reynolds_givre = float(reynolds_givre)
+        mach_givre = float(mach_givre)
 
-            for dossier in ["data/profils_importes", "data/profils_manuels"]:
-                chemin_test = os.path.join(dossier, coord_profil_base)
-                if os.path.exists(chemin_test):
-                    chemin_dat_givre = chemin_test
-                    break
-
-            if chemin_dat_givre:
-                profil_a_givrer = Airfoil.depuis_airfoiltools(nom_profil_givre)
-                polaire_txt = f"{nom_profil_givre}_coef_aero.txt"
-                chemin_polaire_base = None
-
-                for dossier in ["data/polaires_importees", "data/polaires_xfoil"]:
-                    test = os.path.join(dossier, polaire_txt)
-                    if os.path.exists(test):
-                        chemin_polaire_base = test
+        # === Récupérer le profil à givrer ===
+        if choix == "Profil depuis la base":
+            essais = gestion.chercher_nom(nom_profil)
+            profil_a_givrer = None
+            for noms in essais:
+                chemin = f"data/profils_importes/{noms}_coord_profil.dat"
+                if os.path.exists(chemin):
+                    with open(chemin, "r") as f:
+                        coord = [(float(x), float(y)) for x, y in [line.strip().split() for line in f.readlines()[1:]]]
+                        profil_a_givrer = Airfoil(nom_profil, coord)
+                        chemin_dat = chemin
                         break
-
-                if chemin_polaire_base:
-                    aero_normale = Aerodynamique(nom_profil_givre)
-                    aero_normale.donnees = aero_normale.lire_txt_et_convertir_dataframe(chemin_polaire_base)
-
-    if profil_a_givrer:
-        ep = st.number_input("Épaisseur du givrage (fraction corde)", value=0.02, step=0.01)
-        zone_txt = st.text_input("Zone de givrage x0,x1 (ex : 0.3,0.45)", value="0.3,0.45")
-
-        try:
-            z0, z1 = map(float, zone_txt.replace(" ", "").split(","))
-        except:
-            st.warning("Format de zone invalide, valeurs par défaut utilisées.")
-            z0, z1 = 0.3, 0.45
-
-        mode_cond = st.radio(
-            "Conditions pour le givrage :",
-            ["Conditions de vol réelles", "Saisie manuelle"]
-        )
-
-        if mode_cond == "Conditions de vol réelles":
-            if st.button(" Sélectionner un vol réel pour givrage"):
-                df_vols = asyncio.run(fetch_vols(100))
-                df_vols = pd.DataFrame([{
-                    "icao24": v.icao24,
-                    "altitude_m": v.geo_altitude or 0.0,
-                    "vitesse_m_s": v.velocity or 0.0
-                } for v in df_vols])
-
-                if not df_vols.empty:
-                    st.session_state.df_vols_givre = df_vols.sample(n=min(20, len(df_vols)))
-
-        if "df_vols_givre" in st.session_state:
-            st.dataframe(st.session_state.df_vols_givre)
-            idx = st.number_input("Index du vol", min_value=0, max_value=len(st.session_state.df_vols_givre)-1)
-            row = st.session_state.df_vols_givre.loc[idx]
-            alt = row["altitude_m"]
-            vit = row["vitesse_m_s"]
-            corde = st.number_input("Longueur de corde (m)", value=0.3)
-            Tstd = 288.15 - 0.0065 * alt
-            mach_givre = vit / ((1.4 * 287.05 * Tstd) ** 0.5)
-            rho = 1.225 * (1 - 2.25577e-5 * alt) ** 5.25588
-            mu = 1.7894e-5
-            reynolds_givre = (rho * vit * corde) / mu
-
         else:
-            reynolds_givre = st.number_input("Reynolds pour givrage", value=50000)
-            mach_givre = st.number_input("Mach pour givrage", value=0.1)
+            profil_a_givrer = st.session_state.profil
+            chemin_dat = st.session_state.chemin_dat
 
-        if st.button(" Lancer la simulation givrée"):
-            profil_a_givrer.tracer_givrage(epaisseur=ep, zone=(z0, z1))
-            dir_givre = os.path.join("data", "profils_givre")
-            dat_givre = os.path.join(dir_givre, f"{nom_profil_givre}_coord_givre.dat")
-            txt_givre = os.path.join(dir_givre, f"{nom_profil_givre}_givree.txt")
+        if profil_a_givrer is None:
+            st.error("Profil non trouvé.")
+        else:
+            # === Givrer le profil ===
+            csv_givre, dat_givre = profil_a_givrer.tracer_givrage(epaisseur=ep, zone=(z0, z1))
 
-            aero_givre = Aerodynamique(nom_profil_givre + "-givre")
-            try:
-                aero_givre.run_xfoil(
-                    dat_file=dat_givre,
-                    reynolds=reynolds_givre,
-                    mach=mach_givre,
-                    alpha_start=-5, alpha_end=12, alpha_step=1,
-                    output_file=txt_givre
-                )
+            # === Simulation du profil givré ===
+            txt_givre = os.path.join("data", "polaires_importees", f"{nom_profil}_coef_aero_givre.txt")
+            aero_givre = Aerodynamique(nom_profil + "-givre")
+            if forcer_xfoil and os.path.exists(txt_givre):
+                os.remove(txt_givre)
 
-                if os.path.exists(txt_givre):
-                    df_givre = aero_givre.lire_txt_et_convertir_dataframe(txt_givre)
-                    if not df_givre.empty:
-                        aero_givre.donnees = df_givre
-                        polaires = {}
-                        if aero_normale and getattr(aero_normale, "donnees", None) is not None:
-                            polaires["Normal"] = aero_normale.donnees
-                        polaires["Givré"] = aero_givre.donnees
+            aero_givre.run_xfoil(dat_file=dat_givre, reynolds=reynolds_givre, mach=mach_givre,
+                                 alpha_start=-15, alpha_end=15, alpha_step=1, output_file=txt_givre)
 
-                        if len(polaires) >= 2:
-                            fig = comparer_polaires(polaires)
-                            st.pyplot(fig)
-                        else:
-                            fig = aero_givre.tracer_polaires_depuis_txt()
-                            if fig:
-                                st.pyplot(fig)
-                    else:
-                        st.error("Données de la simulation givrée sont vides.")
-                else:
-                    st.error("Fichier de données givrées introuvable.")
-            except Exception as e:
-                st.error(f"Erreur durant la simulation givrée : {e}")
+            # === Simulation du profil normal ===
+            txt_normal = os.path.join("data", "polaires_importees", f"{nom_profil}_coef_aero_normal.txt")
+            aero_normal = Aerodynamique(nom_profil + "-normal")
+            if forcer_xfoil and os.path.exists(txt_normal):
+                os.remove(txt_normal)
+
+            aero_normal.run_xfoil(dat_file=chemin_dat, reynolds=reynolds_givre, mach=mach_givre,
+                                      alpha_start=-15, alpha_end=15, alpha_step=1, output_file=txt_normal)
+            if not os.path.exists(txt_normal):
+                st.error("⚠️ Le fichier XFoil normal n’a pas été généré.")
+            else:
+                st.success("✅ Fichier XFoil normal bien généré.")
+            # === Tracer les contours ===
+            import matplotlib.pyplot as plt
+            with open(chemin_dat, "r") as f:
+                coords_norm = [(float(x), float(y)) for x, y in [l.strip().split() for l in f.readlines()[1:]]]
+            with open(dat_givre, "r") as f:
+                coords_givre = [(float(x), float(y)) for x, y in [l.strip().split() for l in f.readlines()[1:]]]
+
+            x_norm, y_norm = zip(*coords_norm)
+            x_givre, y_givre = zip(*coords_givre)
+
+            plt.figure(figsize=(8, 3))
+            plt.plot(x_norm, y_norm, label="Profil normal", linewidth=2)
+            plt.plot(x_givre, y_givre, label="Profil givré", linestyle="--", linewidth=2)
+            plt.xlabel("x")
+            plt.ylabel("y")
+            plt.title(f"Comparaison des contours – {nom_profil}")
+            plt.legend()
+            plt.axis("equal")
+            st.pyplot(plt)
+
+            # === Lecture et comparaison des polaires ===
+            df_norm = aero_normal.lire_txt_et_convertir_dataframe(txt_normal)
+            df_givre = aero_givre.lire_txt_et_convertir_dataframe(txt_givre)
+
+            #  Vérification que les deux objets sont bien des DataFrame et non None
+            if isinstance(df_norm, pd.DataFrame) and not df_norm.empty and isinstance(df_givre,
+                                                                                      pd.DataFrame) and not df_givre.empty:
+                aero_normal.donnees = df_norm
+                aero_givre.donnees = df_givre
+
+                fig, axs = plt.subplots(2, 2, figsize=(12, 8))
+                axs[0, 0].plot(df_norm["alpha"], df_norm["CL"], label="Normal")
+                axs[0, 0].plot(df_givre["alpha"], df_givre["CL"], label="Givré")
+                axs[0, 0].set_title("CL vs Alpha")
+
+                axs[0, 1].plot(df_norm["alpha"], df_norm["CD"], label="Normal")
+                axs[0, 1].plot(df_givre["alpha"], df_givre["CD"], label="Givré")
+                axs[0, 1].set_title("CD vs Alpha")
+
+                axs[1, 0].plot(df_norm["alpha"], df_norm["CM"], label="Normal")
+                axs[1, 0].plot(df_givre["alpha"], df_givre["CM"], label="Givré")
+                axs[1, 0].set_title("CM vs Alpha")
+
+                finesse_norm = df_norm["CL"] / df_norm["CD"]
+                finesse_givre = df_givre["CL"] / df_givre["CD"]
+                axs[1, 1].plot(df_norm["alpha"], finesse_norm, label="Normal")
+                axs[1, 1].plot(df_givre["alpha"], finesse_givre, label="Givré")
+                axs[1, 1].set_title("Finesse (CL/CD) vs Alpha")
+
+                for ax in axs.flat:
+                    ax.set_xlabel("α")
+                    ax.legend()
+                    ax.grid(True)
+
+                plt.tight_layout()
+                st.pyplot(fig)
+
+                st.success("Simulation givrage terminée. Résultats générés et comparés.")
+            else:
+                st.error("Données givrées ou normales invalides.")
+    except Exception as e:
+        st.error(f"Erreur pendant la simulation : {e}")
+
+
+
+
 
 

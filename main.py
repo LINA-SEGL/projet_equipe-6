@@ -41,6 +41,18 @@ def comparer_polaires(profiles: dict[str, pd.DataFrame]):
     profiles : dictionnaire {label → DataFrame}, chaque DataFrame doit avoir les colonnes
                'alpha', 'CL', 'CD' et 'CM'.
     """
+    if not profiles:
+        st.warning("Aucun profil fourni à comparer_polaires().")
+        return None
+
+    colonnes_attendues = {"alpha", "CL", "CD", "CM"}
+    for label, df in profiles.items():
+        if df is None or df.empty:
+            st.warning(f" Le DataFrame de {label} est vide.")
+            return None
+        if not colonnes_attendues.issubset(df.columns):
+            st.error(f" Le DataFrame de {label} ne contient pas toutes les colonnes attendues.")
+            return None
     # Prépare un 2×2
     fig, axs = plt.subplots(2, 2, figsize=(12, 10))
     ax_cl,   ax_cd   = axs[0]
@@ -60,8 +72,8 @@ def comparer_polaires(profiles: dict[str, pd.DataFrame]):
     ax_lvsd.set_title("CL vs CD");  ax_lvsd.set_xlabel("CD"); ax_lvsd.set_ylabel("CL"); ax_lvsd.legend(); ax_lvsd.grid(True)
 
     # Ajuste les espacements
-    #plt.tight_layout()
-    plt.show()
+    plt.tight_layout()
+    #plt.show()
     return fig
 
 def choisir_vols(limit: int = 100, sample_n: int = 20) -> pd.DataFrame:

@@ -307,6 +307,8 @@ class Airfoil:
         plt.grid(True)
         plt.show()
 
+
+
     def tracer_avec_bruit(self, amplitude=0.01, mode="gaussien", zone=(0.0, 0.3)):
         """
         Applique et affiche un bruit localisé sur l’extrados du profil.
