@@ -7,7 +7,7 @@ name = "projet_sessione2025"
 version = "0.1.0"
 description = "Module Python pour le projet session E2025"
 readme = "README.md"
-license = { file = "LICENSE.md" }
+license = "MIT"
 authors = [
   { name = "Lina Segjilani, Noé Morance, Cyril Traineau" }
 ]
