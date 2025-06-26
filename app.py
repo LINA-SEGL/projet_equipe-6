@@ -205,7 +205,7 @@ if st.session_state.profil and st.session_state.chemin_dat:
     mach = st.number_input("Nombre de Mach", value=0.1)
 
     # Ajout : checkbox pour forcer la régénération
-    forcer_xfoil = st.checkbox("🔄 Forcer la régénération XFOIL")
+    forcer_xfoil = st.checkbox(" Forcer la régénération XFOIL")
 
     if st.button("Lancer l'aero aérodynamique"):
         aero = Aerodynamique(st.session_state.nom)
@@ -236,9 +236,9 @@ if st.session_state.profil and st.session_state.chemin_dat:
                     output_file=chemin_polaire
                 )
                 df = aero.lire_txt_et_convertir_dataframe(chemin)
-                st.success("✅ Analyse XFOIL terminée.")
+                st.success(" Analyse XFOIL terminée.")
             except Exception as e:
-                st.error(f"❌ Erreur XFOIL : {e}")
+                st.error(f" Erreur XFOIL : {e}")
                 df = None
 
 
@@ -250,17 +250,17 @@ if st.session_state.profil and st.session_state.chemin_dat:
                     raise FileNotFoundError(f"Fichier introuvable : {chemin_polaire}")
 
                 df = aero.lire_txt_et_convertir_dataframe(chemin_polaire)
-                st.success("✅ Données de la base récupérées avec succès.")
+                st.success(" Données de la base récupérées avec succès.")
             except Exception as e:
-                st.error(f"❌ Erreur lors de la lecture depuis la base : {e}")
+                st.error(f" Erreur lors de la lecture depuis la base : {e}")
 
         else:
-            st.error(f"❌ Méthode inconnue : {methode}")
+            st.error(f" Méthode inconnue : {methode}")
 
             # Si on a des données valides : sauvegarde et affichage
         if df is not None:
             st.session_state.df_polaires = df
-            st.success("📊 Données prêtes à tracer.")
+            st.success(" Données prêtes à tracer.")
 
 # ───── Tracé des polaires si données présentes ─────
 if "df_polaires" in st.session_state and st.session_state.df_polaires is not None:
@@ -465,7 +465,7 @@ if st.session_state.profil and st.session_state.chemin_dat:
             except Exception as e:
                 st.error(f" Échec de la simulation XFoil : {e}")
 
-    # 📊 Collecte des polaires disponibles
+    #  Collecte des polaires disponibles
     # ============================
     polaires = {}
 
@@ -533,7 +533,7 @@ def charger_et_simuler(nom_profil, reynolds, mach, alpha_start, alpha_end, alpha
             chemin = test
             break
     if not chemin:
-        st.error(f"❌ Fichier .dat introuvable pour {nom_profil}")
+        st.error(f" Fichier .dat introuvable pour {nom_profil}")
         return None
 
     coordonnees = []
@@ -569,7 +569,7 @@ def charger_et_simuler(nom_profil, reynolds, mach, alpha_start, alpha_end, alpha
         df = aero.lire_txt_et_convertir_dataframe(txt_path)
         aero.donnees = df
     except Exception as e:
-        st.error(f"❌ Erreur XFOIL pour {nom_profil} : {e}")
+        st.error(f" Erreur XFOIL pour {nom_profil} : {e}")
         aero.donnees = None
 
     return aero
@@ -582,7 +582,7 @@ if choix_mode == "Conditions personnalisées":
     alpha_end = st.number_input("Alpha fin (°)", value=15)
     alpha_step = st.number_input("Pas d’alpha (°)", value=1)
     corde = st.number_input("Longueur de corde (m)", value=1.0)
-    forcer_xfoil = st.checkbox("🔄 Forcer la régénération des résultats XFOIL", value=False)
+    forcer_xfoil = st.checkbox(" Forcer la régénération des résultats XFOIL", value=False)
 
     if st.button("Simuler et comparer", key="simuler_comparer_btn"):
         aero1 = charger_et_simuler(profil1_nom, Re, Mach, alpha_start, alpha_end, alpha_step, forcer=forcer_xfoil)
@@ -599,7 +599,9 @@ elif choix_mode == "VOL REEL OPENSKY":
     ], key="filtre_couche_opensky")
     couche_id = couche.split(" ")[0]
 
-    if st.button(" Générer une nouvelle liste de vols filtrés") or "df_vols_ok" not in st.session_state:
+    if st.button("Générer une nouvelle liste de vols filtrés",
+                 key="bouton_generation_vols") or "df_vols_ok" not in st.session_state:
+
         vols = asyncio.run(fetch_vols(limit=100))
         rows = [{
             "icao24": v.icao24,
@@ -628,7 +630,7 @@ elif choix_mode == "VOL REEL OPENSKY":
 
     if "df_vols_proposee" in st.session_state:
         st.dataframe(st.session_state.df_vols_proposee)
-        valider = st.radio(" Cette liste vous convient-elle ?", ["Oui", "Non"], key="valide_liste")
+        valider = st.radio(" Cette liste vous convient-elle ?", ["Oui", "Non"], key="valide_liste-1")
         if valider == "Oui":
             st.session_state.df_vols_ok = True
 
@@ -647,7 +649,7 @@ elif choix_mode == "VOL REEL OPENSKY":
         alpha_end = +15
         alpha_step = 1
         Re = 1e6
-        forcer_xfoil = st.checkbox("🔄 Forcer la régénération des résultats XFOIL", value=False)
+        forcer_xfoil = st.checkbox(" Forcer la régénération des résultats XFOIL", value=False)
 
         if st.button("Simuler et comparer", key="simuler_comparer_reel"):
             aero1 = charger_et_simuler(profil1_nom, Re, mach, alpha_start, alpha_end, alpha_step, forcer=forcer_xfoil)
@@ -694,7 +696,7 @@ if 'aero1' in locals() and 'aero2' in locals() and aero1 and aero2 and aero1.don
     plt.tight_layout()
     st.pyplot(fig)
 elif st.session_state.get("simulation_effectuee", False):
-    st.error("❌ Données indisponibles pour l’un des profils. Vérifie si XFOIL a bien généré les résultats.")
+    st.error(" Données indisponibles pour l’un des profils. Vérifie si XFOIL a bien généré les résultats.")
 
 
 
@@ -751,7 +753,7 @@ if st.button("Comparer les deux profils"):
 import os
 import glob
 
-st.subheader("❄️ Simulation de givrage sur un profil NACA")
+st.subheader("️ Simulation de givrage sur un profil NACA")
 choix = st.radio("Choix du profil :", ["Profil importé actuel", "Profil depuis la base"])
 
 # Chargement des noms de profils depuis les dossiers
@@ -774,8 +776,8 @@ z1 = st.text_input("x1 (zone de givrage)", "0.45").replace(",", ".")
 reynolds_givre = st.text_input("Reynolds pour givrage", "50000")
 mach_givre = st.text_input("Mach pour givrage", "0.30")
 
-# ✅ Ajout : option pour forcer XFOIL
-forcer_xfoil = st.checkbox("🔄 Forcer la régénération XFOIL", key="forcer_xfoil_givre")
+#  Ajout : option pour forcer XFOIL
+forcer_xfoil = st.checkbox(" Forcer la régénération XFOIL", key="forcer_xfoil_givre")
 
 if st.button("Lancer simulation givrage"):
     try:
@@ -824,9 +826,9 @@ if st.button("Lancer simulation givrage"):
             aero_normal.run_xfoil(dat_file=chemin_dat, reynolds=reynolds_givre, mach=mach_givre,
                                       alpha_start=-15, alpha_end=15, alpha_step=1, output_file=txt_normal)
             if not os.path.exists(txt_normal):
-                st.error("⚠️ Le fichier XFoil normal n’a pas été généré.")
+                st.error("⚠ Le fichier XFoil normal n’a pas été généré.")
             else:
-                st.success("✅ Fichier XFoil normal bien généré.")
+                st.success(" Fichier XFoil normal bien généré.")
             # === Tracer les contours ===
             import matplotlib.pyplot as plt
             with open(chemin_dat, "r") as f:
