@@ -8,6 +8,76 @@ st.title("✈️ Interface Streamlit – Simulation profil NACA")
 API_KEY = "955814a8002a56c995edec56283f7caf"  # à remplacer si besoin
 gestion = GestionBase()
 
+def interface_selection_vol_opensky(profil1_nom, profil2_nom, suffixe=""):
+    st.subheader("Sélection d’un vol réel (via OpenSky)")
+
+    couche = st.radio("Filtrer les vols par couche atmosphérique :", [
+        "1 – Troposphère (< 11 000 m)",
+        "2 – Stratosphère (≥ 11 000 m)",
+        "3 – Aucun filtre"
+    ], key=f"filtre_couche_opensky_{suffixe}")
+    couche_id = couche.split(" ")[0]
+
+    if st.button("🔄 Générer une nouvelle liste de vols filtrés", key=f"bouton_generation_vols_{suffixe}") or f"df_vols_ok_{suffixe}" not in st.session_state:
+        vols = asyncio.run(fetch_vols(limit=100))
+        rows = [{
+            "icao24": v.icao24,
+            "callsign": (v.callsign or "").strip(),
+            "origin_country": v.origin_country,
+            "altitude_m": v.geo_altitude or 0.0,
+            "vitesse_m_s": v.velocity or 0.0,
+            "latitude": v.latitude,
+            "longitude": v.longitude
+        } for v in vols]
+        df = pd.DataFrame(rows)
+
+        if couche_id == "1":
+            df_filt = df[df["altitude_m"] < 11000]
+        elif couche_id == "2":
+            df_filt = df[df["altitude_m"] >= 11000]
+        else:
+            df_filt = df
+
+        if df_filt.empty:
+            st.warning("Aucun vol trouvé pour ce filtre. Essayez à nouveau.")
+        else:
+            df_sample = df_filt.sample(n=min(20, len(df_filt))).reset_index(drop=True)
+            st.session_state[f"df_vols_proposee_{suffixe}"] = df_sample
+            st.session_state[f"df_vols_ok_{suffixe}"] = False
+
+    if f"df_vols_proposee_{suffixe}" in st.session_state:
+        st.dataframe(st.session_state[f"df_vols_proposee_{suffixe}"])
+        valider = st.radio("Cette liste vous convient-elle ?", ["Oui", "Non"], key=f"valide_liste_{suffixe}")
+        if valider == "Oui":
+            st.session_state[f"df_vols_ok_{suffixe}"] = True
+
+    if st.session_state.get(f"df_vols_ok_{suffixe}", False):
+        df_vols = st.session_state[f"df_vols_proposee_{suffixe}"]
+        idx = st.number_input("Sélectionnez le vol (index)", min_value=0, max_value=len(df_vols) - 1, step=1,
+                              key=f"idx_vol_{suffixe}")
+        row = df_vols.loc[idx]
+
+        alt = row["altitude_m"]
+        vit = row["vitesse_m_s"]
+        Tstd = 288.15 - 0.0065 * alt
+        mach = vit / ((1.4 * 287.05 * Tstd) ** 0.5)
+
+        angle = st.number_input("Angle d’attaque (°)", value=2.0, key=f"angle_reel_{suffixe}")
+        st.success(f"Conditions extraites : Mach = {mach:.3f}, Altitude = {alt:.1f} m")
+
+        alpha_start = -15
+        alpha_end = +15
+        alpha_step = 1
+        Re = 1e6
+
+        forcer_xfoil = st.checkbox("Forcer la régénération des résultats XFOIL",
+                                   value=False, key=f"forcer_xfoil_{suffixe}")
+
+        return mach, alt, angle, Re, alpha_start, alpha_end, alpha_step, forcer_xfoil
+
+    # 🟨 Si aucun vol n’a encore été validé, on retourne None pour éviter une erreur
+    return None
+
 # Comparaison de deux profils avec conditions personnalisées
 import os
 import glob
@@ -590,71 +660,17 @@ if choix_mode == "Conditions personnalisées":
         st.session_state.simulation_effectuee = True
 
 elif choix_mode == "VOL REEL OPENSKY":
-    st.subheader(" Sélection d’un vol réel (via OpenSky)")
+    st.subheader("Sélection d’un vol réel (via OpenSky)")
 
-    couche = st.radio("Filtrer les vols par couche atmosphérique :", [
-        "1 – Troposphère (< 11 000 m)",
-        "2 – Stratosphère (≥ 11 000 m)",
-        "3 – Aucun filtre"
-    ], key="filtre_couche_opensky")
-    couche_id = couche.split(" ")[0]
+    resultats = interface_selection_vol_opensky("naca2412", "naca0012", suffixe="vol_reel")
 
-    if st.button("Générer une nouvelle liste de vols filtrés",
-                 key="bouton_generation_vols") or "df_vols_ok" not in st.session_state:
+    if resultats:
+        mach, alt, angle, Re, alpha_start, alpha_end, alpha_step, forcer_xfoil = resultats
 
-        vols = asyncio.run(fetch_vols(limit=100))
-        rows = [{
-            "icao24": v.icao24,
-            "callsign": (v.callsign or "").strip(),
-            "origin_country": v.origin_country,
-            "altitude_m": v.geo_altitude or 0.0,
-            "vitesse_m_s": v.velocity or 0.0,
-            "latitude": v.latitude,
-            "longitude": v.longitude
-        } for v in vols]
-        df = pd.DataFrame(rows)
-
-        if couche_id == "1":
-            df_filt = df[df["altitude_m"] < 11000]
-        elif couche_id == "2":
-            df_filt = df[df["altitude_m"] >= 11000]
-        else:
-            df_filt = df
-
-        if df_filt.empty:
-            st.warning(" Aucun vol trouvé pour ce filtre. Essayez à nouveau.")
-        else:
-            df_sample = df_filt.sample(n=min(20, len(df_filt))).reset_index(drop=True)
-            st.session_state.df_vols_proposee = df_sample
-            st.session_state.df_vols_ok = False
-
-    if "df_vols_proposee" in st.session_state:
-        st.dataframe(st.session_state.df_vols_proposee)
-        valider = st.radio(" Cette liste vous convient-elle ?", ["Oui", "Non"], key="valide_liste-1")
-        if valider == "Oui":
-            st.session_state.df_vols_ok = True
-
-    if st.session_state.get("df_vols_ok", False):
-        df_vols = st.session_state.df_vols_proposee
-        idx = st.number_input("Sélectionnez le vol (index)", min_value=0, max_value=len(df_vols)-1, step=1, key="idx_vol")
-        row = df_vols.loc[idx]
-        alt = row["altitude_m"]
-        vit = row["vitesse_m_s"]
-        Tstd = 288.15 - 0.0065 * alt
-        mach = vit / ((1.4 * 287.05 * Tstd) ** 0.5)
-        angle = st.number_input("Angle d’attaque (°)", value=2.0, key="angle_reel")
-        st.success(f"Conditions extraites : Mach = {mach:.3f}, Altitude = {alt:.1f} m")
-
-        alpha_start = -15
-        alpha_end = +15
-        alpha_step = 1
-        Re = 1e6
-        forcer_xfoil = st.checkbox(" Forcer la régénération des résultats XFOIL", value=False)
-
-        if st.button("Simuler et comparer", key="simuler_comparer_reel"):
-            aero1 = charger_et_simuler(profil1_nom, Re, mach, alpha_start, alpha_end, alpha_step, forcer=forcer_xfoil)
-            aero2 = charger_et_simuler(profil2_nom, Re, mach, alpha_start, alpha_end, alpha_step, forcer=forcer_xfoil)
-            st.session_state.simulation_effectuee = True
+    if st.button("Simuler et comparer", key="simuler_comparer_reel"):
+        aero1 = charger_et_simuler(profil1_nom, Re, mach, alpha_start, alpha_end, alpha_step, forcer=forcer_xfoil)
+        aero2 = charger_et_simuler(profil2_nom, Re, mach, alpha_start, alpha_end, alpha_step, forcer=forcer_xfoil)
+        st.session_state.simulation_effectuee = True
 
 if 'aero1' in locals() and 'aero2' in locals() and aero1 and aero2 and aero1.donnees is not None and aero2.donnees is not None:
     df1 = aero1.donnees
@@ -891,6 +907,12 @@ if st.button("Lancer simulation givrage"):
                 st.error("Données givrées ou normales invalides.")
     except Exception as e:
         st.error(f"Erreur pendant la simulation : {e}")
+
+
+
+
+
+
 
 
 
