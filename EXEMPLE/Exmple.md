@@ -441,17 +441,35 @@ L'utilisateur doit alors entrer :
 ![img_55.png](img_55.png)
 
 
-## ️ Génération des fichiers
+## ️ Génération des fichiers – Simulation de givrage
 
-Une fois les entrées validées, le programme :
 
-1. **Crée un nouveau fichier .dat** contenant le contour du profil modifié avec le givre.
-2. **Crée un fichier .csv** avec les mêmes coordonnées pour consultation.
-3. **Exécute XFoil** avec ces nouveaux fichiers.
-4. **Sauvegarde les résultats dans** :
-   - `data/profils_givre/` : les coordonnées du profil givré.
-   - `data/polaires_importees/` : les coefficients aérodynamiques du profil givré.
+une fois que l'utilisateur entre les **paramètres du givrage**, le programme applique une transformation géométrique sur le profil choisi :
 
+- `épaisseur` : intensité du givrage à appliquer (exprimée en fraction de la corde, ex. `0.02`)
+- `zone` : intervalle (ex. `(0.2, 0.8)`) représentant la portion du profil affectée par le givrage, exprimée aussi en fraction de la corde.
+
+---
+
+###  Étapes automatiques :
+
+1.  Le fichier `.csv` original du profil (ex. `naca0012_coord_profil.csv`) est chargé.
+2.  Le programme applique une **modification des coordonnées `(x, y)`** dans la zone spécifiée afin de simuler un **défaut de type givrage** (excroissance localisée).
+3.  Deux nouveaux fichiers sont générés :
+   - `nacaXXXX-suffixe_coord_givre.csv` : coordonnées modifiées avec givrage (pour visualisation)
+   - `nacaXXXX-suffixe_coord_givre.dat` : format `.dat` pour XFoil
+4.  XFoil est lancé sur ce nouveau profil modifié.
+5.  Les résultats sont enregistrés dans les répertoires suivants :
+
+```bash
+
+data/
+├── profils_givre/              # coordonnées du profil avec givrage
+│   ├── nacaXXXX-jf_coord_givre.csv
+│   └── nacaXXXX-jf_coord_givre.dat
+├── polaires_importees/        # polaire générée avec le profil givré
+│   └── nacaXXXX_coef_aero_givre.txt
+```
 ---
 ![img_18.png](img_18.png)
 
