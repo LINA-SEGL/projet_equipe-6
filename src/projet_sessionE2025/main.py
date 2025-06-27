@@ -238,15 +238,15 @@ if __name__ == "__main__":
         else:
             chemin_txt = None
 
-            # on enregistre le profil dans la BaseDonnees et on deplace les fichiers
-        gestion.ajouter_profil(
-            nom_profil,
-            "importé",
-            chemin_csv,
-            None,  # pas de .dat
-            chemin_txt,
-            None
-            )
+        #     # on enregistre le profil dans la BaseDonnees et on deplace les fichiers
+        # gestion.ajouter_profil(
+        #     nom_profil,
+        #     "importé",
+        #     chemin_csv,
+        #     None,  # pas de .dat
+        #     chemin_txt,
+        #     None
+        #     )
 
         # On normalise l'objet
         aero = aero_import
@@ -298,14 +298,14 @@ if __name__ == "__main__":
         chemin_csv = profil_manuel.enregistrer_profil_manuel_csv(x_up, y_up, x_low, y_low, nom_fichier=f"{nom_profil}_coord_profil.csv")
         chemin_dat = profil_manuel.enregistrer_profil_format_dat(x_up, y_up, x_low, y_low, c, nom_fichier=f"{nom_profil}_coord_profil.dat")
 
-        gestion.ajouter_profil(
-            nom_profil,
-            "manuel",
-            fichier_coord_csv=chemin_csv,
-            fichier_coord_dat=chemin_dat,
-            #fichier_polaire_txt=chemin_txt,
-            fichier_polaire_csv=None
-        )
+        # gestion.ajouter_profil(
+        #     nom_profil,
+        #     "manuel",
+        #     fichier_coord_csv=chemin_csv,
+        #     fichier_coord_dat=chemin_dat,
+        #     #fichier_polaire_txt=chemin_txt,
+        #     fichier_polaire_csv=None
+        # )
 
         # Demander à l'utilisateur s'il veut afficher le profil
         tracer = interface.demander_choix("Voulez-vous afficher le profil ?", ["Oui", "Non"]).strip().lower()
@@ -340,7 +340,7 @@ if __name__ == "__main__":
             chemin_txt = output_file
 
             #Lire fichier output
-            df_manuel = aero_manuel.lire_txt_et_convertir_dataframe(output_file)
+            df_manuel = aero_manuel.lire_txt_et_convertir_dataframe(chemin_txt)
             aero_manuel.donnees = df_manuel
             aero_manuel.tracer_polaires_depuis_txt()
 
@@ -533,18 +533,27 @@ if __name__ == "__main__":
         aero_cond = Aerodynamique(nom_profil)
         suffix = '_vol_reel' if tag == 'vol_reel' else '_vol_perso'
 
-        txt_out = os.path.join('data', 'profils_importes' if generation == 'importer' else 'profils_manuels',
+        txt_out = os.path.join('data', 'polaires_importees' if generation == 'importer' else 'polaires_xfoil',
                                f"{nom_profil}{suffix}.txt")
+
+        txt_out = aero_cond.run_xfoil(chemin_dat, reynolds, mach, alpha_start=-15, alpha_end=15, alpha_step=1, output_file=txt_out)
+
         print(' XFoil', tag, txt_out)
-        aero_cond.run_xfoil(chemin_dat, reynolds, mach, alpha_start=-15, alpha_end=15, alpha_step=1, output_file=txt_out)
+
         df_cond = aero_cond.lire_txt_et_convertir_dataframe(txt_out)
         aero_cond.donnees = df_cond
+
         if tag == 'vol_reel':
             aero_volreel, df_volreel = aero_cond, df_cond
         else:
             aero_volperso, df_volperso = aero_cond, df_cond
+
         if input('Afficher polaire X ? (Oui/Non) ').strip().lower() == 'oui':
-            aero_cond.tracer_polaires_depuis_txt()
+
+            if tag == 'vol_reel':
+                aero_volreel.tracer_polaires_depuis_txt()
+            elif tag == 'vol_perso':
+                aero_volperso.tracer_polaires_depuis_txt()
 
     # Collecte des polaires pour comparaison
     polaires = {}
@@ -592,7 +601,12 @@ if __name__ == "__main__":
 
     if faire_givrage == "oui":
         # 1. Sélection du profil à givrer
-        profil_givre_label = interface.demander_choix("Sur quel type de profil veux-tu simuler le givrage?",["Profil importé actuel", "Profil depuis la BaseDonnees"]).strip().lower()
+
+        if generation == "importer":
+            profil_givre_label = interface.demander_choix("Sur quel type de profil veux-tu simuler le givrage?",["Profil importé actuel", "Profil depuis la BaseDonnees"]).strip().lower()
+        else:
+            profil_givre_label = interface.demander_choix("Sur quel type de profil veux-tu simuler le givrage?",
+                                                          ["Profil depuis la BaseDonnees"]).strip().lower()
 
         # --- Profil importé/généré ---
         if profil_givre_label == "profil importé actuel" and aero is not None:
@@ -602,11 +616,11 @@ if __name__ == "__main__":
                 aero = aero_import
                 chemin_dat_givre = chemin_dat
 
-            elif generation == "générer":
-                profil_a_givrer = profil_manuel
-                nom_profil_givre = nom_profil
-                aero = aero_manuel
-                chemin_dat_givre = chemin_dat
+            # elif generation == "générer":
+            #     profil_a_givrer = profil_manuel
+            #     nom_profil_givre = nom_profil
+            #     aero = aero_manuel
+            #     chemin_dat_givre = chemin_dat
 
         # --- Profil depuis la BaseDonnees ---
         elif profil_givre_label == "profil depuis la basedonnees":
@@ -703,8 +717,8 @@ if __name__ == "__main__":
 
         #  Choix du mode de conditions pour le givrage
         mode_cond = interface.demander_choix(
-            "Pour la simulation givrée, veux-tu :\n- Récupérer des conditions réelles de vol (OpenSky)\n- Saisir manuellement Mach et Reynolds ?",
-            ["Conditions de vol réelles", "Saisie manuelle"]
+            "Pour la simulation givrée, veux-tu:\n- Saisir manuellement Mach et Reynolds ?",
+            ["Saisie manuelle"]
         ).strip().lower()
 
         """
@@ -738,7 +752,7 @@ if __name__ == "__main__":
 
         txt_givre = f"{nom_profil_givre}_coef_aero_givre.txt"
 
-        txt_givre = os.path.join("data", "polaires_importees", f"{nom_profil_givre}_coef_aero_givre.txt")
+        txt_givre = os.path.join("data", 'polaires_importees' if generation == 'importer' else 'polaires_xfoil', f"{nom_profil_givre}_coef_aero_givre.txt")
 
         #  Simulation XFoil sur profil givré
         aero_givre = Aerodynamique(nom_profil_givre + "-givre")

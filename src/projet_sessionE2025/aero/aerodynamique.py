@@ -289,8 +289,10 @@ class Aerodynamique:
             alpha_step (float): Incrément d’angle (°).
             output_file (str): Fichier de sortie des résultats.
         """
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        PACKAGE_ROOT = os.path.abspath(os.path.join(BASE_DIR, ".."))  # ← remonte au dossier 'projet_sessionE2025'
         #xfoil_path = Path(__file__).parent.parent.parent / "xfoil.exe"  # Remonte jusqu'à la racine
-        xfoil_path = "xfoil.exe" #os.path.join(os.getcwd(), "xfoil.exe")
+        xfoil_path = os.path.join(PACKAGE_ROOT, "xfoil.exe")
 
         # Script pour XFOIL
         xfoil_input = f"""
@@ -313,14 +315,15 @@ class Aerodynamique:
 
         QUIT
         """
+        print("CHEMIN VERS XFOIL :", xfoil_path)
 
         try:
             result = subprocess.run(
-                [str(xfoil_path)],
+                [xfoil_path],
                 input=xfoil_input.encode(),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                cwd = os.getcwd() # Utilise le dossier actuel automatiquement
+                cwd = os.path.dirname(xfoil_path) # Utilise le dossier actuel automatiquement
             )
             if result.returncode != 0:
                 print("Erreur XFOIL :", result.stderr.decode())
