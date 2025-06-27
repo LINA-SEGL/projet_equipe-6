@@ -47,25 +47,42 @@ Le projet de ce cours à été mis en oeuvre selon certains requis:
 
 ## Installation
 
-Installez le module avec :
+Pour utilise le programme il faut faire les étapes suivantes (par exemple sur PyCharm):
 
+- cloner le projet GitHub à partir de l'url : https://github.com/LINA-SEGL/projet_equipe-6
+    - OU faire : ```git clone https://github.com/LINA-SEGL/projet_sessionE2025.git```
+- Définir un environnement virtuel .venv
+- Dans la console éxécuter la commande suivante:
 ```
-pip install projet_sessionE2025
+pip install -e .
 ```
+- Installer Xfoil, si le fichier xfoil.exe n'est pas présent lors du clonage, il doit se trouver dans le même dossier que le main.py (Dans le dossier : projet_session_E2025)
+- Il faut absolument définir le dossier src comme fichier source.
+    - Pour cela dans Pycharm faites clic-droit / Mark Directory as / Sources Root (le fichier devrait être bleu).
 
-Vous pouvez également le cloner en faisant:
-
-```
-git clone https://github.com/LINA-SEGL/projet_sessionE2025.git
-cd projet_sessionE2025
-pip install -e
-```
-
-Installez également:
+Installez également si cela n'est pas fait automatiquement dans l'installation précédente:
 
 ```
 pip install python-opensky
 ```
+
+## Utilisation
+
+Si l'installation s'est bien passée, ce qui devrait être le cas vous devriez pouvoir lancer le main à partir du fichier main.py.
+
+Cela lancera le programme de la même manière que l'exemple fourni.
+
+Vous pouvez également lancer une interface web streamlit en faisant :
+
+```
+streamlit run src/projet_sessionE2025/app.py
+```
+
+DISCLAIMER:
+
+Cependant l'interface fonctionne mais le lancement de xfoil peut ne pas fonctionner à cause des chemins d'accès aux dossiers nécessaires.
+Pour le moment il est préférable d'utiliser l'interface tkinter du main.py.
+
 
 ## Dépendances:
 
@@ -77,20 +94,6 @@ pip install python-opensky
 - sqlite3
 - XFoil (doit être installé et accessible dans le PATH)
 - OpenSky Python SDK : python-opensky
-
-```
-python
-import airfoil_calculateur
-
-from 
-
-
-def main() -> None:
-
-
-if __name__ == "__main__":
-    .run(main())
-```
 
 ## Contribution
 
@@ -118,19 +121,30 @@ make html ou ./make.bat html sous Windows.
 L'architecture du projet est le suivant:
 
 ```
-projet_sessionE2025/
-├── airfoil_calculateur/
-│   ├── __init__.py
-│   ├── condition_vol.py
-│   ├── airfoil.py
-│   ├── xfoil_interface.py
-│   └── ...
-├── data/
-│   └── base_de_donnees.db
-├── tests/
-│   └── test_airfoil.py
-├── main.py
-└── README.md
+projet_equipe-6/
+├── docs/ # Documentation du projet
+├── src/ # Code source principal
+│ ├── projet_sessionE2025/ # Package principal
+│ │ ├── aero/ # calcul des performances aérodynamiques
+│ │ ├── airfoil/ # Gestion des profils NACA
+│ │ ├── BaseDonnees/ # Base de données
+│ │ ├── donnees_vol/ # Données de vol (OpenSky)
+│ │ ├── Interface/ # Interface utilisateur
+│ │ ├── init.py # Fichier d'initialisation du package
+│ │ ├── app.py # Point d'entrée de l'application Streamlit
+│ │ └── main.py # Script principal
+│ │
+│ └── xfoil.exe # Binaire XFoil (nécessaire pour les calculs)
+│
+├── data/ # Données persistantes (profils, résultats)
+├── projet_equipe_6.egg-info/ # Métadonnées du package (généré automatiquement)
+│
+├── EXEMPLE/ #Exemple documenté du programme
+├── .gitignore # Fichiers à ignorer par Git
+├── LICENSE.md
+├── pyproject.toml # Configuration du package
+├── README.md # Documentation actuelle
+└── requirements.txt # Dépendances Python
 ```
 
 ## Auteurs du projet

@@ -29,7 +29,7 @@ Pour tester rapidement le programme après installation :
 Run Main.py
 ```
 
- Déroulement et fonctionnalités testées
+##  Déroulement et fonctionnalités testées
 
 L’utilisateur sera guidé par des menus interactifs.
 
@@ -66,7 +66,7 @@ L'utilisateur est capable de :
 
 ##  Simulation étape par étape
 
-### Étape 1 : Choix du mode d’obtention du profil
+###  Choix du mode d’obtention du profil
 Dès que l’on lance le programme 
 
 ![demander_chois_davoirleprofile.png](img.png)
@@ -80,7 +80,7 @@ Une fenêtre s’ouvre pour demander **comment obtenir un profil NACA** :
 >  Comme il s'agit de la première utilisation, la base de données est encore vide.  
 > Il faut donc **soit importer un profil, soit en générer un nouveau**.
 
-### Étape 2 : Importer un profil NACA de Airfoil
+###  Importer un profil NACA de Airfoil
 
 Si l’on choisit **Importer**, une nouvelle fenêtre apparaît.  
 L’utilisateur est invité à **entrer le nom du profil NACA à importer**.
@@ -127,7 +127,7 @@ Si l’utilisateur clique sur **Oui**, une fenêtre graphique s’ouvre avec la 
 
 ![img_5.png](img_5.png)
 
-### Étape 3 : Récupérer les performances aérodynamiques
+###  Récupérer les performances aérodynamiques
 
 ![img_6.png](img_6.png)
 
@@ -179,7 +179,7 @@ Une fois les coefficients aérodynamiques récupérés, le programme propose à 
 Voulez-vous afficher les courbes aérodynamiques de votre profil ?
 [Oui]   [Non]
 ```
-### Étape 5 : Visualisation des courbes aérodynamiques
+###  Visualisation des courbes aérodynamiques
 
 📈 Si l’utilisateur clique sur **Oui** à l’étape précédente, le programme affiche une **figure contenant quatre graphes** générés à partir des données de la polaire.
 
@@ -208,7 +208,7 @@ Chaque sous-graphe donne des informations essentielles pour analyser le comporte
 ![img_9.png](img_9.png)  
 
 
-### Étape 10 : Calcul de la finesse maximale
+###  Calcul de la finesse maximale
 
 ![img_11.png](img_11.png)  
 
@@ -222,7 +222,7 @@ Voulez-vous calculer la finesse maximale ?
 ![img_12.png](img_12.png)
 
 
-### Étape 6 : Simulation du profil en conditions de vol
+###  Simulation du profil en conditions de vol
 
 ![img_13.png](img_13.png)  
 Le programme propose ensuite de **tester les performances du profil dans des conditions de vol** :  
@@ -422,8 +422,12 @@ Cela permet de définir la portion du profil impactée par le givre (ex. entre 4
 L'utilisateur doit alors entrer :  
 
 
-#### ➤ Nombre de Reynolds
-#### ➤ Nombre de Mach
+####  Nombre de Reynolds  
+![img_54.png](img_54.png)
+
+####  Nombre de Mach  
+![img_55.png](img_55.png)
+
 
 ## ️ Génération des fichiers
 
@@ -467,18 +471,18 @@ Les résultats sont comparés entre le profil **normal** et le profil **givré**
 ## Démenstration dans le cas ge générer ou de labse :  
 ![img_35.png](img_35.png)  
 
-##  Mode 1 : Générer un profil NACA
+##  Mode  : Générer un profil NACA
 
 Lorsque l’utilisateur choisit de **générer manuellement un profil NACA**, une suite d'étapes lui permet de créer un profil, de visualiser son contour, puis d'en calculer les performances aérodynamiques à l’aide de XFoil.
 
 ---
 
-###  Étape 1 : Saisie du nom du profil
+###  Saisie du nom du profil
 
 L’utilisateur est invité à saisir un nom de profil (par exemple : `naca3312`) :  
 ![img_36.png](img_36.png)  
 
-### ️ Étape 2 : Définition des paramètres géométriques
+### ️  Définition des paramètres géométriques
 
 L’utilisateur renseigne ensuite les **paramètres géométriques** du profil :
 
@@ -492,7 +496,7 @@ L’utilisateur renseigne ensuite les **paramètres géométriques** du profil :
 ![img_37.png](img_37.png)  
 
 
-###  Étape 3 : Affichage du profil généré
+###   Affichage du profil généré
 
 Une fois les paramètres validés, l’utilisateur peut choisir d'afficher le contour du profil :
 
@@ -501,7 +505,7 @@ Une fois les paramètres validés, l’utilisateur peut choisir d'afficher le co
 
 
 ---
-###  Étape 4 : Calcul des performances aérodynamiques
+###  Calcul des performances aérodynamiques
 
 Une fois les paramètres validés, l’utilisateur peut choisir d'afficher le contour du profil :  
 
@@ -512,7 +516,7 @@ Une fois les paramètres validés, l’utilisateur peut choisir d'afficher le co
 
 ---
 
-###  Étape 5 : Génération et affichage des polaires
+###   Génération et affichage des polaires
 
 Une fois la simulation lancée, XFoil génère automatiquement les polaires du profil (`Cl`, `Cd`, `Cm` en fonction de l’angle d’attaque α) :
 
@@ -583,3 +587,15 @@ Ensuite en a le contour afficher des deux profils :
 Le profil original est comparé au profil modifié par givrage.  
 
 ![img_50.png](img_50.png)  
+
+
+##  Mode  : BaseDonnees
+Affiche la liste des profils déjà existants dans la base de données (profils .csv et .dat).  
+
+![img_53.png](img_53.png)    
+
+L’utilisateur entre le nom exact du profil souhaité (ex. : naca3312).  
+
+
+Le programme charge directement ce profil pour affichage ou simulation.  
+
