@@ -45,3 +45,4 @@ docs/source/
 *.egg
 build/
 dist/
+.src/projet_sessione2025.egg-info

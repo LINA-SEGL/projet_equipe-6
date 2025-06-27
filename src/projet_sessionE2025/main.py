@@ -177,6 +177,7 @@ if __name__ == "__main__":
     """
     print("\n---- Lancement du programme Airfoil ----\n")
 
+    #Choix du mode utilisateur initial
     generation = interface.demander_choix("Voulez-vous importer de AirfoilTools, de votre BaseDonnees ou générer un profil ?", ["importer", "générer", "BaseDonnees"])
 
     """
@@ -184,6 +185,7 @@ if __name__ == "__main__":
     """
     if generation == "importer":
 
+        #Fonction profil appelée, return l'objet (noms + données) et le nom du profil rentré
         profil_obj_import, nom_profil = demande_profil(interface)
 
         chemin_csv = profil_obj_import.sauvegarder_coordonnees(f"{nom_profil}_coord_profil.csv")
@@ -220,7 +222,7 @@ if __name__ == "__main__":
 
             # Lire le fichier texte et convertir en DataFrame
             df_import = aero_import.lire_txt_et_convertir_dataframe(chemin_txt_airfoiltools)
-            # **Nouvelle ligne :** on stocke le DataFrame pour le tracer
+
             aero_import.donnees = df_import
 
             # Stocker dans l’objet et tracer
@@ -248,7 +250,7 @@ if __name__ == "__main__":
         #     None
         #     )
 
-        # On normalise l'objet
+        #On normalise l'objet
         aero = aero_import
         profil_obj = profil_obj_import
         nom_profil = nom_profil
@@ -272,7 +274,7 @@ if __name__ == "__main__":
                 continue
 
             nom_profil = f"{nom_profil.strip().lower()}"
-            verif_fichier = f"{nom_profil}_coord_profil.csv"
+            verif_fichier = f"data/profils_manuels/{nom_profil}_coord_profil.csv"
 
             # Vérifie si le fichier existe déjà
             if os.path.exists(verif_fichier):
@@ -318,6 +320,9 @@ if __name__ == "__main__":
         lancement_xfoil = interface.demander_choix("Voulez-vous calculer les performances de votre profil?", ["Oui", "Non"])
 
         if lancement_xfoil.lower() == "oui":
+
+            #print("nom_profil pour aéro", nom_profil)
+
             aero_manuel = Aerodynamique(nom_profil)
 
             params = interface.demander_parametres({
@@ -338,7 +343,7 @@ if __name__ == "__main__":
             chemin_txt = output_file
 
             #Lire fichier output
-            df_manuel = aero_manuel.lire_txt_et_convertir_dataframe(chemin_txt)
+            df_manuel = aero_manuel.lire_txt_et_convertir_dataframe(output_file)
             aero_manuel.donnees = df_manuel
             aero_manuel.tracer_polaires_depuis_txt()
 
@@ -355,7 +360,7 @@ if __name__ == "__main__":
         # gestion.ajouter_profil(nom_profil, "manuel",
         #                        chemin_csv, chemin_dat, chemin_txt, chemin_pol_csv)
 
-        # On normalise l'objet
+        #On normalise l'objet
         aero = aero_manuel
         profil_obj = profil_manuel
         nom_profil = nom_profil
@@ -366,8 +371,8 @@ if __name__ == "__main__":
     elif generation == "BaseDonnees":
 
         #Lecture des dossiers de la BaseDonnees pour lister leur contenu
-        dossier_database_import = "data/profils_importes"  #
-        dossier_database_genere = "data/profils_manuels"   #
+        dossier_database_import = "data/profils_importes"
+        dossier_database_genere = "data/profils_manuels"
 
         try:
             contenu_import = os.listdir(dossier_database_import)
@@ -515,9 +520,21 @@ if __name__ == "__main__":
         conditions.append(("vol_reel", alt, mach, angle, lat, lon))
 
     if choix_mode in ("2", "3"):
-        alt = float(input("\nAltitude personnalisée (m) : "))
-        mach = float(input("Mach personnalisé : "))
-        angle = float(input("Angle d’attaque perso (°) : "))
+
+        params = interface.demander_parametres({
+            "alt": "Altitude personnalisée (m)",
+            "mach": "Mach personnalisé",
+            "angle": "Angle d’attaque perso (°)",
+        })
+
+        alt = params["alt"]
+        mach = params["mach"]
+        angle = params["angle"]
+        #corde = params["corde"]
+
+        # alt = float(input("\nAltitude personnalisée (m) : "))
+        # mach = float(input("Mach personnalisé : "))
+        # angle = float(input("Angle d’attaque perso (°) : "))
         conditions.append(("vol_perso", alt, mach, angle, None, None))
 
     # Exécution XFoil pour chaque condition
@@ -525,25 +542,29 @@ if __name__ == "__main__":
         cond = ConditionVol(altitude_m=alt, mach=mach, angle_deg=angle,
                             delta_isa=calcul_delta_isa(lat or 0, lon or 0, alt, API_KEY) or 0)
         cond.afficher()
-        corde = float(input('Corde (m): '))
+        corde = 10
 
-        reynolds = cond.calculer_reynolds(vitesse_m_s=mach * (1.4 * 287.05 * cond.temperature_K) ** 0.5, corde_m=corde,
-                                          viscosite_kgms=cond.viscosite_kgms, densite_kgm3=cond.densite_kgm3)
+        #reynolds = cond.calculer_reynolds(vitesse_m_s=mach * (1.4 * 287.05 * cond.temperature_K) ** 0.5, corde_m=corde, viscosite_kgms=cond.viscosite_kgms, densite_kgm3=cond.densite_kgm3)
+
+        reynolds = 100000
+
         print("Re = ", reynolds)
+
+        #print("nom_profil pour conditions", nom_profil)
 
         aero_cond = Aerodynamique(nom_profil)
 
         suffix = '_vol_reel' if tag == 'vol_reel' else '_vol_perso'
 
-        if generation == 'importer':
-            nom_profil = vrai_nom_import
+        # if generation == 'importer':
+        #     nom_profil = vrai_nom_import
 
         txt_out = os.path.join("data", "polaires_importees" if generation == 'importer' else "polaires_xfoil",
                                f"{nom_profil}{suffix}.txt")
 
         acces_fichier_dat = os.path.join("data", "profils_importes" if generation == 'importer' else "profils_manuels", f"{nom_profil}_coord_profil.dat")
 
-        print("acces_fichier_dat", acces_fichier_dat)
+        #print("acces_fichier_dat", acces_fichier_dat)
 
         aero_cond.run_xfoil(acces_fichier_dat, reynolds, mach, alpha_start=-15, alpha_end=15, alpha_step=1, output_file=txt_out)
 
@@ -571,7 +592,9 @@ if __name__ == "__main__":
     if aero_volperso: polaires['Vol perso'] = aero_volperso.donnees
     if aero_base:   polaires['Base'] = aero_base.donnees
 
-    if len(polaires) >= 2 and input('Superposer polaires ? (Oui/Non) ').strip().lower() == 'oui':
+    superposer_polaire = interface.demander_choix("Voulez-vous superposer les polaires ?", ["Oui", "Non"])
+
+    if len(polaires) >= 2 and superposer_polaire.lower() == 'oui':
         comparer_polaires(polaires)
 
     # ===================================
