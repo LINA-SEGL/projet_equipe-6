@@ -100,13 +100,14 @@ naca0012
 ### Confirmation de l’import et enregistrement du profil
 une fois le profil importé, le programme affiche une **fenêtre d’information** confirmant que :
 
-> Les coordonnées du profil ont été enregistrées dans le fichier : `0012_coord_profil.csv`
+> Les coordonnées du profil ont été enregistrées dans le fichier : `0012_coord_profil.csv`  
 > 
-![img_2.png](img_2.png)image
+![img_2.png](img_2.png)
+
 
 Ce fichier est automatiquement sauvegardé dans le dossier :
 
-![img_3.png](img_3.png)image      
+![img_3.png](img_3.png)     
 
 Il contient les coordonnées (x, y) du contour du profil NACA0012, récupérées depuis AirfoilTools.
 
@@ -169,7 +170,8 @@ data/polaires_importees/naca0012h-sa_coef_aero.txt
 ```
 Afficher les courbes aérodynamiques
 
-![img_10.png](img_10.png)image
+![img_10.png](img_10.png)   
+
 
 Une fois les coefficients aérodynamiques récupérés, le programme propose à l’utilisateur d’**afficher les courbes aérodynamiques** du profil :
 
@@ -203,11 +205,13 @@ Chaque sous-graphe donne des informations essentielles pour analyser le comporte
 
  Le tracé est interactif et utilise la bibliothèque `matplotlib`.
 
-![img_9.png](img_9.png)image
+![img_9.png](img_9.png)  
+
 
 ### Étape 10 : Calcul de la finesse maximale
 
-![img_11.png](img_11.png)imageeee
+![img_11.png](img_11.png)  
+
 
 Une fois les performances récupérées, le programme propose de **calculer la finesse maximale** du profil :
 
@@ -220,8 +224,9 @@ Voulez-vous calculer la finesse maximale ?
 
 ### Étape 6 : Simulation du profil en conditions de vol
 
-![img_13.png](img_13.png)
-Le programme propose ensuite de **tester les performances du profil dans des conditions de vol** :
+![img_13.png](img_13.png)  
+Le programme propose ensuite de **tester les performances du profil dans des conditions de vol** :  
+
 
 ```text
 Voulez-vous tester les performances de votre profil ?
@@ -254,4 +259,140 @@ L’objectif est de **voir comment le profil se comporte en situation réelle**,
 >  Très utile pour observer l’impact des conditions de vol sur les performances du profil (comme la finesse ou la polaire aérodynamique).
 
 
-.
+
+
+## Comparaison de contours de deux profils NACA
+
+Le programme propose à l'utilisateur une **fonctionnalité de comparaison géométrique** entre deux profils aérodynamiques. Cette option permet de superposer les contours des deux profils pour en analyser visuellement les différences de forme.
+
+---
+
+###  Étapes de la comparaison  
+
+1. **Proposition de comparaison :**    
+   Une boîte de dialogue demande à l'utilisateur s’il souhaite comparer deux profils d’aile.
+
+   ![img_21.png](img_21.png)   
+
+2. **Saisie du premier profil :**  
+   L’utilisateur est invité à entrer le nom du premier profil (ex : `naca0012`).   
+![img_22.png](img_22.png)  
+
+   Une fois saisi, le programme importe automatiquement les coordonnées (x, y) depuis le site AirfoilTools.
+
+
+  ![img_23.png](img_23.png)  
+
+
+   Le programme confirme ensuite que les coordonnées ont bien été enregistrées :
+
+
+3. **Saisie du deuxième profil :**  
+   L’utilisateur saisit le nom du deuxième profil (ex : `naca22112`).
+
+  ![img_24.png](img_24.png)  
+
+   Le programme confirme également l’enregistrement de ce second profil :
+
+   ![img_25.png](img_25.png)
+
+---
+
+###  Sauvegarde des fichiers
+
+Les coordonnées des deux profils sont automatiquement sauvegardées dans le dossier `data/profils_importes` sous deux formats :
+- `.csv` : format tabulaire exploitable
+- `.dat` : format utilisable par XFoil
+
+```text
+data/
+└── profils_importes/
+    ├── naca0012_coord_profil.csv
+    ├── naca0012_coord_profil.dat
+    ├── naca22112_coord_profil.csv
+    └── naca22112_coord_profil.dat
+```
+![img_26.png](img_26.png)  
+
+![img_27.png](img_27.png)  
+
+# Simulation de givrage sur un profil NACA
+
+##  Objectif
+
+L’objectif est de **simuler un dépôt de givre** sur une zone spécifique d’un profil aérodynamique (ex. NACA22112), puis d’observer **l’impact du givrage sur les performances aérodynamiques** (portance, traînée, moment).
+
+---
+
+##  Étapes de la simulation
+
+###  Choix de l'utilisateur  
+
+
+Une boîte de dialogue s'affiche pour demander :  
+
+![img_14.png](img_14.png)
+
+ Saisie des paramètres de givrage
+
+Si l'utilisateur clique sur **Oui**, plusieurs fenêtres s’affichent successivement :
+
+####  Épaisseur du givre
+
+![img_15.png](img_15.png)  
+
+L’utilisateur entre une valeur (ex. `0.01`) correspondant à l’**épaisseur ajoutée** au profil.  
+
+![img_16.png](img_16.png)  
+
+Cela permet de définir la portion du profil impactée par le givre (ex. entre 45% et 50% de la corde).   
+
+
+### Paramètres de vol pour simulation XFoil:  
+
+![img_17.png](img_17.png)  
+
+L'utilisateur doit alors entrer :  
+
+
+#### ➤ Nombre de Reynolds
+#### ➤ Nombre de Mach
+
+## ️ Génération des fichiers
+
+Une fois les entrées validées, le programme :
+
+1. **Crée un nouveau fichier .dat** contenant le contour du profil modifié avec le givre.
+2. **Crée un fichier .csv** avec les mêmes coordonnées pour consultation.
+3. **Exécute XFoil** avec ces nouveaux fichiers.
+4. **Sauvegarde les résultats dans** :
+   - `data/profils_givre/` : les coordonnées du profil givré.
+   - `data/polaires_importees/` : les coefficients aérodynamiques du profil givré.
+
+---
+![img_18.png](img_18.png)
+
+
+
+##  Résultats graphiques
+###  Comparaison des performances aérodynamiques
+
+Les résultats sont comparés entre le profil **normal** et le profil **givré** :
+
+- CL vs α
+- CD vs α
+- CM vs α
+- CL vs CD
+
+---
+![img_19.png](img_19.png)
+![img_20.png](img_20.png)
+
+##  Observations
+
+- Le givrage **réduit la portance maximale**
+- Il **augmente significativement la traînée**
+- L’efficacité globale est diminuée (courbe CL/CD moins tendue)
+- Le moment de tangage est perturbé, ce qui pourrait affecter la stabilité de l’aéronef
+
+---
