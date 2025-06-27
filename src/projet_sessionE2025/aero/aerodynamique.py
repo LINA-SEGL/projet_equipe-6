@@ -316,7 +316,7 @@ class Aerodynamique:
 
         try:
             result = subprocess.run(
-                [str(xfoil_path)],
+                [xfoil_path],
                 input=xfoil_input.encode(),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
