@@ -7,10 +7,10 @@ import streamlit as st
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-st.sidebar.subheader("Debug - Chemins")
-st.sidebar.write("BASE_DIR:", BASE_DIR)
-st.sidebar.write("Working Directory:", os.getcwd())
-st.sidebar.write("Contenu de BASE_DIR:", os.listdir(BASE_DIR))
+# st.sidebar.subheader("Debug - Chemins")
+# st.sidebar.write("BASE_DIR:", BASE_DIR)
+# st.sidebar.write("Working Directory:", os.getcwd())
+# st.sidebar.write("Contenu de BASE_DIR:", os.listdir(BASE_DIR))
 
 #streamlit run src/projet_sessionE2025/app.py
 

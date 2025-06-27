@@ -39,8 +39,10 @@ Thumbs.db
 #*.txt
 #*.buildinfo
 # Fichiers à ignorer SAUF la documentation build
-docs/*
-!docs/build/html/
+docs/*               # Ignore tout dans docs/
+!docs/build/         # Ré-inclut le dossier build
+docs/build/*         # Re-ignore tout dans build/
+!docs/build/html/    # Ré-inclut SEULEMENT le dossier html
 
 
 # Fichiers générés
@@ -48,4 +50,3 @@ docs/*
 *.egg
 build/
 dist/
-.src/projet_sessione2025.egg-info
