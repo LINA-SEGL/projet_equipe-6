@@ -216,7 +216,7 @@ if __name__ == "__main__":
             aero_import = Aerodynamique(nom_profil)
 
             # Télécharger le fichier texte depuis AirfoilTools
-            chemin_txt_airfoiltools = aero_import.telecharger_et_sauvegarder_txt(reynolds)
+            chemin_txt_airfoiltools, vrai_nom_import = aero_import.telecharger_et_sauvegarder_txt(reynolds)
 
             # Lire le fichier texte et convertir en DataFrame
             df_import = aero_import.lire_txt_et_convertir_dataframe(chemin_txt_airfoiltools)
@@ -254,8 +254,6 @@ if __name__ == "__main__":
         nom_profil = nom_profil
         chemin_dat = chemin_dat
         chemin_txt = chemin_txt
-
-        print("nom_profil_import = ", nom_profil)
 
         """
         DANS LE CAS D'UNE CRÉATION MANUELLE.
@@ -537,10 +535,15 @@ if __name__ == "__main__":
 
         suffix = '_vol_reel' if tag == 'vol_reel' else '_vol_perso'
 
+        if generation == 'importer':
+            nom_profil = vrai_nom_import
+
         txt_out = os.path.join("data", "polaires_importees" if generation == 'importer' else "polaires_xfoil",
                                f"{nom_profil}{suffix}.txt")
 
-        acces_fichier_dat = os.path.join("data", "profils_manuels", f"{nom_profil}_coord_profil.dat")
+        acces_fichier_dat = os.path.join("data", "profils_importes" if generation == 'importer' else "profils_manuels", f"{nom_profil}_coord_profil.dat")
+
+        print("acces_fichier_dat", acces_fichier_dat)
 
         aero_cond.run_xfoil(acces_fichier_dat, reynolds, mach, alpha_start=-15, alpha_end=15, alpha_step=1, output_file=txt_out)
 

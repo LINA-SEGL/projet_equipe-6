@@ -95,14 +95,18 @@ import os
 import glob
 
 chemins = [
-    os.path.join(BASE_DIR, "data", "profils_importes"),
-    os.path.join(BASE_DIR, "data", "profils_manuels")
+    os.path.join("data", "profils_importes"),
+    os.path.join("data", "profils_manuels")
 ]
 
 noms_profils = []
 for dossier in chemins:
     fichiers = glob.glob(os.path.join(dossier, "*_coord_profil.dat"))
+
+    print("fichiers", fichiers)
+
     noms_profils += [os.path.basename(f).split("_coord")[0] for f in fichiers]
+
 noms_profils = sorted(set(noms_profils))
 
 
@@ -135,11 +139,11 @@ if mode == "Importer":
             # Étape 1 : Import depuis AirfoilTools
             profil = Airfoil.depuis_airfoiltools(code)
 
-            print(profil)
+            print('profil', profil)
 
             # Étape 2 : Sauvegarder en CSV (chemin auto)
             chemin_csv = profil.sauvegarder_coordonnees()
-            print(chemin_csv)
+            print('chemin_csv', chemin_csv)
 
             # Étape 3 : Convertir CSV -> DAT (comme dans main.py)
             chemin_dat = chemin_csv.replace("_coord_profil.csv", "_coord_profil.dat")
@@ -302,33 +306,33 @@ if st.session_state.profil and st.session_state.chemin_dat:
 
         if methode == "Importer":
             try:
-                chemin = aero.telecharger_et_sauvegarder_txt(re=reynolds)
+                chemin, vrai_nom_import = aero.telecharger_et_sauvegarder_txt(re=reynolds)
                 df = aero.lire_txt_et_convertir_dataframe(chemin)
                 st.success(" Données récupérées depuis AirfoilTools.")
             except Exception as e:
                 st.error(f" Erreur AirfoilTools : {e}")
                 df = None
 
-
-
         elif methode == "Générer":
             try:
-                chemin_polaire = os.path.join(BASE_DIR, "data", "polaires_xfoil", f"{st.session_state.nom}_polar.txt")
+                chemin_polaire = os.path.join(BASE_DIR, "data", "polaires_xfoil", f"{st.session_state.nom}_coef_aero.txt")
                 if forcer_xfoil and os.path.exists(chemin_polaire):
                     os.remove(chemin_polaire)
                     st.info("Ancien fichier supprimé. Nouvelle analyse XFOIL en cours...")
 
-                chemin = aero.run_xfoil(
+                chemin_polaire = aero.run_xfoil(
                     dat_file=st.session_state.chemin_dat,
                     reynolds=reynolds,
                     mach=mach,
                     output_file=chemin_polaire
                 )
 
-                print('CHEMIN RESULT XFOIL', chemin)
+                #print('CHEMIN RESULT XFOIL', chemin_polaire)
 
-                df = aero.lire_txt_et_convertir_dataframe(chemin)
+                df = aero.lire_txt_et_convertir_dataframe(chemin_polaire)
+                print(df)
                 st.success(" Analyse XFOIL terminée.")
+
             except Exception as e:
                 st.error(f" Erreur XFOIL : {e}")
                 df = None
@@ -404,11 +408,6 @@ if "df_polaires" in st.session_state and st.session_state.df_polaires is not Non
         df["finesse"] = df["CL"] / df["CD"]
         max_f = df["finesse"].max()
         st.write(f"### Finesse max : {max_f:.2f}")
-
-
-
-
-
 
 
 # Étape : Conditions de vol (si un profil est chargé)
@@ -519,6 +518,7 @@ if st.session_state.profil and st.session_state.chemin_dat:
         - Reynolds : {reynolds:.2e}  
         - ΔISA : {cond.delta_isa:.1f} K  
         - Corde : {corde:.2f} m
+        - Reynolds : {reynolds:.6e}
         """)
 
         st.session_state.conditions_pretes.append({
@@ -542,11 +542,20 @@ if st.session_state.profil and st.session_state.chemin_dat:
             suffix = "_vol_reel" if tag == "vol_reel" else "_vol_perso"
             #dossier = "profils_importes" if "-il" in st.session_state.nom else "profils_manuels"
             dossier = os.path.join(BASE_DIR, "data", "profils_importes")
-            txt_out = os.path.join(f"{st.session_state.nom}{suffix}.txt")
+
+            txt_out = os.path.join("data", "polaires_xfoil", f"{st.session_state.nom}{suffix}.txt")
+
+            if mode == "Importer":
+                chemin, vrai_nom_import = aero.telecharger_et_sauvegarder_txt(re=reynolds)
+                st.session_state.nom = vrai_nom_import
+
+            fichier_dat = os.path.join("data", "profils_importes", f"{st.session_state.nom}_coord_profil.dat")
+
+            print("fichier_dat", fichier_dat)
 
             try:
                 aero.run_xfoil(
-                    dat_file=st.session_state.chemin_dat,
+                    dat_file=fichier_dat,
                     reynolds=reynolds,
                     mach=mach,
                     alpha_start=-15,

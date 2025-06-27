@@ -179,7 +179,7 @@ class Aerodynamique:
                 with open(chemin, "w", encoding="utf-8") as fichier:
                     fichier.write(contenu)
                 print(f"[INFO] Polaire trouvée et enregistrée: {url_txt}")
-                return chemin
+                return chemin, code_url
 
         raise Exception(f"Aucune version de polaire trouvée pour le profil {self.nom} (Re={re})")
 
