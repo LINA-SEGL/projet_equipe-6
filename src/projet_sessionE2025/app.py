@@ -1,15 +1,16 @@
-from main import *
+import pandas as pd
+import matplotlib.pyplot as plt
+import asyncio
 import os
+from main import GestionBase, Aerodynamique, Airfoil, ConditionVol, calcul_delta_isa, fetch_vols, comparer_polaires
+import streamlit as st
 
-# # Configuration des chemins
-# BASE_DIR = Path(__file__).parent.parent
-# sys.path.append(str(BASE_DIR))
-#
-# # Chemins des données
-# DATA_DIR = BASE_DIR / "data"
-# os.makedirs(DATA_DIR / "profils_importes", exist_ok=True)
-# os.makedirs(DATA_DIR / "profils_manuels", exist_ok=True)
-# os.makedirs(DATA_DIR / "polaires_xfoil", exist_ok=True)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+st.sidebar.subheader("Debug - Chemins")
+st.sidebar.write("BASE_DIR:", BASE_DIR)
+st.sidebar.write("Working Directory:", os.getcwd())
+st.sidebar.write("Contenu de BASE_DIR:", os.listdir(BASE_DIR))
 
 #streamlit run src/projet_sessionE2025/app.py
 
@@ -93,7 +94,11 @@ def interface_selection_vol_opensky(profil1_nom, profil2_nom, suffixe=""):
 import os
 import glob
 
-chemins = ["data/profils_importes", "data/profils_manuels"]
+chemins = [
+    os.path.join(BASE_DIR, "data", "profils_importes"),
+    os.path.join(BASE_DIR, "data", "profils_manuels")
+]
+
 noms_profils = []
 for dossier in chemins:
     fichiers = glob.glob(os.path.join(dossier, "*_coord_profil.dat"))
@@ -130,8 +135,11 @@ if mode == "Importer":
             # Étape 1 : Import depuis AirfoilTools
             profil = Airfoil.depuis_airfoiltools(code)
 
+            print(profil)
+
             # Étape 2 : Sauvegarder en CSV (chemin auto)
             chemin_csv = profil.sauvegarder_coordonnees()
+            print(chemin_csv)
 
             # Étape 3 : Convertir CSV -> DAT (comme dans main.py)
             chemin_dat = chemin_csv.replace("_coord_profil.csv", "_coord_profil.dat")
@@ -160,8 +168,6 @@ if mode == "Importer":
 
         except Exception as e:
             st.error(f"Erreur lors de l'import du profil {code} : {type(e).__name__} – {e}")
-
-
 
 
 elif mode == "Générer":
@@ -196,7 +202,8 @@ elif mode == "Générer":
                 x_up, y_up, x_low, y_low, _, c = profil.naca4_profil()
 
                 # 4. Enregistrement
-                dossier = "data/profils_manuels"
+                #dossier = f"{BASE_DIR}/data/profils_manuels"
+                dossier = os.path.join(BASE_DIR, "data", "profils_manuels")
                 os.makedirs(dossier, exist_ok=True)
 
                 chemin_csv = profil.enregistrer_profil_manuel_csv(
@@ -232,14 +239,14 @@ elif mode == "Générer":
 elif mode == "Depuis la BaseDonnees":
     import os
 
-    fichiers = os.listdir("data/profils_manuels") + os.listdir("data/profils_importes")
+    fichiers = os.listdir(f"{BASE_DIR}/data/profils_manuels") + os.listdir(f"{BASE_DIR}/data/profils_importes")
     noms = sorted(set(f.split("_coord")[0] for f in fichiers if f.endswith(".dat")))
 
     choix = st.selectbox("Choisissez un profil disponible :", noms)
 
     if st.button("Charger"):
         chemin = None
-        for dossier in ["data/profils_importes", "data/profils_manuels"]:
+        for dossier in [f"{BASE_DIR}/data/profils_importes", f"{BASE_DIR}/data/profils_manuels"]:
             chemin_test = os.path.join(dossier, f"{choix}_coord_profil.dat")
             if os.path.exists(chemin_test):
                 chemin = chemin_test
@@ -289,7 +296,7 @@ if st.session_state.profil and st.session_state.chemin_dat:
     # Ajout : checkbox pour forcer la régénération
     forcer_xfoil = st.checkbox(" Forcer la régénération XFOIL")
 
-    if st.button("Lancer l'aero aérodynamique"):
+    if st.button("Lancer l'aérodynamique"):
         aero = Aerodynamique(st.session_state.nom)
         methode = st.session_state.get("methode_utilisee", "")
 
@@ -306,7 +313,7 @@ if st.session_state.profil and st.session_state.chemin_dat:
 
         elif methode == "Générer":
             try:
-                chemin_polaire = os.path.join("data", "polaires_xfoil", f"{st.session_state.nom}_polar.txt")
+                chemin_polaire = os.path.join(BASE_DIR, "data", "polaires_xfoil", f"{st.session_state.nom}_polar.txt")
                 if forcer_xfoil and os.path.exists(chemin_polaire):
                     os.remove(chemin_polaire)
                     st.info("Ancien fichier supprimé. Nouvelle analyse XFOIL en cours...")
@@ -317,6 +324,9 @@ if st.session_state.profil and st.session_state.chemin_dat:
                     mach=mach,
                     output_file=chemin_polaire
                 )
+
+                print('CHEMIN RESULT XFOIL', chemin)
+
                 df = aero.lire_txt_et_convertir_dataframe(chemin)
                 st.success(" Analyse XFOIL terminée.")
             except Exception as e:
@@ -325,21 +335,37 @@ if st.session_state.profil and st.session_state.chemin_dat:
 
 
         elif methode == "Depuis la BaseDonnees":
+            chemin_polaire_import = os.path.join(BASE_DIR, "data", "polaires_importees", f"{st.session_state.nom}_coef_aero.txt")
+            chemin_polaire_xfoil = os.path.join(BASE_DIR, "data", "polaires_xfoil", f"{st.session_state.nom}_coef_aero.txt")
+
             try:
-                chemin_polaire = os.path.join("data", "polaires_importees", f"{st.session_state.nom}_coef_aero.txt")
+                if os.path.exists(chemin_polaire_import):
+                    df = aero.lire_txt_et_convertir_dataframe(chemin_polaire_import)
+                    st.success("Données importées depuis polaires_importees.")
 
-                if not os.path.exists(chemin_polaire):
-                    raise FileNotFoundError(f"Fichier introuvable : {chemin_polaire}")
+                elif os.path.exists(chemin_polaire_xfoil):
+                    df = aero.lire_txt_et_convertir_dataframe(chemin_polaire_xfoil)
+                    st.success("Données importées depuis polaires_xfoil.")
+                else:
+                    raise FileNotFoundError("Aucun fichier de polaire trouvé.")
+            # try:
+            #     chemin_polaire = os.path.join(BASE_DIR, "data", "polaires_importees", f"{st.session_state.nom}_coef_aero.txt")
+            #
+            #     if not os.path.exists(chemin_polaire):
+            #         raise FileNotFoundError(f"Fichier introuvable : {chemin_polaire}")
+            #
+            #     df = aero.lire_txt_et_convertir_dataframe(chemin_polaire)
+            #     st.success(" Données de la base récupérées avec succès.")
 
-                df = aero.lire_txt_et_convertir_dataframe(chemin_polaire)
-                st.success(" Données de la base récupérées avec succès.")
             except Exception as e:
                 st.error(f" Erreur lors de la lecture depuis la base : {e}")
 
         else:
             st.error(f" Méthode inconnue : {methode}")
+            df = None
 
             # Si on a des données valides : sauvegarde et affichage
+        #if df is not None:
         if df is not None:
             st.session_state.df_polaires = df
             st.success(" Données prêtes à tracer.")
@@ -515,8 +541,8 @@ if st.session_state.profil and st.session_state.chemin_dat:
             aero = Aerodynamique(st.session_state.nom)
             suffix = "_vol_reel" if tag == "vol_reel" else "_vol_perso"
             #dossier = "profils_importes" if "-il" in st.session_state.nom else "profils_manuels"
-            dossier = "profils_importes"
-            txt_out = os.path.join("data", dossier, f"{st.session_state.nom}{suffix}.txt")
+            dossier = os.path.join(BASE_DIR, "data", "profils_importes")
+            txt_out = os.path.join(f"{st.session_state.nom}{suffix}.txt")
 
             try:
                 aero.run_xfoil(
@@ -589,7 +615,11 @@ choix_mode = st.radio("Méthode de simulation :", ["Conditions personnalisées",
 import os
 import glob
 
-chemins = ["data/profils_importes", "data/profils_manuels"]
+chemins = [
+    os.path.join(BASE_DIR, "data", "profils_importes"),
+    os.path.join(BASE_DIR, "data", "profils_manuels")
+]
+
 noms_profils = []
 for dossier in chemins:
     fichiers = glob.glob(os.path.join(dossier, "*_coord_profil.dat"))
@@ -631,8 +661,8 @@ def charger_et_simuler(nom_profil, reynolds, mach, alpha_start, alpha_end, alpha
     profil = Airfoil(nom_profil, coordonnees)
     aero = Aerodynamique(nom_profil)
 
-    dossier = "profils_importes"
-    txt_path = os.path.join("data", dossier, f"{nom_profil}_simule_coef_aero.txt")
+    dossier = os.path.join(BASE_DIR, "data", "profils_importes")
+    txt_path = os.path.join(dossier, f"{nom_profil}_simule_coef_aero.txt")
     aero.fichier_resultat = txt_path
 
     if forcer and os.path.exists(txt_path):
@@ -734,7 +764,7 @@ elif st.session_state.get("simulation_effectuee", False):
 
 st.subheader("Comparaison de deux profils NACA")
 
-profils_disponibles = sorted(set(f.split("_coord")[0] for dossier in ["data/profils_importes", "data/profils_manuels"]
+profils_disponibles = sorted(set(f.split("_coord")[0] for dossier in [f"{BASE_DIR}/data/profils_importes", f"{BASE_DIR}/data/profils_manuels"]
                                  for f in os.listdir(dossier) if f.endswith(".dat")))
 
 profil_1 = st.selectbox("Choisissez le 1er profil", profils_disponibles, key="profil1")
@@ -743,7 +773,7 @@ profil_2 = st.selectbox("Choisissez le 2e profil", profils_disponibles, key="pro
 if st.button("Comparer les deux profils"):
     try:
         def charger_coord(nom):
-            for dossier in ["data/profils_importes", "data/profils_manuels"]:
+            for dossier in [f"{BASE_DIR}/data/profils_importes", f"{BASE_DIR}/data/profils_manuels"]:
                 chemin = os.path.join(dossier, f"{nom}_coord_profil.dat")
                 if os.path.exists(chemin):
                     with open(chemin, "r") as f:
@@ -785,7 +815,11 @@ st.subheader("️ Simulation de givrage sur un profil NACA")
 choix = st.radio("Choix du profil :", ["Profil importé actuel", "Profil depuis la base"])
 
 # Chargement des noms de profils depuis les dossiers
-chemins = ['data/profils_importes', 'data/profils_manuels']
+chemins = [
+    os.path.join(BASE_DIR, "data", "profils_importes"),
+    os.path.join(BASE_DIR, "data", "profils_manuels")
+]
+
 noms_profils = []
 for dossier in chemins:
     fichiers = glob.glob(os.path.join(dossier, "*_coord_profil.dat"))
@@ -819,7 +853,7 @@ if st.button("Lancer simulation givrage"):
             essais = gestion.chercher_nom(nom_profil)
             profil_a_givrer = None
             for noms in essais:
-                chemin = f"data/profils_importes/{noms}_coord_profil.dat"
+                chemin = os.path.join(BASE_DIR, "data", "profils_importes", f"{noms}_coord_profil.dat")
                 if os.path.exists(chemin):
                     with open(chemin, "r") as f:
                         coord = [(float(x), float(y)) for x, y in [line.strip().split() for line in f.readlines()[1:]]]
@@ -837,7 +871,7 @@ if st.button("Lancer simulation givrage"):
             csv_givre, dat_givre = profil_a_givrer.tracer_givrage(epaisseur=ep, zone=(z0, z1))
 
             # === Simulation du profil givré ===
-            txt_givre = os.path.join("data", "polaires_importees", f"{nom_profil}_coef_aero_givre.txt")
+            txt_givre = os.path.join(BASE_DIR, "data", "polaires_importees", f"{nom_profil}_coef_aero_givre.txt")
             aero_givre = Aerodynamique(nom_profil + "-givre")
             if forcer_xfoil and os.path.exists(txt_givre):
                 os.remove(txt_givre)
@@ -846,7 +880,7 @@ if st.button("Lancer simulation givrage"):
                                  alpha_start=-15, alpha_end=15, alpha_step=1, output_file=txt_givre)
 
             # === Simulation du profil normal ===
-            txt_normal = os.path.join("data", "polaires_importees", f"{nom_profil}_coef_aero_normal.txt")
+            txt_normal = os.path.join(BASE_DIR, "data", "polaires_importees", f"{nom_profil}_coef_aero_normal.txt")
             aero_normal = Aerodynamique(nom_profil + "-normal")
             if forcer_xfoil and os.path.exists(txt_normal):
                 os.remove(txt_normal)
@@ -919,15 +953,3 @@ if st.button("Lancer simulation givrage"):
                 st.error("Données givrées ou normales invalides.")
     except Exception as e:
         st.error(f"Erreur pendant la simulation : {e}")
-
-
-
-
-
-
-
-
-
-
-
-
