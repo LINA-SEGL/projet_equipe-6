@@ -66,6 +66,24 @@ Installez également si cela n'est pas fait automatiquement dans l'installation 
 pip install python-opensky
 ```
 
+## Utilisation
+
+Si l'installation c'est bien passé, ce qui devrait être le cas vous devriez pouvoir lancer le main à partir du fichier main.py.
+
+Cela lancera le programme de la même manière que l'exemple fourni.
+
+Vous pouvez également lancer une interface web streamlit en faisant :
+
+```
+streamlit run src/projet_sessionE2025/app.py
+```
+
+DISCLAIMER:
+
+Cependant l'interface fonctionne mais le lancement de xfoil peut ne pas fonctionner à cause des chemins d'accès aux dossiers nécessaires.
+Pour le moment il est préférable d'utiliser l'interface tkinter du main.py.
+
+
 ## Dépendances:
 
 - Python ≥ 3.9
