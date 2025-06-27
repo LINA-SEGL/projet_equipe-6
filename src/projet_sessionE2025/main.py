@@ -712,7 +712,7 @@ if __name__ == "__main__":
             aero.donnees = aero_base.donnees
 
         else:
-            interface.msgbox("Aucun profil à givrer sélectionné !", titre="Erreur")
+            interface.msgbox("Aucun profil à givrer sélectionné!", titre="Erreur")
             raise SystemExit
 
         #  Demande des paramètres de givrage
@@ -725,7 +725,7 @@ if __name__ == "__main__":
 
         #  Choix du mode de conditions pour le givrage
         mode_cond = interface.demander_choix(
-            "Pour la simulation givrée, veux-tu:\n- Saisir manuellement Mach et Reynolds ?",
+            "Pour la simulation givrée, veux-tu:\n- Saisir manuellement Mach et Reynolds?",
             ["Saisie manuelle"]
         ).strip().lower()
 
@@ -750,11 +750,11 @@ if __name__ == "__main__":
         else:
         """
         # == Saisie manuelle
-        reynolds_givre = float(interface.demander_texte("Reynolds pour givrage ? (ex : 50000)") or 50000)
-        mach_givre = float(interface.demander_texte("Mach pour givrage ? (ex : 0.1)") or 0.1)
+        reynolds_givre = float(interface.demander_texte("Reynolds pour givrage? (ex: 50000)") or 50000)
+        mach_givre = float(interface.demander_texte("Mach pour givrage? (ex: 0.1)") or 0.1)
 
         # Optionnel : afficher immédiatement le profil chargé pour vérifier
-        profil_a_givrer.tracer_contour(nom_profil_givre)
+        #profil_a_givrer.tracer_contour(nom_profil_givre)
 
         csv_givre, dat_givre = profil_a_givrer.tracer_givrage(epaisseur=ep, zone=(z0, z1))
 
