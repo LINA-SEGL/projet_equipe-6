@@ -10,17 +10,29 @@ Ce document montre comment un utilisateur externe peut :
 
 
 ## 📦 Installation du programme
+Pour utilise le programme il faut faire les étapes suivantes (par exemple sur PyCharm):
+
+- cloner le projet GitHub à partir de l'url : https://github.com/LINA-SEGL/projet_equipe-6
+    - OU faire : ```git clone https://github.com/LINA-SEGL/projet_sessionE2025.git```
+- Définir un environnement virtuel .venv
+- Dans la console éxécuter la commande suivante:
 ```
-pip install projet_sessionE2025
+pip install -e .
+```
+- Installer Xfoil, si le fichier xfoil.exe n'est pas présent lors du clonage, il doit se trouver dans le même dossier que le main.py (Dans le dossier : projet_session_E2025)
+- Il faut absolument définir le dossier src comme fichier source.
+    - Pour cela dans Pycharm faites clic-droit / Mark Directory as / Sources Root (le fichier devrait être bleu).
+
+Installez également si cela n'est pas fait automatiquement dans l'installation précédente:
+
+```
+pip install python-opensky
 ```
 
-Vous pouvez également le cloner en faisant:
+## Utilisation
 
-```
-git clone https://github.com/LINA-SEGL/projet_sessionE2025.git
-cd projet_sessionE2025
-pip install -e
-```
+Si l'installation s'est bien passée, ce qui devrait être le cas vous devriez pouvoir lancer le main à partir du fichier main.py.
+
 
 ##  Exemple d'utilisation avec `main.py`
 
