@@ -50,7 +50,7 @@ Le projet de ce cours à été mis en oeuvre selon certains requis:
 Installez le module avec :
 
 ```
-pip install git+https://github.com/LINA-SEGL/projet_sessionE2025.git
+pip install projet_sessionE2025
 ```
 
 Vous pouvez également le cloner en faisant:
