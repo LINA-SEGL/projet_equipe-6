@@ -100,16 +100,19 @@ def choisir_vols(limit: int = 100, sample_n: int = 20) -> pd.DataFrame:
             })
         df = pd.DataFrame(rows)
 
-        # 2) choix du filtre — entrée robuste
-        while True:
-            print("\nFiltrer les vols par altitude :")
-            print("  1 - Troposphère (< 11 000 m)")
-            print("  2 - Stratosphère (≥ 11 000 m)")
-            print("  3 - Aucun filtre")
-            choix = input("Votre choix (1/2/3) : ").strip()
-            if choix in ("1", "2", "3"):
-                break
-            print(" Entrée invalide. Veuillez entrer 1, 2 ou 3.")
+        # # 2) choix du filtre — entrée robuste
+        # while True:
+        #     print("\nFiltrer les vols par altitude :")
+        #     print("  1 - Troposphère (< 11 000 m)")
+        #     print("  2 - Stratosphère (≥ 11 000 m)")
+        #     print("  3 - Aucun filtre")
+        #     choix = input("Votre choix (1/2/3) : ").strip()
+        #     if choix in ("1", "2", "3"):
+        #         break
+        #     print(" Entrée invalide. Veuillez entrer 1, 2 ou 3.")
+
+        choix = interface.demander_choix("Filtrer les vols par altitude : \n1 - Troposphère (< 11 000 m) \n2 - Stratosphère (≥ 11 000 m) \n3 - Aucun filtre",
+                                                ["1", "2", "3"])
 
         if choix == "1":
             df_filt = df[df["altitude_m"] < 11000]
@@ -126,19 +129,24 @@ def choisir_vols(limit: int = 100, sample_n: int = 20) -> pd.DataFrame:
         n = min(sample_n, len(df_filt))
         df_sample = df_filt.sample(n=n).reset_index(drop=True)
 
+        interface.msgbox(f"\nVoir la liste des vols dans la console.", titre="Indication")
+
         # 4) affichage
         print(df_sample[[
             "icao24", "callsign", "origin_country", "altitude_m", "vitesse_m_s"
         ]].to_string(index=True))
 
         # 5) validation — entrée robuste
-        while True:
-            rep = input("\nCette liste vous convient-elle ? (oui/non) ").strip().lower()
-            if rep in ("oui", "non"):
-                break
-            print(" Veuillez répondre uniquement par 'oui' ou 'non'.")
 
-        if rep == "oui":
+        rep = interface.demander_choix("Cette liste vous convient-elle ?", ["Oui", "Non"])
+
+        # while True:
+        #     rep = input("\nCette liste vous convient-elle ? (oui/non) ").strip().lower()
+        #     if rep in ("oui", "non"):
+        #         break
+        #     print(" Veuillez répondre uniquement par 'oui' ou 'non'.")
+
+        if rep.lower() == "oui":
             return df_sample
         # sinon on boucle
 
@@ -508,7 +516,14 @@ if __name__ == "__main__":
     if choix_mode in ("1", "3"):
         df_vols = choisir_vols(limit=100, sample_n=20)
         # l'index en tête de chaque ligne est déjà celui qu'on affichera
-        sel = int(input("\nSélectionnez le vol (numéro) : ").strip())
+
+        selection = interface.demander_parametres({
+            "sel": "Sélectionnez le vol (numéro) :"
+        })
+
+        sel = selection["sel"]
+
+        #sel = int(input("\nSélectionnez le vol (numéro) : ").strip())
         row = df_vols.loc[sel]
         alt =row["altitude_m"]
         vit =row["vitesse_m_s"]
