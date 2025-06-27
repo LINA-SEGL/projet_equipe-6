@@ -77,12 +77,16 @@ Vous pouvez également lancer une interface web streamlit en faisant :
 ```
 streamlit run src/projet_sessionE2025/app.py
 ```
+Bien vérifier le chemin de lancement!
 
 DISCLAIMER:
 
 Cependant l'interface fonctionne mais le lancement de xfoil peut ne pas fonctionner à cause des chemins d'accès aux dossiers nécessaires.
 Pour le moment il est préférable d'utiliser l'interface tkinter du main.py.
 
+## Documentation
+
+La documentation via Sphinx est disponible dans le dossier Docs/Build/html.
 
 ## Dépendances:
 
