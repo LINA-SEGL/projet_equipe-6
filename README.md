@@ -68,7 +68,7 @@ pip install python-opensky
 
 ## Utilisation
 
-Si l'installation c'est bien passé, ce qui devrait être le cas vous devriez pouvoir lancer le main à partir du fichier main.py.
+Si l'installation s'est bien passée, ce qui devrait être le cas vous devriez pouvoir lancer le main à partir du fichier main.py.
 
 Cela lancera le programme de la même manière que l'exemple fourni.
 
