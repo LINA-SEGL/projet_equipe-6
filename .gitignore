@@ -33,8 +33,15 @@ Thumbs.db
 !xfoil.exe
 
 # Sphinx documentation build files
+#docs/build/
+#*.doctree
+#*.html
+#*.txt
+#*.buildinfo
+docs/source/
+
+# Fichiers générés
+.egg-info/
+*.egg
 build/
-*.doctree
-*.html
-*.txt
-*.buildinfo
+dist/

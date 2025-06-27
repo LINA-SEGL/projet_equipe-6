@@ -2,25 +2,26 @@
 import os
 import pandas as pd
 from datetime import datetime
+import os
 
 # chemins globaux pour l'organisation des fichiers
-Dossier_data = "data/"
+Dossier_data = "data"
 profils_importes = os.path.join(Dossier_data, "profils_importes")
 profils_manuels = os.path.join(Dossier_data, "profils_manuels")
 polaires_xfoil = os.path.join(Dossier_data, "polaires_xfoil")
 polaires_importees = os.path.join(Dossier_data, "polaires_importees")
 profils_givre = os.path.join(Dossier_data, "profils_givre")
 
+
 class GestionBase:
     """
-
     Classe pour gérer la BaseDonnees de données centrale des profils d'ailes elle crée automatiquement un dossier 'data/' et
     un fichier CSV qui contient un historique des profils enregistrés.
     """
 
     def __init__(self):
 
-         self.chemin_dossier = "data/"
+         self.chemin_dossier = "data"
          self.chemin_fichier = os.path.join(self.chemin_dossier, "donnees_profils.csv")
          self.colonnes = [
               "nom_profil",

@@ -8,8 +8,8 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath("../"))
-sys.path.insert(0, os.path.abspath("../other_code"))
+sys.path.insert(0, os.path.abspath("../../"))
+sys.path.insert(0, os.path.abspath("../../src"))
 
 project = 'Projet_session_analyse_Naca'
 copyright = '2025, Lila, Noé, Cyril'
@@ -18,7 +18,7 @@ author = 'Lila, Noé, Cyril'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ["sphinx.ext.autodoc"]
+extensions = ["sphinx.ext.autodoc", 'sphinx.ext.viewcode']
 
 
 templates_path = ['_templates']

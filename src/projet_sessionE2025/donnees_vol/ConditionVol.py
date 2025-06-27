@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import requests
 class ConditionVol:
     def __init__(self, altitude_m, mach, angle_deg, delta_isa=0):

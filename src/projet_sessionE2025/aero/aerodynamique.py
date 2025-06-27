@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from io import StringIO
 import subprocess
 import os
+from pathlib import Path
 
 # ─────────── dossier pour les imports AirfoilTools ───────────
 # (tous les .txt générés par telecharger_et_sauvegarder_txt iront ici)
@@ -288,6 +289,7 @@ class Aerodynamique:
             alpha_step (float): Incrément d’angle (°).
             output_file (str): Fichier de sortie des résultats.
         """
+        #xfoil_path = Path(__file__).parent.parent.parent / "xfoil.exe"  # Remonte jusqu'à la racine
         xfoil_path = os.path.join(os.getcwd(), "xfoil.exe")
 
         # Script pour XFOIL
@@ -314,7 +316,7 @@ class Aerodynamique:
 
         try:
             result = subprocess.run(
-                [xfoil_path],
+                [str(xfoil_path)],
                 input=xfoil_input.encode(),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,

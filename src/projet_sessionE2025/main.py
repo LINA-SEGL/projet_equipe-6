@@ -4,12 +4,12 @@ import asyncio
 import matplotlib.pyplot as plt
 import streamlit as st
 
-from projet_sessionE2025.Interface.interaction_graphique import *
 from projet_sessionE2025.airfoil.Airfoil import Airfoil
 from projet_sessionE2025.BaseDonnees.gestion_base import GestionBase
 from projet_sessionE2025.aero.aerodynamique import Aerodynamique
+from projet_sessionE2025.donnees_vol.ConditionVol import ConditionVol
 from projet_sessionE2025.donnees_vol.VolOpenSkyAsync import *
-from projet_sessionE2025.donnees_vol.ConditionVol import *
+from projet_sessionE2025.Interface.interaction_graphique import FenetreInteraction
 
 def demande_profil(interface):
     nom_profil = interface.demander_texte("Entrez le nom du profil NACA (ex: naca2412)").strip().lower()
@@ -73,7 +73,7 @@ def comparer_polaires(profiles: dict[str, pd.DataFrame]):
 
     # Ajuste les espacements
     plt.tight_layout()
-    #plt.show()
+    plt.show()
     return fig
 
 def choisir_vols(limit: int = 100, sample_n: int = 20) -> pd.DataFrame:
