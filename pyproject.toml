@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "projet_sessione2025"
+name = "projet_equipe-6"
 version = "0.1.0"
 description = "Module Python pour le projet session E2025"
 readme = "README.md"
