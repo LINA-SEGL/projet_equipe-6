@@ -254,3 +254,4 @@ L’objectif est de **voir comment le profil se comporte en situation réelle**,
 >  Très utile pour observer l’impact des conditions de vol sur les performances du profil (comme la finesse ou la polaire aérodynamique).
 
 
+.
