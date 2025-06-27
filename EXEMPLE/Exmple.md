@@ -422,8 +422,12 @@ Cela permet de définir la portion du profil impactée par le givre (ex. entre 4
 L'utilisateur doit alors entrer :  
 
 
-#### ➤ Nombre de Reynolds
-#### ➤ Nombre de Mach
+####  Nombre de Reynolds  
+![img_54.png](img_54.png)
+
+####  Nombre de Mach  
+![img_55.png](img_55.png)
+
 
 ## ️ Génération des fichiers
 
