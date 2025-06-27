@@ -543,5 +543,43 @@ Lorsqu’un profil a été généré , il est enregistré dans la base de donné
 data/profils_manuels
 ```  
 
+### Étapes de la simulation givrée :  
+Choix du type de profil :  
+
+- L'utilisateur choisit "Profil depuis la base" pour simuler un givrage sur un profil déjà enregistré.  
+
+![img_44.png](img_44.png)  
+
+- Le nom du profil (ex. naca3312) doit être exactement celui utilisé lors de la génération.  
+![img_45.png](img_45.png)  
+
+- Épaisseur du givre :
+
+Épaisseur (en mètre) à ajouter localement sur le profil. Ex : 0.007
+
+![img_46.png](img_46.png)  
+
+Zone de givrage :
+
+Définir la zone sur l’abscisse pour appliquer le givrage (ex: 0.5,0.55).  
+![img_47.png](img_47.png)  
+
+Paramètres de simulation :
+
+L’utilisateur choisit ensuite comment fournir les paramètres aérodynamiques pour la simulation.   
+### Reynolds pour givrage :  
+
+![img_48.png](img_48.png)    
+### Mach pour givrage : 
+![img_49.png](img_49.png)
+
+Ensuite en a le contour afficher des deux profils :  
+![img_51.png](img_51.png)
 
 
+### Résultat graphique  :
+![img_52.png](img_52.png)  
+
+Le profil original est comparé au profil modifié par givrage.  
+
+![img_50.png](img_50.png)  
