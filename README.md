@@ -4,17 +4,6 @@
 Le projet suivant à été développé dans le cadre du cours de MGA802 - Sujet spéciaux en aéronautique, axé sur la programmation Python.
 C'est un projet réalisé en équipe, lors de ce cours intensif sur une période de 1 semaine.
 
-
-A remplir:
-
-Introduction au code (contexte, utilité, pertinence, cadre d’utilisation)
-• Fonctionnalités
-• Aspects généraux
-• Instructions d’installation et d’utilisation (dépendances particulières)
-• Utilisation d’un exemple fourni avec le code
-• Autres informations pertinentes sur le code
-• Adressés aux utilisateurs et développeurs
-
 ## A propos, Utilité et cadre d'utilisation
 
 Ce programme s'adresse aux personnes en lien avec l'aéronautique, et notamment dans le design conceptuel d'aéronefs, étape primaire nécessaire au dimensionnement "théorique" des aéronefs qui se base principalement sur les ailes.
