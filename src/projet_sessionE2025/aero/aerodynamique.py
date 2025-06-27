@@ -290,7 +290,7 @@ class Aerodynamique:
             output_file (str): Fichier de sortie des résultats.
         """
         #xfoil_path = Path(__file__).parent.parent.parent / "xfoil.exe"  # Remonte jusqu'à la racine
-        xfoil_path = os.path.join(os.getcwd(), "xfoil.exe")
+        xfoil_path = "xfoil.exe" #os.path.join(os.getcwd(), "xfoil.exe")
 
         # Script pour XFOIL
         xfoil_input = f"""
@@ -316,7 +316,7 @@ class Aerodynamique:
 
         try:
             result = subprocess.run(
-                [xfoil_path],
+                [str(xfoil_path)],
                 input=xfoil_input.encode(),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,

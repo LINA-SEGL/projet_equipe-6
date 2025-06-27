@@ -11,6 +11,8 @@ import os
 # os.makedirs(DATA_DIR / "profils_manuels", exist_ok=True)
 # os.makedirs(DATA_DIR / "polaires_xfoil", exist_ok=True)
 
+#streamlit run src/projet_sessionE2025/app.py
+
 # Initialisation
 st.set_page_config(page_title="Interface NACA", layout="centered")
 st.title("✈️ Interface Streamlit – Simulation profil NACA")
