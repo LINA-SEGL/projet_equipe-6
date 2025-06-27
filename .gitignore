@@ -38,7 +38,10 @@ Thumbs.db
 #*.html
 #*.txt
 #*.buildinfo
-docs/source/
+# Fichiers à ignorer SAUF la documentation build
+docs/*
+!docs/build/html/
+
 
 # Fichiers générés
 .egg-info/
