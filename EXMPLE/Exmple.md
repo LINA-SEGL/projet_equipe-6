@@ -463,3 +463,85 @@ Les résultats sont comparés entre le profil **normal** et le profil **givré**
 - Le moment de tangage est perturbé, ce qui pourrait affecter la stabilité de l’aéronef
 
 ---
+
+## Démenstration dans le cas ge générer ou de labse :  
+![img_35.png](img_35.png)  
+
+##  Mode 1 : Générer un profil NACA
+
+Lorsque l’utilisateur choisit de **générer manuellement un profil NACA**, une suite d'étapes lui permet de créer un profil, de visualiser son contour, puis d'en calculer les performances aérodynamiques à l’aide de XFoil.
+
+---
+
+###  Étape 1 : Saisie du nom du profil
+
+L’utilisateur est invité à saisir un nom de profil (par exemple : `naca3312`) :  
+![img_36.png](img_36.png)  
+
+### ️ Étape 2 : Définition des paramètres géométriques
+
+L’utilisateur renseigne ensuite les **paramètres géométriques** du profil :
+
+| Paramètre | Description |
+|-----------|-------------|
+| **Cambrure** (entre 0 et 1) | Hauteur maximale du bombement du profil. Influence la portance. |
+| **Position de la cambrure maximale** (entre 0 et 1) | Emplacement (en pourcentage de la corde) où se trouve la cambrure maximale. |
+| **Épaisseur maximale** (entre 0 et 1) | Épaisseur maximale du profil, exprimée en proportion de la corde. |
+| **Longueur de corde** | Longueur totale du profil (en mètres ou toute unité cohérente). |  
+
+![img_37.png](img_37.png)  
+
+
+###  Étape 3 : Affichage du profil généré
+
+Une fois les paramètres validés, l’utilisateur peut choisir d'afficher le contour du profil :
+
+![img_39.png](img_39.png)  
+![img_40.png](img_40.png)  
+
+
+---
+###  Étape 4 : Calcul des performances aérodynamiques
+
+Une fois les paramètres validés, l’utilisateur peut choisir d'afficher le contour du profil :  
+
+- Le **nombre de Mach** ( limité à **0.7 max** pour rester en domaine subsonique).
+- Le **nombre de Reynolds** (lié à la vitesse, la densité de l’air et la corde).  
+
+![img_38.png](img_38.png)  
+
+---
+
+###  Étape 5 : Génération et affichage des polaires
+
+Une fois la simulation lancée, XFoil génère automatiquement les polaires du profil (`Cl`, `Cd`, `Cm` en fonction de l’angle d’attaque α) :
+
+![img_41.png](img_41.png)  
+
+
+---
+
+### Sauvegarde automatique des fichiers
+
+Tous les fichiers générés sont enregistrés automatiquement dans les répertoires suivants :
+
+- `data/profils_manuels/` : pour les coordonnées du profil (`.csv` et `.dat`)
+- `data/polaires_xfoil/` : pour le fichier de coefficients aérodynamiques (`.txt`)
+
+![img_42.png](img_42.png)  
+
+
+---
+
+ Ce processus permet ensuite à l’utilisateur d’utiliser ce profil dans toutes les simulations proposées par le programme, y compris la simulation de givrage, de vol réel ou de comparaison.
+
+## Simulation de givrage depuis un profil générer :  
+Lorsqu’un profil a été généré , il est enregistré dans la base de données locale (data/). Pour simuler le givrage, on le récupère directement depuis la base.
+
+```bash  
+
+data/profils_manuels
+```  
+
+
+
