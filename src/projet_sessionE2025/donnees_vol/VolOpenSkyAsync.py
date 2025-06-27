@@ -4,11 +4,39 @@ import asyncio
 import requests
 from python_opensky import OpenSky, StatesResponse
 import os
+"""
+Script pour récupérer les données de vols en temps réel via l’API OpenSky 
+et afficher les détails aérodynamiques, incluant le calcul du delta ISA 
+via l’API OpenWeather.
 
+Fonctionnalités :
+- Connexion asynchrone à OpenSky pour récupérer les vols en temps réel.
+- Affichage d'une liste de vols avec altitude et vitesse.
+- Calcul du Mach et du delta ISA basé sur la température atmosphérique réelle.
+- Utilisation de l’API OpenWeather pour estimer la température observée.
+
+Constantes :
+    API_KEY_OPENWEATHER (str): Clé d’authentification pour accéder à OpenWeather.
+"""
 #  Définissez votre clé ici :
 API_KEY_OPENWEATHER ="955814a8002a56c995edec56283f7caf"
 
 def calcul_delta_isa(lat: float, lon: float, alt_m: float, api_key: str) -> float | None:
+    """
+       Calcule l'écart de température entre l’atmosphère réelle et l’atmosphère standard (ΔISA).
+
+       Cette fonction interroge OpenWeather pour obtenir la température au sol, puis extrapole
+       la température à l’altitude donnée selon un gradient thermique standard (0.0065 K/m).
+
+       Args:
+           lat (float): Latitude du vol.
+           lon (float): Longitude du vol.
+           alt_m (float): Altitude en mètres.
+           api_key (str): Clé API OpenWeather.
+
+       Returns:
+           float | None: Écart ΔISA en Kelvin si calcul réussi, sinon None.
+       """
     url = "https://api.openweathermap.org/data/2.5/weather"
     params = {"lat": lat, "lon": lon, "appid": api_key}
     resp = requests.get(url, params=params)
@@ -31,11 +59,27 @@ def calcul_delta_isa(lat: float, lon: float, alt_m: float, api_key: str) -> floa
     return T_obs - T_isa
 
 async def fetch_vols(limit: int = 20):
+    """
+       Récupère une liste de vols en temps réel depuis l’API OpenSky.
+
+       Args:
+           limit (int): Nombre maximum de vols à récupérer.
+
+       Returns:
+           list[State]: Liste d'objets représentant les vols (appareils en vol).
+       """
     async with OpenSky() as api:
         states: StatesResponse = await api.get_states()
         return states.states[:limit]  # liste d'objets State
 
 def afficher_liste(vols):
+    """
+       Affiche une liste formatée des vols récupérés : callsign, pays d’origine,
+       altitude géométrique et vitesse.
+
+       Args:
+           vols (list[State]): Liste des objets vols issus d’OpenSky.
+       """
     for i, s in enumerate(vols, 1):
         cs = (s.callsign or "N/A").strip()
         pays = s.origin_country or "Inconnu"

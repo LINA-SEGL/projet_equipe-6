@@ -1,6 +1,40 @@
 import numpy as np
 import os
 import requests
+
+"""
+Module : ConditionVol
+
+Ce module définit la classe ConditionVol, qui permet de calculer les **paramètres atmosphériques**
+selon l'altitude, le Mach et un écart à l'atmosphère standard (ΔISA), en se basant sur le modèle ISA.
+
+Fonctionnalités principales :
+- Calcul de la température, densité et viscosité de l’air selon l'altitude.
+- Affichage formaté des paramètres de vol.
+- Calcul du nombre de Reynolds pour un profil donné.
+
+Classes :
+---------
+ConditionVol:
+    Représente une condition de vol (altitude, Mach, angle d’attaque, ΔISA) et calcule
+    les paramètres nécessaires aux simulations aérodynamiques.
+
+Attributs :
+-----------
+- altitude_m (float)       : Altitude de vol en mètres.
+- mach (float)             : Nombre de Mach.
+- angle_deg (float)        : Angle d’attaque en degrés.
+- delta_isa (float)        : Ecart de température par rapport à l’atmosphère standard (K).
+- temperature_K (float)    : Température réelle de l’air (K).
+- densite_kgm3 (float)     : Densité de l’air (kg/m³).
+- viscosite_kgms (float)   : Viscosité dynamique de l’air (kg/(m·s)).
+
+Méthodes :
+----------
+- _calculer_parametres_isa() : Calcule T, ρ, μ en fonction de l’altitude et ΔISA.
+- afficher()                 : Affiche les paramètres de vol calculés.
+- calculer_reynolds(...)     : Calcule le nombre de Reynolds à partir des conditions de vol.
+"""
 class ConditionVol:
     def __init__(self, altitude_m, mach, angle_deg, delta_isa=0):
         self.altitude_m = altitude_m          # Altitude en mètres
@@ -12,6 +46,19 @@ class ConditionVol:
         self.temperature_K, self.densite_kgm3, self.viscosite_kgms = self._calculer_parametres_isa()
 
     def _calculer_parametres_isa(self):
+
+        """
+                Calcule les paramètres atmosphériques basés sur le modèle ISA (Standard Atmosphere).
+
+                Le modèle ISA fournit des estimations de la température, pression, densité et viscosité
+                de l'air en fonction de l'altitude. Cette méthode applique la formule de la troposphère
+                si l'altitude est ≤ 11 000 m, sinon celle de la stratosphère (température constante).
+
+                Returns:
+                    T (float): Température de l'air en Kelvin.
+                    rho (float): Densité de l'air en kg/m³.
+                    mu (float): Viscosité dynamique de l'air en kg/(m·s).
+                """
         # Constantes
         T0 = 288.15      # Température au sol (K)
         P0 = 101325      # Pression au sol (Pa)
