@@ -1,15 +1,15 @@
 from main import *
 import os
 
-# Configuration des chemins
-BASE_DIR = Path(__file__).parent.parent
-sys.path.append(str(BASE_DIR))
-
-# Chemins des données
-DATA_DIR = BASE_DIR / "data"
-os.makedirs(DATA_DIR / "profils_importes", exist_ok=True)
-os.makedirs(DATA_DIR / "profils_manuels", exist_ok=True)
-os.makedirs(DATA_DIR / "polaires_xfoil", exist_ok=True)
+# # Configuration des chemins
+# BASE_DIR = Path(__file__).parent.parent
+# sys.path.append(str(BASE_DIR))
+#
+# # Chemins des données
+# DATA_DIR = BASE_DIR / "data"
+# os.makedirs(DATA_DIR / "profils_importes", exist_ok=True)
+# os.makedirs(DATA_DIR / "profils_manuels", exist_ok=True)
+# os.makedirs(DATA_DIR / "polaires_xfoil", exist_ok=True)
 
 # Initialisation
 st.set_page_config(page_title="Interface NACA", layout="centered")
