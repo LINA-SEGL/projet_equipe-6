@@ -307,7 +307,7 @@ class Aerodynamique:
         RE {reynolds}
         VISC {reynolds}
         MACH {mach}
-        PACCMore actions
+        PACC
         {output_file}
         
         ASEQ {alpha_start} {alpha_end} {alpha_step}
@@ -315,7 +315,6 @@ class Aerodynamique:
 
         QUIT
         """
-        print("CHEMIN VERS XFOIL :", xfoil_path)
 
         try:
             result = subprocess.run(

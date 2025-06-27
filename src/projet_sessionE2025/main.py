@@ -528,32 +528,37 @@ if __name__ == "__main__":
                             delta_isa=calcul_delta_isa(lat or 0, lon or 0, alt, API_KEY) or 0)
         cond.afficher()
         corde = float(input('Corde (m): '))
+
         reynolds = cond.calculer_reynolds(vitesse_m_s=mach * (1.4 * 287.05 * cond.temperature_K) ** 0.5, corde_m=corde,
                                           viscosite_kgms=cond.viscosite_kgms, densite_kgm3=cond.densite_kgm3)
+        print("Re = ", reynolds)
+
         aero_cond = Aerodynamique(nom_profil)
+
         suffix = '_vol_reel' if tag == 'vol_reel' else '_vol_perso'
 
-        txt_out = os.path.join('data', 'polaires_importees' if generation == 'importer' else 'polaires_xfoil',
+        txt_out = os.path.join("data", "polaires_importees" if generation == 'importer' else "polaires_xfoil",
                                f"{nom_profil}{suffix}.txt")
 
-        txt_out = aero_cond.run_xfoil(chemin_dat, reynolds, mach, alpha_start=-15, alpha_end=15, alpha_step=1, output_file=txt_out)
+        acces_fichier_dat = os.path.join("data", "profils_manuels", f"{nom_profil}_coord_profil.dat")
 
-        print(' XFoil', tag, txt_out)
+        aero_cond.run_xfoil(acces_fichier_dat, reynolds, mach, alpha_start=-15, alpha_end=15, alpha_step=1, output_file=txt_out)
 
         df_cond = aero_cond.lire_txt_et_convertir_dataframe(txt_out)
         aero_cond.donnees = df_cond
+        aero_cond.tracer_polaires_depuis_txt()
 
         if tag == 'vol_reel':
             aero_volreel, df_volreel = aero_cond, df_cond
         else:
             aero_volperso, df_volperso = aero_cond, df_cond
 
-        if input('Afficher polaire X ? (Oui/Non) ').strip().lower() == 'oui':
-
-            if tag == 'vol_reel':
-                aero_volreel.tracer_polaires_depuis_txt()
-            elif tag == 'vol_perso':
-                aero_volperso.tracer_polaires_depuis_txt()
+        # if input('Afficher polaire X ? (Oui/Non) ').strip().lower() == 'oui':
+        #
+        #     if tag == 'vol_reel':
+        #         aero_volreel.tracer_polaires_depuis_txt()
+        #     elif tag == 'vol_perso':
+        #         aero_volperso.tracer_polaires_depuis_txt()
 
     # Collecte des polaires pour comparaison
     polaires = {}
