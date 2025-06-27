@@ -11,6 +11,8 @@ from projet_sessionE2025.donnees_vol.ConditionVol import ConditionVol
 from projet_sessionE2025.donnees_vol.VolOpenSkyAsync import *
 from projet_sessionE2025.Interface.interaction_graphique import FenetreInteraction
 
+#streamlit run src/projet_sessionE2025/app.py
+
 def demande_profil(interface):
     nom_profil = interface.demander_texte("Entrez le nom du profil NACA (ex: naca2412)").strip().lower()
 
