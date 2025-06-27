@@ -61,7 +61,7 @@ Si l'installation s'est bien passée, ce qui devrait être le cas vous devriez p
 
 Cela lancera le programme de la même manière que l'exemple fourni.
 
-Vous pouvez également lancer une interface web streamlit en faisant :
+Vous pouvez également lancer une interface web streamlit en faisant dans le terminal:
 
 ```
 streamlit run src/projet_sessionE2025/app.py
@@ -76,6 +76,18 @@ Pour le moment il est préférable d'utiliser l'interface tkinter du main.py.
 ## Documentation
 
 La documentation via Sphinx est disponible dans le dossier Docs/Build/html.
+La documentation peut être mise à jour en tapant dans le terminal:
+
+```
+cd docs
+make html ou ./make.bat html sous Windows. 
+```
+
+Ne pas oublier de revenir dans le bon répertoire en tapant dans le terminal:
+
+```
+cd ..
+```
 
 ## Dépendances:
 
@@ -101,14 +113,6 @@ Vous aurez besoin de:
 - Numpy
 - Pandas
 
-## Documentation
-
-La documentation est disponible en faisant:
-
-```
-pip install -r requirements.txt
-make html ou ./make.bat html sous Windows. 
-```
 ## Architecture
 
 L'architecture du projet est le suivant:
