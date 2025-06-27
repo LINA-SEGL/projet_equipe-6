@@ -258,9 +258,73 @@ L’objectif est de **voir comment le profil se comporte en situation réelle**,
 
 >  Très utile pour observer l’impact des conditions de vol sur les performances du profil (comme la finesse ou la polaire aérodynamique).
 
+### Simulation en conditions réelles (OpenSky)  
+
+Lorsque l'utilisateur choisit **vol réel**, une liste de vols est générée automatiquement. On peut également filtrer par **altitude** :  
+![img_29.png](img_29.png)
+
+ **Note importante** : XFoil ne fonctionne pas bien au-delà de Mach 0.7.   
+> Il faut donc s’assurer de choisir un vol avec une vitesse inférieure (~120 m/s max selon l’altitude).
+
+L’utilisateur peut :  
+- **Regénérer la liste** s’il ne la trouve pas satisfaisante,
+- ou **sélectionner un vol** à l’aide de son numéro.  
+![img_30.png](img_30.png)  
+Les conditions de ce vol seront automatiquement utilisées pour simuler les performances du profil, et les résultats seront sauvegardés dans le fichier :
+
+```bash  
+
+data/polaires_importees/naca0012_vol_reel.txt
+```  
+###  Saisie des conditions personnalisées:  
+Ensuite, pour le vol personnalisé, l'utilisateur est invité à saisir manuellement :
 
 
+Altitude (en m)
 
+Nombre de Mach
+
+Angle d’attaque (en degrés)  
+
+![img_31.png](img_31.png)  
+
+
+Une simulation XFoil est alors lancée avec ces conditions. Les résultats sont sauvegardés dans :  
+```bash  
+
+data/polaires_importees/naca0012_vol_perso.txt
+```  
+![img_32.png](img_32.png)  
+
+### Comparaison graphique : superposition des résultats:  
+![img_34.png](img_34.png)  
+
+À la fin, l'utilisateur peut choisir de superposer les polaires (graphiques CL, CD, CM) pour comparaison :
+
+
+CL vs α
+
+CD vs α
+
+CM vs α
+
+CL vs CD (la finesse)
+
+Les résultats des simulations sont affichés sous forme de graphiques :
+
+
+Chaque courbe représente une simulation différente :
+
+🔵 Profil importé
+
+🟠 Vol réel
+
+🟢 Vol personnalisé  
+
+![img_33.png](img_33.png)    
+
+
+Cette comparaison visuelle permet d’analyser l’impact des différentes conditions de vol sur le profil.
 ## Comparaison de contours de deux profils NACA
 
 Le programme propose à l'utilisateur une **fonctionnalité de comparaison géométrique** entre deux profils aérodynamiques. Cette option permet de superposer les contours des deux profils pour en analyser visuellement les différences de forme.
@@ -331,7 +395,10 @@ L’objectif est de **simuler un dépôt de givre** sur une zone spécifique d�
 
 Une boîte de dialogue s'affiche pour demander :  
 
-![img_14.png](img_14.png)
+![img_14.png](img_14.png)  
+l'utilisateur doit choisir s'il veut simuler le profile qu'il a importer ou bien de la base (data)  
+
+![img_28.png](img_28.png)
 
  Saisie des paramètres de givrage
 
