@@ -40,13 +40,15 @@ Pour utilise le programme il faut faire les étapes suivantes (par exemple sur P
 
 - cloner le projet GitHub à partir de l'url : https://github.com/LINA-SEGL/projet_equipe-6
     - OU faire : ```git clone https://github.com/LINA-SEGL/projet_sessionE2025.git```
+    - 
 - Définir un environnement virtuel .venv
 - Dans la console éxécuter la commande suivante:
 ```
 pip install -e .
 ```
 - Installer Xfoil, si le fichier xfoil.exe n'est pas présent lors du clonage, il doit se trouver dans le même dossier que le main.py (Dans le dossier : projet_session_E2025)
-- Il faut absolument définir le dossier src comme fichier source.
+- 
+- !!! Il faut absolument définir le dossier 'src' comme fichier source !!!
     - Pour cela dans Pycharm faites clic-droit / Mark Directory as / Sources Root (le fichier devrait être bleu).
 
 Installez également si cela n'est pas fait automatiquement dans l'installation précédente:
