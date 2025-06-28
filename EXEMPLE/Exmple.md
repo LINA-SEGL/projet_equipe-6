@@ -247,6 +247,10 @@ Voulez-vous tester les performances de votre profil ?
 3 - Conditions personnalisées
 4 - Les deux
 ```
+![img_56.png](img_56.png)
+
+![img_57.png](img_57.png)
+
 ####  Pourquoi faire cette simulation ?
 
 L’objectif est de **voir comment le profil se comporte en situation réelle**, en tenant compte de paramètres comme :
@@ -280,8 +284,10 @@ Lorsque l'utilisateur choisit **vol réel**, une liste de vols est générée au
 
 L’utilisateur peut :  
 - **Regénérer la liste** s’il ne la trouve pas satisfaisante,
+![img_58.png](img_58.png)
 - ou **sélectionner un vol** à l’aide de son numéro.  
-![img_30.png](img_30.png)  
+- ![img_59.png](img_59.png)
+![img_30.png](img_30.png)
 Les conditions de ce vol seront automatiquement utilisées pour simuler les performances du profil, et les résultats seront sauvegardés dans le fichier :
 
 ```bash  
