@@ -247,9 +247,11 @@ Voulez-vous tester les performances de votre profil ?
 3 - Conditions personnalisées
 4 - Les deux
 ```
-![img_56.png](img_56.png)
+![img_56.png](img_56.png)  
 
-![img_57.png](img_57.png)
+
+![img_57.png](img_57.png)  
+
 
 ####  Pourquoi faire cette simulation ?
 
@@ -277,14 +279,17 @@ L’objectif est de **voir comment le profil se comporte en situation réelle**,
 ### Simulation en conditions réelles (OpenSky)  
 
 Lorsque l'utilisateur choisit **vol réel**, une liste de vols est générée automatiquement. On peut également filtrer par **altitude** :  
-![img_29.png](img_29.png)
+![img_29.png](img_29.png)  
+
 
  **Note importante** : XFoil ne fonctionne pas bien au-delà de Mach 0.7.   
 > Il faut donc s’assurer de choisir un vol avec une vitesse inférieure (~120 m/s max selon l’altitude).
 
 L’utilisateur peut :  
-- **Regénérer la liste** s’il ne la trouve pas satisfaisante,
-![img_58.png](img_58.png)
+- **Regénérer la liste** s’il ne la trouve pas satisfaisante,  
+
+![img_58.png](img_58.png)   
+- 
 - ou **sélectionner un vol** à l’aide de son numéro.  
 - ![img_59.png](img_59.png)
 ![img_30.png](img_30.png)
