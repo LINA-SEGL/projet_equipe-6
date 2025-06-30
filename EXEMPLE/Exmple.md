@@ -47,6 +47,12 @@ Certaines fonctionnalités du projet utilisent l’API **OpenWeather** pour réc
 
 5. Copiez la clé affichée (c’est une chaîne de caractères comme `a8b27f1d72e14e24b7e1dd8d8eab1234`).
 
+> **IMPORTANT :  Activation de la clé API**  
+    Une fois votre clé API générée sur OpenWeather :  
+    Vous devez obligatoirement confirmer votre adresse email en cliquant sur le lien reçu par courriel.
+    Sans cela, la clé restera inactive.  
+    Même si votre adresse email est bien confirmée, la clé peut rester "Inactive" pendant quelques minutes (jusqu’à 2 heures maximum).  
+
 ####  Où ajouter la clé :  
 Dans le fichier `VolOpenSkyAsync.py`, remplacez cette ligne(ligne**22**) :  
 ```python
