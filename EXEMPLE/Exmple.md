@@ -23,11 +23,94 @@ pip install -e .
 - Il faut absolument définir le dossier src comme fichier source.
     - Pour cela dans Pycharm faites clic-droit / Mark Directory as / Sources Root (le fichier devrait être bleu).
 
-Installez également si cela n'est pas fait automatiquement dans l'installation précédente:
+##  Clé API OpenWeather & Module OpenSky  
 
+### ️ OpenWeather API (pour les données atmosphériques)  
+
+Certaines fonctionnalités du projet utilisent l’API **OpenWeather** pour récupérer la température réelle à une position géographique donnée. Cela permet de calculer le **delta ISA (ΔISA)**, c’est-à-dire l’écart entre l’atmosphère standard et l’atmosphère réelle.
+
+ Cette fonctionnalité est facultative, mais permet un calcul plus réaliste du Mach et des performances aérodynamiques.
+
+>  **IMPORTANT** : vous devez créer votre propre clé API.  
+
+####  Comment obtenir la clé :  
+1. Rendez-vous sur le site : [https://openweathermap.org/api](https://openweathermap.org/api)
+
+2. Cliquez sur **"Sign In"** en haut à droite.  
+   Si vous n’avez pas encore de compte, cliquez sur **"Create an Account"** et remplissez le formulaire (email + mot de passe).
+
+3. Une fois connecté·e, allez dans votre tableau de bord utilisateur :  
+    [https://home.openweathermap.org/api_keys](https://home.openweathermap.org/api_keys)
+
+4. Sous la section **API keys**, vous verrez une clé par défaut appelée `Default`.  
+   Vous pouvez soit l’utiliser, soit cliquer sur **"Generate"** pour créer une nouvelle clé avec le nom de votre choix.
+
+5. Copiez la clé affichée (c’est une chaîne de caractères comme `a8b27f1d72e14e24b7e1dd8d8eab1234`).
+
+####  Où ajouter la clé :  
+Dans le fichier `VolOpenSkyAsync.py`, remplacez cette ligne(ligne**22**) :  
+```python
+API_KEY_OPENWEATHER = ""
+## Utilisation
+```  
+par :  
+```python  
+API_KEY_OPENWEATHER = "votre_clé_personnelle"
+```  
+Dans le fichier `app.py`, remplacez cette ligne(ligne**20**) :  
+```python
+API_KEY = ""  #  Définissez votre clé ici :
+## Utilisation
+```  
+par :  
+```python  
+API_KEY = "votre_clé_personnelle"
+```  
+### ️ OpenSky (pour les données de vols en temps réel)
+
+Le projet utilise le module [`python-opensky`](https://github.com/joostlek/python-opensky) pour récupérer des données de vols telles que :
+- l’altitude,
+- la vitesse,
+- la position géographique,
+- et d'autres informations essentielles à l’analyse aérodynamique.
+
+ **Aucune clé API n’est requise**  
+L’accès se fait en mode public, sans identifiants.  
+Une authentification est **possible mais facultative** si vous disposez d’un compte sur le site [opensky-network.org](https://opensky-network.org/).
+
+---
+
+####  Installation du module
+
+Si le module n’est pas encore installé, utilisez la commande suivante :
+soit sur votre terminal 
 ```
 pip install python-opensky
 ```
+ou bien :
+```bash
+
+pip install git+https://github.com/joostlek/python-opensky.git
+```
+## Usage 
+```
+import asyncio
+
+from python_opensky import OpenSky, StatesResponse
+
+
+async def main() -> None:
+    """Show example of fetching all flight states."""
+    async with OpenSky() as opensky:
+        states: StatesResponse = await opensky.get_states()
+        print(states)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+### Source :https://github.com/joostlek/python-opensky
+
 
 ## Utilisation
 
