@@ -195,6 +195,7 @@ if __name__ == "__main__":
 
         #Fonction profil appelée, return l'objet (noms + données) et le nom du profil rentré
         profil_obj_import, nom_profil = demande_profil(interface)
+        #vrai_nom_import = nom_profil
 
         chemin_csv = profil_obj_import.sauvegarder_coordonnees(f"{nom_profil}_coord_profil.csv")
 
@@ -578,12 +579,17 @@ if __name__ == "__main__":
                                f"{nom_profil}{suffix}.txt")
 
         acces_fichier_dat = os.path.join("data", "profils_importes" if generation == 'importer' else "profils_manuels", f"{nom_profil}_coord_profil.dat")
+        #Supprimer ancien fichiers'il existe
+        if os.path.exists(txt_out):
+            print(f"[INFO] Suppression ancienne polaire : {txt_out}")
+            os.remove(txt_out)
 
         #print("acces_fichier_dat", acces_fichier_dat)
 
         aero_cond.run_xfoil(acces_fichier_dat, reynolds, mach, alpha_start=-15, alpha_end=15, alpha_step=1, output_file=txt_out)
 
         df_cond = aero_cond.lire_txt_et_convertir_dataframe(txt_out)
+
         aero_cond.donnees = df_cond
         aero_cond.tracer_polaires_depuis_txt()
 
@@ -767,26 +773,7 @@ if __name__ == "__main__":
             ["Saisie manuelle"]
         ).strip().lower()
 
-        """
-        if mode_cond == "conditions de vol réelles":
-            # == Sélectionner un vol réel
-            df_vols = choisir_vols(limit=100, sample_n=20)
-            sel = int(input("\nSélectionne le vol (numéro) : ").strip())
-            row = df_vols.loc[sel]
-            alt = row["altitude_m"]
-            vit = row["vitesse_m_s"]
-            Tstd = 288.15 - 0.0065 * alt
-            mach_givre = vit / ((1.4 * 287.05 * Tstd) ** 0.5)
-            corde = float(input("Corde du profil (m) : "))
-            # Calcul Reynolds
-            rho = 1.225 * (1 - 2.25577e-5 * alt) ** 5.25588  # densité ISA approx
-            mu = 1.7894e-5  # viscosité air (kg/ms) approx
-            reynolds_givre = (rho * vit * corde) / mu
-            print(f"Mach utilisé pour givrage : {mach_givre:.4f}")
-            print(f"Reynolds utilisé pour givrage : {reynolds_givre:.0f}")
-        
-        else:
-        """
+
         # == Saisie manuelle
         reynolds_givre = float(interface.demander_texte("Reynolds pour givrage? (ex: 50000)") or 50000)
         mach_givre = float(interface.demander_texte("Mach pour givrage? (ex: 0.1)") or 0.1)
@@ -844,6 +831,7 @@ if __name__ == "__main__":
                     print("Données givrées vides ou invalides!")
             else:
                 print("Fichier givré non trouvé ou erreur.")
+
         elif affiche_polaire == "non":
             pass
 
