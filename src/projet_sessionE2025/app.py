@@ -17,7 +17,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Initialisation
 st.set_page_config(page_title="Interface NACA", layout="centered")
 st.title("✈️ Interface Streamlit – Simulation profil NACA")
-API_KEY = "955814a8002a56c995edec56283f7caf"  # à remplacer si besoin
+API_KEY = ""  #  Définissez votre clé ici :
 gestion = GestionBase()
 
 def interface_selection_vol_opensky(profil1_nom, profil2_nom, suffixe=""):

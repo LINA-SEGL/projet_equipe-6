@@ -19,7 +19,7 @@ Constantes :
     API_KEY_OPENWEATHER (str): Clé d’authentification pour accéder à OpenWeather.
 """
 #  Définissez votre clé ici :
-API_KEY_OPENWEATHER ="955814a8002a56c995edec56283f7caf"
+API_KEY_OPENWEATHER =""
 
 def calcul_delta_isa(lat: float, lon: float, alt_m: float, api_key: str) -> float | None:
     """
