@@ -366,7 +366,7 @@ L’objectif est de **voir comment le profil se comporte en situation réelle**,
 ####  Deux possibilités s’offrent à l’utilisateur :
 
 - **Conditions réelles** : les données sont récupérées automatiquement via l’API **OpenSky**  
-  _(ex : un vol à 9700 m d’altitude, 240 m/s)_
+  _(ex : un vol à 1500 m d’altitude, 64 m/s)_
 
 - **Conditions personnalisées** : l’utilisateur entre lui-même ses paramètres (**altitude**, **vitesse**, **angle d’attaque**, etc.)
 
@@ -381,7 +381,7 @@ Lorsque l'utilisateur choisit **vol réel**, une liste de vols est générée au
 
 
  **Note importante** : XFoil ne fonctionne pas bien au-delà de Mach 0.7.   
-> Il faut donc s’assurer de choisir un vol avec une vitesse inférieure (~120 m/s max selon l’altitude).
+> Il faut donc s’assurer de choisir un vol avec une vitesse inférieure (~100 m/s max selon l’altitude).
 
 L’utilisateur peut :  
 - **Regénérer la liste** s’il ne la trouve pas satisfaisante,  
