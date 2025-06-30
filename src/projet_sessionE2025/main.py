@@ -576,19 +576,36 @@ if __name__ == "__main__":
 
         suffix = '_vol_reel' if tag == 'vol_reel' else '_vol_perso'
 
-        # if generation == 'importer':
-        #     nom_profil = vrai_nom_import
+        # Définir le dossier de sortie selon le mode
+        if generation == "importer":
+            dossier_out = "data/polaires_importees"
+        else:
+            dossier_out = "data/polaires_xfoil"
 
-        txt_out = os.path.join("data", "polaires_importees" if generation == 'importer' else "polaires_xfoil",
-                               f"{nom_profil}{suffix}.txt")
+        txt_out = os.path.join(dossier_out, f"{nom_profil}{suffix}.txt")
 
-        acces_fichier_dat = os.path.join("data", "profils_importes" if generation == 'importer' else "profils_manuels", f"{nom_profil}_coord_profil.dat")
-        #Supprimer ancien fichiers'il existe
+        #  Supprimer ancien fichier s’il existe
         if os.path.exists(txt_out):
             print(f"[INFO] Suppression ancienne polaire : {txt_out}")
             os.remove(txt_out)
 
-        #print("acces_fichier_dat", acces_fichier_dat)
+        #  Résoudre le bon chemin du fichier .dat
+        if generation == "importer":
+            acces_fichier_dat = os.path.join("data", "profils_importes", f"{nom_profil}_coord_profil.dat")
+        elif generation == "générer":
+            acces_fichier_dat = os.path.join("data", "profils_manuels", f"{nom_profil}_coord_profil.dat")
+        elif generation == "BaseDonnees":
+            candidats = [
+                os.path.join("data", "profils_importes", f"{nom_profil}_coord_profil.dat"),
+                os.path.join("data", "profils_manuels", f"{nom_profil}_coord_profil.dat")
+            ]
+            acces_fichier_dat = None
+            for chemin in candidats:
+                if os.path.exists(chemin):
+                    acces_fichier_dat = chemin
+                    break
+            if acces_fichier_dat is None:
+                raise FileNotFoundError(f"[ERREUR] Le fichier .dat du profil '{nom_profil}' est introuvable.")
 
         aero_cond.run_xfoil(acces_fichier_dat, reynolds, mach, alpha_start=-15, alpha_end=15, alpha_step=1, output_file=txt_out)
 
