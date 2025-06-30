@@ -162,8 +162,8 @@ if __name__ == "__main__":
     """
 
     interface = FenetreInteraction()
-
-    API_KEY = "c6bf5947268d141c6ca08f54c7d65b63"
+    #  Définissez votre clé ici :
+    API_KEY = ""
     #Initialisation de la BaseDonnees de données des profils
     gestion = GestionBase()
     # on réserve les variables pour stocker chacun des trois objets Aerodynamique

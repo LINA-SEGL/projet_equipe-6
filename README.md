@@ -86,6 +86,15 @@ Certaines fonctionnalités du projet utilisent l’API **OpenWeather** pour réc
     Sans cela, la clé restera inactive.  
     Même si votre adresse email est bien confirmée, la clé peut rester "Inactive" pendant quelques minutes (jusqu’à 2 heures maximum).
 ####  Où ajouter la clé :  
+Dans le fichier `main.py`, remplacez cette ligne(ligne**166**) :  
+```python
+API_KEY = ""  #  Définissez votre clé ici :
+## Utilisation
+```  
+par :  
+```python  
+API_KEY = "votre_clé_personnelle"
+```  
 Dans le fichier `VolOpenSkyAsync.py`, remplacez cette ligne(ligne**22**) :  
 ```python
 API_KEY_OPENWEATHER = ""
